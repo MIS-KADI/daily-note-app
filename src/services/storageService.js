@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   FITNESS: 'daily_diary_fitness',
   ACCOUNTS: 'daily_diary_accounts',
   KHATA: 'daily_diary_khata',
+  EVENTS: 'daily_diary_events',
 };
 
 
@@ -173,6 +174,27 @@ const DEFAULT_FINANCE = [
     description: 'ગાડીમાં પેટ્રોલ પુરાવ્યું',
     date: new Date().toISOString().split('T')[0],
     paymentMode: 'UPI',
+  },
+];
+
+const DEFAULT_EVENTS = [
+  {
+    id: 'ev-1',
+    name: 'રમેશભાઈ શાહ (Ramesh Shah)',
+    type: 'birthday',
+    date: new Date().toISOString().split('T')[0], // Today
+    phone: '+91 98250 11223',
+    relation: 'મિત્ર (Friend)',
+    notes: 'સાંજે ૭ વાગે જન્મદિવસ પાર્ટી',
+  },
+  {
+    id: 'ev-2',
+    name: 'મુકેશભાઈ & રીતાબેન (Mukesh & Rita)',
+    type: 'anniversary',
+    date: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
+    phone: '+91 94280 44556',
+    relation: 'કાકા-કાકી',
+    notes: 'લગ્ન વર્ષગાંઠ (૨૫મી સિલ્વર જ્યુબિલી)',
   },
 ];
 
@@ -418,6 +440,19 @@ export const storageService = {
     localStorage.setItem(STORAGE_KEYS.KHATA, JSON.stringify(khata));
   },
 
+  getEvents() {
+    const data = localStorage.getItem(STORAGE_KEYS.EVENTS);
+    if (!data) {
+      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(DEFAULT_EVENTS));
+      return DEFAULT_EVENTS;
+    }
+    return JSON.parse(data);
+  },
+
+  saveEvents(events) {
+    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+  },
+
   getDailyQuote(lang, offset = 0) {
     const activeLang = lang || this.getLanguage() || 'gu';
     return fetchDailyQuote(activeLang, offset);
@@ -426,11 +461,12 @@ export const storageService = {
   // Export all application data as encrypted/portable JSON file
   exportBackup() {
     const fullBackup = {
-      version: '1.3.0',
+      version: '1.4.0',
       exportedAt: new Date().toISOString(),
       user: this.getUserProfile(),
       notes: this.getNotes(),
       reminders: this.getReminders(),
+      events: this.getEvents(),
       medicines: this.getMedicines(),
       medicineLogs: this.getMedicineLogs(),
       finance: this.getFinance(),
@@ -459,6 +495,7 @@ export const storageService = {
       if (parsed.user) this.saveUserProfile(parsed.user);
       if (parsed.notes) this.saveNotes(parsed.notes);
       if (parsed.reminders) this.saveReminders(parsed.reminders);
+      if (parsed.events) this.saveEvents(parsed.events);
       if (parsed.medicines) this.saveMedicines(parsed.medicines);
       if (parsed.medicineLogs) this.saveMedicineLogs(parsed.medicineLogs);
       if (parsed.finance) this.saveFinance(parsed.finance);

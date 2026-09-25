@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { X, Delete, PlusCircle, MinusCircle, Copy, Check } from 'lucide-react';
+import { t } from '../services/i18n';
 
-export default function CalculatorModal({ isOpen, onClose, onTransferAmount }) {
+export default function CalculatorModal({ isOpen, onClose, onTransferAmount, lang = 'gu' }) {
   const [display, setDisplay] = useState('0');
   const [equation, setEquation] = useState('');
   const [copied, setCopied] = useState(false);
@@ -75,8 +76,8 @@ export default function CalculatorModal({ isOpen, onClose, onTransferAmount }) {
           <div className="flex items-center gap-2">
             <span className="text-xl">🧮</span>
             <div>
-              <h3 className="font-semibold text-base leading-tight">સ્માર્ટ કેલ્ક્યુલેટર</h3>
-              <p className="text-xs text-slate-400">ઝડપી હિસાબ અને ગણતરી</p>
+              <h3 className="font-semibold text-base leading-tight">{t('smart_calc_title', lang)}</h3>
+              <p className="text-xs text-slate-400">{t('calc_sub', lang)}</p>
             </div>
           </div>
           <button
@@ -102,14 +103,14 @@ export default function CalculatorModal({ isOpen, onClose, onTransferAmount }) {
             className="flex items-center justify-center gap-1.5 py-2 px-3 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-xl border border-red-200 transition active:scale-95"
           >
             <MinusCircle size={15} />
-            ખર્ચમાં ઉમેરો (-₹)
+            {t('calc_transfer_expense', lang)} (-₹)
           </button>
           <button
             onClick={() => handleUseAmount('income')}
             className="flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-xl border border-emerald-200 transition active:scale-95"
           >
             <PlusCircle size={15} />
-            આવકમાં ઉમેરો (+₹)
+            {t('calc_transfer_income', lang)} (+₹)
           </button>
         </div>
 
@@ -130,7 +131,7 @@ export default function CalculatorModal({ isOpen, onClose, onTransferAmount }) {
           <button
             onClick={handleCopy}
             className="p-3.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center active:scale-95 transition"
-            title="કોપી કરો"
+            title={t('copy', lang)}
           >
             {copied ? <Check size={18} className="text-emerald-600" /> : <Copy size={18} />}
           </button>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Lock, ShieldCheck, KeyRound, Delete } from 'lucide-react';
+import { t } from '../services/i18n';
 
-export default function PinLockModal({ correctPin, onUnlock }) {
+export default function PinLockModal({ correctPin, onUnlock, lang = 'gu' }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
 
@@ -38,9 +39,9 @@ export default function PinLockModal({ correctPin, onUnlock }) {
         </div>
 
         <div>
-          <h2 className="text-xl font-bold">સુરક્ષિત એપ્લિકેશન લૉક</h2>
+          <h2 className="text-xl font-bold">{t('secure_app_lock', lang)}</h2>
           <p className="text-xs text-slate-400 mt-1">
-            તમારો વ્યક્તિગત ડેટા એન્ક્રિપ્ટ કરેલ છે. અનલૉક કરવા ૪ અંકનો પિન દાખલ કરો.
+            {t('pin_modal_desc', lang)}
           </p>
         </div>
 
@@ -62,7 +63,7 @@ export default function PinLockModal({ correctPin, onUnlock }) {
 
         {error && (
           <p className="text-xs text-red-400 font-semibold animate-in fade-in">
-            ખોટો પિન! કૃપા કરીને ફરી પ્રયાસ કરો.
+            {t('wrong_pin_msg', lang)}
           </p>
         )}
 
@@ -100,7 +101,7 @@ export default function PinLockModal({ correctPin, onUnlock }) {
         <div className="pt-2">
           <p className="text-[11px] text-slate-500 flex items-center justify-center gap-1">
             <KeyRound size={12} />
-            ડિફોલ્ટ પિન: 1234
+            {t('default_pin_hint', lang)}
           </p>
         </div>
       </div>

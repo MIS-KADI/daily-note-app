@@ -20,27 +20,11 @@ import {
   Edit2,
   ArrowDownLeft,
   ArrowUpRight,
+  MessageCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { t } from '../../services/i18n';
-
-const EXPENSE_CATEGORIES = {
-  gu: ['કરિયાણું / ઘરખર્ચ', 'દવાઓ / હેલ્થ', 'પેટ્રોલ / મુસાફરી', 'શાકભાજી / ફળફળાદિ', 'દૂધ અને ચા-નાસ્તો', 'લાઇટ બિલ / રિચાર્જ', 'શિક્ષણ / ફી', 'અન્ય ખર્ચ'],
-  hi: ['किराना / घरेलू खर्च', 'दवाइयाँ / स्वास्थ्य', 'पेट्रोल / यात्रा', 'सब्जी / फल', 'दूध और चाय-नाश्ता', 'बिजली बिल / रिचार्ज', 'शिक्षा / फ़ीस', 'अन्य खर्च'],
-  en: ['Grocery / Household', 'Medicines / Health', 'Fuel / Travel', 'Vegetables / Fruits', 'Milk & Snacks', 'Bills & Recharge', 'Education & Fees', 'Other Expenses'],
-};
-
-const INCOME_CATEGORIES = {
-  gu: ['પગાર / આવક', 'વેપાર / ધંધો', 'વ્યાજ / ડિવિડન્ડ', 'ભાડું', 'અન્ય આવક'],
-  hi: ['वेतन / आय', 'व्यापार / धंधा', 'ब्याज / डिविडेंड', 'किराया', 'अन्य आय'],
-  en: ['Salary / Income', 'Business / Trade', 'Interest / Returns', 'Rent Received', 'Other Income'],
-};
-
-const PAYMENT_MODES = {
-  gu: ['UPI (GPay/PhonePe)', 'રોકડ (Cash)', 'બેંક ટ્રાન્સફર', 'ક્રેડિટ/ડેબિટ કાર્ડ'],
-  hi: ['UPI (GPay/PhonePe)', 'नकद (Cash)', 'बैंक ट्रांसफर', 'क्रेडिट/डेबिट कार्ड'],
-  en: ['UPI (GPay/PhonePe)', 'Cash in Hand', 'Bank Transfer', 'Credit/Debit Card'],
-};
+import { t, getExpenseCategories, getIncomeCategories, getPaymentModes } from '../../services/i18n';
+import { whatsappService } from '../../services/whatsappService';
 
 export default function FinanceTab({
   finance = [],
@@ -56,6 +40,10 @@ export default function FinanceTab({
   const [filterType, setFilterType] = useState('all'); // 'all', 'expense', 'income'
   const [khataFilter, setKhataFilter] = useState('all'); // 'all', 'to_receive', 'to_pay'
 
+  const expenseCategories = getExpenseCategories(lang);
+  const incomeCategories = getIncomeCategories(lang);
+  const paymentModes = getPaymentModes(lang);
+
   // Modals state
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
   const [isKhataModalOpen, setIsKhataModalOpen] = useState(false);
@@ -64,9 +52,9 @@ export default function FinanceTab({
   // Transaction form
   const [txType, setTxType] = useState('expense');
   const [txAmount, setTxAmount] = useState('');
-  const [txCategory, setTxCategory] = useState(EXPENSE_CATEGORIES[lang]?.[0] || EXPENSE_CATEGORIES.gu[0]);
+  const [txCategory, setTxCategory] = useState(expenseCategories[0]);
   const [txDescription, setTxDescription] = useState('');
-  const [txPaymentMode, setTxPaymentMode] = useState(PAYMENT_MODES[lang]?.[0] || PAYMENT_MODES.gu[0]);
+  const [txPaymentMode, setTxPaymentMode] = useState(paymentModes[0]);
   const [txDate, setTxDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Khata form
@@ -110,9 +98,9 @@ export default function FinanceTab({
   const handleOpenAddTx = (defaultType = 'expense') => {
     setTxType(defaultType);
     setTxAmount('');
-    setTxCategory(defaultType === 'expense' ? EXPENSE_CATEGORIES[lang][0] : INCOME_CATEGORIES[lang][0]);
+    setTxCategory(defaultType === 'expense' ? expenseCategories[0] : incomeCategories[0]);
     setTxDescription('');
-    setTxPaymentMode(PAYMENT_MODES[lang][0]);
+    setTxPaymentMode(paymentModes[0]);
     setTxDate(new Date().toISOString().split('T')[0]);
     setIsTxModalOpen(true);
   };
@@ -135,7 +123,14 @@ export default function FinanceTab({
     onSaveFinance([newEntry, ...finance]);
 
     // Update bank / cash balance accordingly
-    const isCash = txPaymentMode.includes('રોકડ') || txPaymentMode.includes('Cash') || txPaymentMode.includes('नकद');
+    const isCash =
+      txPaymentMode.includes('રોકડ') ||
+      txPaymentMode.includes('Cash') ||
+      txPaymentMode.includes('नकद') ||
+      txPaymentMode.includes('Efectivo') ||
+      txPaymentMode.includes('Espèces') ||
+      txPaymentMode.includes('Bargeld') ||
+      txPaymentMode.includes('نقداً');
     if (isCash) {
       const nextCash = txType === 'income' ? cashBalance + num : cashBalance - num;
       onSaveAccounts({ ...accounts, cashBalance: nextCash });
@@ -149,7 +144,7 @@ export default function FinanceTab({
   };
 
   const handleDeleteTx = (id) => {
-    if (window.confirm('શું તમે આ હિસાબ એન્ટ્રી કાઢી નાખવા માંગો છો?')) {
+    if (window.confirm(t('delete_tx_confirm', lang))) {
       onSaveFinance(finance.filter((f) => f.id !== id));
     }
   };
@@ -201,7 +196,7 @@ export default function FinanceTab({
   };
 
   const handleDeleteKhata = (id) => {
-    if (window.confirm('શું તમે આ પાર્ટી ખાતાની એન્ટ્રી કાઢવા માંગો છો?')) {
+    if (window.confirm(t('delete_khata_confirm', lang))) {
       onSaveKhata(khata.filter((k) => k.id !== id));
     }
   };
@@ -239,7 +234,7 @@ export default function FinanceTab({
             <div>
               <h2 className="text-base font-bold">{t('tab_finance', lang)}</h2>
               <p className="text-[11px] text-blue-200">
-                કુલ ઉપલબ્ધ રકમ: <strong className="text-white">₹{totalAvailable.toLocaleString()}</strong>
+                {t('total_available', lang)}: <strong className="text-white">₹{totalAvailable.toLocaleString()}</strong>
               </p>
             </div>
           </div>
@@ -269,7 +264,7 @@ export default function FinanceTab({
             <p className="text-lg font-black mt-1 text-white tracking-tight">
               ₹{bankBalance.toLocaleString()}
             </p>
-            <span className="text-[10px] text-blue-200 block mt-0.5">UPI અને ખાતા બેલેન્સ</span>
+            <span className="text-[10px] text-blue-200 block mt-0.5">{t('upi_and_account', lang)}</span>
           </div>
 
           {/* 2. Hand Cash */}
@@ -283,7 +278,7 @@ export default function FinanceTab({
             <p className="text-lg font-black mt-1 text-white tracking-tight">
               ₹{cashBalance.toLocaleString()}
             </p>
-            <span className="text-[10px] text-emerald-200 block mt-0.5">હાથ પર રોકડ રકમ</span>
+            <span className="text-[10px] text-emerald-200 block mt-0.5">{t('cash_in_hand_sub', lang)}</span>
           </div>
 
           {/* 3. Lena (Receivables) */}
@@ -297,7 +292,7 @@ export default function FinanceTab({
             <p className="text-lg font-black mt-1 text-emerald-300 tracking-tight">
               ₹{totalToReceive.toLocaleString()}
             </p>
-            <span className="text-[10px] text-emerald-200 block mt-0.5">પાર્ટીઓ પાસેથી લેવાના બાકી</span>
+            <span className="text-[10px] text-emerald-200 block mt-0.5">{t('receivable_from_parties', lang)}</span>
           </div>
 
           {/* 4. Dena (Payables) */}
@@ -311,7 +306,7 @@ export default function FinanceTab({
             <p className="text-lg font-black mt-1 text-red-300 tracking-tight">
               ₹{totalToPay.toLocaleString()}
             </p>
-            <span className="text-[10px] text-red-200 block mt-0.5">પાર્ટીઓને આપવાના બાકી</span>
+            <span className="text-[10px] text-red-200 block mt-0.5">{t('payable_to_parties', lang)}</span>
           </div>
         </div>
 
@@ -322,21 +317,21 @@ export default function FinanceTab({
             className="flex-1 py-2 px-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-xs active:scale-95 transition"
           >
             <Plus size={14} />
-            <span>- ખર્ચ ઉમેરો</span>
+            <span>{t('add_expense_btn', lang)}</span>
           </button>
           <button
             onClick={() => handleOpenAddTx('income')}
             className="flex-1 py-2 px-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-xs active:scale-95 transition"
           >
             <Plus size={14} />
-            <span>+ આવક ઉમેરો</span>
+            <span>{t('add_income_btn', lang)}</span>
           </button>
           <button
             onClick={() => handleOpenAddKhata('to_receive')}
             className="py-2 px-3 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-xs active:scale-95 transition"
           >
             <Users size={14} />
-            <span>ખાતાવહી</span>
+            <span>{t('khata_book', lang)}</span>
           </button>
         </div>
       </div>
@@ -352,7 +347,7 @@ export default function FinanceTab({
           }`}
         >
           <CreditCard size={15} />
-          <span>આવક-ખર્ચ હિસાબ ({finance.length})</span>
+          <span>{t('income_expense_tab', lang)} ({finance.length})</span>
         </button>
 
         <button
@@ -364,7 +359,7 @@ export default function FinanceTab({
           }`}
         >
           <Users size={15} />
-          <span>{t('khata_book', lang)} ({khata.filter((k) => !k.isSettled).length} બાકી)</span>
+          <span>{t('khata_book', lang)} ({khata.filter((k) => !k.isSettled).length} {t('pending', lang)})</span>
         </button>
       </div>
 
@@ -382,7 +377,7 @@ export default function FinanceTab({
                   filterType === 'all' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600'
                 }`}
               >
-                બધા
+                {t('all', lang)}
               </button>
               <button
                 onClick={() => setFilterType('expense')}
@@ -390,7 +385,7 @@ export default function FinanceTab({
                   filterType === 'expense' ? 'bg-red-500 text-white shadow-2xs' : 'text-slate-600'
                 }`}
               >
-                ખર્ચ (₹{totalExpense.toLocaleString()})
+                {t('expense', lang)} (₹{totalExpense.toLocaleString()})
               </button>
               <button
                 onClick={() => setFilterType('income')}
@@ -398,7 +393,7 @@ export default function FinanceTab({
                   filterType === 'income' ? 'bg-emerald-500 text-white shadow-2xs' : 'text-slate-600'
                 }`}
               >
-                આવક (₹{totalIncome.toLocaleString()})
+                {t('income', lang)} (₹{totalIncome.toLocaleString()})
               </button>
             </div>
 
@@ -406,7 +401,7 @@ export default function FinanceTab({
               <button
                 onClick={onOpenCalculator}
                 className="p-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 transition shadow-2xs"
-                title="કેલ્ક્યુલેટર ખોલો"
+                title={t('smart_calc_title', lang)}
               >
                 <Calculator size={16} />
               </button>
@@ -418,12 +413,12 @@ export default function FinanceTab({
             {filteredFinance.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-300 p-6">
                 <Wallet size={36} className="mx-auto text-slate-300 mb-2" />
-                <p className="text-xs font-semibold text-slate-600">આ ફિલ્ટરમાં કોઈ વ્યવહાર નોંધાયેલ નથી.</p>
+                <p className="text-xs font-semibold text-slate-600">{t('no_tx_found', lang)}</p>
                 <button
                   onClick={() => handleOpenAddTx('expense')}
                   className="mt-3 text-xs text-blue-600 font-bold hover:underline"
                 >
-                  + નવો ખર્ચ ઉમેરો
+                  {t('add_new_expense', lang)}
                 </button>
               </div>
             ) : (
@@ -465,7 +460,7 @@ export default function FinanceTab({
                           {isExpense ? '-' : '+'}₹{Number(f.amount).toLocaleString()}
                         </span>
                         <span className="text-[9px] block text-slate-400">
-                          {isExpense ? 'ખર્ચ' : 'આવક'}
+                          {isExpense ? t('expense', lang) : t('income', lang)}
                         </span>
                       </div>
                       <button
@@ -497,7 +492,7 @@ export default function FinanceTab({
                   khataFilter === 'all' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600'
                 }`}
               >
-                બધા ({khata.length})
+                {t('all', lang)} ({khata.length})
               </button>
               <button
                 onClick={() => setKhataFilter('to_receive')}
@@ -507,7 +502,7 @@ export default function FinanceTab({
                     : 'text-slate-600'
                 }`}
               >
-                લેવાના (₹{totalToReceive.toLocaleString()})
+                {t('to_receive', lang)} (₹{totalToReceive.toLocaleString()})
               </button>
               <button
                 onClick={() => setKhataFilter('to_pay')}
@@ -515,7 +510,7 @@ export default function FinanceTab({
                   khataFilter === 'to_pay' ? 'bg-red-600 text-white shadow-2xs' : 'text-slate-600'
                 }`}
               >
-                આપવાના (₹{totalToPay.toLocaleString()})
+                {t('to_pay', lang)} (₹{totalToPay.toLocaleString()})
               </button>
             </div>
 
@@ -524,7 +519,7 @@ export default function FinanceTab({
               className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition"
             >
               <Plus size={14} />
-              <span>પાર્ટી ઉમેરો</span>
+              <span>{t('add_party', lang)}</span>
             </button>
           </div>
 
@@ -533,12 +528,12 @@ export default function FinanceTab({
             {filteredKhata.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-300 p-6">
                 <Users size={36} className="mx-auto text-slate-300 mb-2" />
-                <p className="text-xs font-semibold text-slate-600">ખાતાવહીમાં કોઈ પાર્ટી એન્ટ્રી નથી.</p>
+                <p className="text-xs font-semibold text-slate-600">{t('no_khata_entry', lang)}</p>
                 <button
                   onClick={() => handleOpenAddKhata('to_receive')}
                   className="mt-3 text-xs text-blue-600 font-bold hover:underline"
                 >
-                  + નવી લેતી-દેતી નોંધો
+                  {t('add_khata_entry', lang)}
                 </button>
               </div>
             ) : (
@@ -570,7 +565,7 @@ export default function FinanceTab({
                                 : 'bg-red-100 text-red-800'
                             }`}
                           >
-                            {k.isSettled ? 'ચૂકવાઈ ગયું' : isReceive ? 'મારે લેવાના' : 'મારે આપવાના'}
+                            {k.isSettled ? t('settled', lang) : isReceive ? t('my_receivables', lang) : t('my_payables', lang)}
                           </span>
                         </div>
 
@@ -578,7 +573,7 @@ export default function FinanceTab({
                           <p className="text-xs text-slate-600 mt-1">{k.description}</p>
                         )}
 
-                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 mt-2">
+                        <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-slate-500 mt-2">
                           {k.phone && (
                             <a
                               href={`tel:${k.phone}`}
@@ -588,13 +583,31 @@ export default function FinanceTab({
                               {k.phone}
                             </a>
                           )}
+                          <button
+                            onClick={() =>
+                              whatsappService.sendPaymentReminder({
+                                partyName: k.partyName,
+                                phone: k.phone,
+                                amount: k.amount,
+                                type: k.type,
+                                dueDate: k.dueDate,
+                                senderName: user?.name,
+                                lang,
+                              })
+                            }
+                            className="flex items-center gap-1 text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-lg font-bold transition active:scale-95"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle size={12} />
+                            <span>WhatsApp</span>
+                          </button>
                           <span className="flex items-center gap-1">
                             <Calendar size={12} />
-                            તારીખ: {k.date}
+                            {t('date', lang)}: {k.date}
                           </span>
                           {k.dueDate && (
                             <span className="font-semibold text-amber-700">
-                              પાકતી તારીખ: {k.dueDate}
+                              {t('due_date', lang)}: {k.dueDate}
                             </span>
                           )}
                         </div>
@@ -620,7 +633,7 @@ export default function FinanceTab({
                             }`}
                           >
                             <Check size={12} />
-                            <span>{k.isSettled ? 'ફરી બાકી કરો' : 'હિસાબ ચૂકતે'}</span>
+                            <span>{k.isSettled ? t('reopen', lang) : t('mark_settled', lang)}</span>
                           </button>
                           <button
                             onClick={() => handleDeleteKhata(k.id)}
@@ -647,7 +660,7 @@ export default function FinanceTab({
           <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <h3 className="text-base font-bold text-slate-800">
-                {txType === 'expense' ? 'નવો ખર્ચ નોંધો' : 'નવી આવક નોંધો'}
+                {txType === 'expense' ? t('add_new_expense', lang) : t('add_new_income', lang)}
               </h3>
               <button
                 onClick={() => setIsTxModalOpen(false)}
@@ -663,7 +676,7 @@ export default function FinanceTab({
                   type="button"
                   onClick={() => {
                     setTxType('expense');
-                    setTxCategory(EXPENSE_CATEGORIES[lang][0]);
+                    setTxCategory(expenseCategories[0]);
                   }}
                   className={`py-2 rounded-xl text-xs font-bold border transition ${
                     txType === 'expense'
@@ -671,13 +684,13 @@ export default function FinanceTab({
                       : 'bg-slate-50 text-slate-600 border-slate-200'
                   }`}
                 >
-                  ખર્ચ (Expense)
+                  {t('expense', lang)}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setTxType('income');
-                    setTxCategory(INCOME_CATEGORIES[lang][0]);
+                    setTxCategory(incomeCategories[0]);
                   }}
                   className={`py-2 rounded-xl text-xs font-bold border transition ${
                     txType === 'income'
@@ -685,12 +698,14 @@ export default function FinanceTab({
                       : 'bg-slate-50 text-slate-600 border-slate-200'
                   }`}
                 >
-                  આવક (Income)
+                  {t('income', lang)}
                 </button>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">રકમ (₹) *</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {t('amount', lang)} (₹) *
+                </label>
                 <input
                   type="number"
                   required
@@ -705,13 +720,15 @@ export default function FinanceTab({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">કેટેગરી</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {t('category', lang)}
+                </label>
                 <select
                   value={txCategory}
                   onChange={(e) => setTxCategory(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
                 >
-                  {(txType === 'expense' ? EXPENSE_CATEGORIES[lang] : INCOME_CATEGORIES[lang]).map((c) => (
+                  {(txType === 'expense' ? expenseCategories : incomeCategories).map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>
@@ -721,13 +738,15 @@ export default function FinanceTab({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">ચુકવણી મોડ</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    {t('payment_mode', lang)}
+                  </label>
                   <select
                     value={txPaymentMode}
                     onChange={(e) => setTxPaymentMode(e.target.value)}
                     className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
                   >
-                    {PAYMENT_MODES[lang].map((p) => (
+                    {paymentModes.map((p) => (
                       <option key={p} value={p}>
                         {p}
                       </option>
@@ -735,7 +754,9 @@ export default function FinanceTab({
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">તારીખ</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    {t('date', lang)}
+                  </label>
                   <input
                     type="date"
                     value={txDate}
@@ -746,10 +767,12 @@ export default function FinanceTab({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">વિગત / નોંધ</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {t('desc_note', lang)}
+                </label>
                 <input
                   type="text"
-                  placeholder="દા.ત. કરિયાણું ખરીદ્યું, પેટ્રોલ પુરાવ્યું..."
+                  placeholder={t('tx_desc_placeholder', lang)}
                   value={txDescription}
                   onChange={(e) => setTxDescription(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200"
@@ -762,13 +785,13 @@ export default function FinanceTab({
                   onClick={() => setIsTxModalOpen(false)}
                   className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
                 >
-                  રદ કરો
+                  {t('cancel', lang)}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs"
                 >
-                  સાચવો
+                  {t('save', lang)}
                 </button>
               </div>
             </form>
@@ -784,7 +807,7 @@ export default function FinanceTab({
           <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <h3 className="text-base font-bold text-slate-800">
-                {khType === 'to_receive' ? 'મારે લેવાના (ઉધાર લેણાં)' : 'મારે આપવાના (ઉધાર દેવાં)'}
+                {khType === 'to_receive' ? t('to_receive', lang) : t('to_pay', lang)}
               </h3>
               <button
                 onClick={() => setIsKhataModalOpen(false)}
@@ -805,7 +828,7 @@ export default function FinanceTab({
                       : 'bg-slate-50 text-slate-600 border-slate-200'
                   }`}
                 >
-                  મેં આપ્યા (મારે લેવાના)
+                  {t('khata_gave_to_receive', lang)}
                 </button>
                 <button
                   type="button"
@@ -816,16 +839,18 @@ export default function FinanceTab({
                       : 'bg-slate-50 text-slate-600 border-slate-200'
                   }`}
                 >
-                  મેં લીધા (મારે આપવાના)
+                  {t('khata_took_to_pay', lang)}
                 </button>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">પાર્ટી / વ્યક્તિનું નામ *</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {t('party_name', lang)} *
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="દા.ત. રમેશભાઈ, સુરેશ ટ્રેડર્સ..."
+                  placeholder={t('party_name', lang)}
                   value={khPartyName}
                   onChange={(e) => setKhPartyName(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-blue-500 font-bold"
@@ -834,7 +859,9 @@ export default function FinanceTab({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">રકમ (₹) *</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    {t('amount', lang)} (₹) *
+                  </label>
                   <input
                     type="number"
                     required
@@ -846,7 +873,9 @@ export default function FinanceTab({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">મોબાઈલ નંબર</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    {t('mobile_number', lang)}
+                  </label>
                   <input
                     type="tel"
                     placeholder="+91..."
@@ -859,7 +888,9 @@ export default function FinanceTab({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">આપ્યા/લીધા તારીખ</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    {t('tx_date', lang)}
+                  </label>
                   <input
                     type="date"
                     value={khDate}
@@ -868,7 +899,9 @@ export default function FinanceTab({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">પાકતી તારીખ (Due)</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    {t('due_date', lang)}
+                  </label>
                   <input
                     type="date"
                     value={khDueDate}
@@ -879,10 +912,12 @@ export default function FinanceTab({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">વિગત / કારણ</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {t('desc_reason', lang)}
+                </label>
                 <input
                   type="text"
-                  placeholder="દા.ત. માલ સામાન બાકી, હાથ ઉછીના..."
+                  placeholder={t('khata_desc_placeholder', lang)}
                   value={khDescription}
                   onChange={(e) => setKhDescription(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200"
@@ -895,13 +930,13 @@ export default function FinanceTab({
                   onClick={() => setIsKhataModalOpen(false)}
                   className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
                 >
-                  રદ કરો
+                  {t('cancel', lang)}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs"
                 >
-                  ખાતામાં સેવ કરો
+                  {t('save_to_khata', lang)}
                 </button>
               </div>
             </form>
@@ -962,13 +997,13 @@ export default function FinanceTab({
                   onClick={() => setIsBalanceModalOpen(false)}
                   className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
                 >
-                  રદ કરો
+                  {t('cancel', lang)}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs"
                 >
-                  અપડેટ કરો
+                  {t('update', lang)}
                 </button>
               </div>
             </form>

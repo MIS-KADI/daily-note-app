@@ -17,18 +17,14 @@ import {
   Share2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { t } from '../../services/i18n';
-
-const CATEGORIES = {
-  gu: ['બધા', 'અંગત', 'કામ', 'વિચાર', 'ખરીદી', 'અગત્યનું'],
-  hi: ['सभी', 'व्यक्तिगत', 'काम', 'विचार', 'खरीदारी', 'महत्वपूर्ण'],
-  en: ['All', 'Personal', 'Work', 'Thoughts', 'Shopping', 'Important'],
-};
+import { t, getNoteCategories } from '../../services/i18n';
+import { whatsappService } from '../../services/whatsappService';
 
 export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
+  const noteCategories = getNoteCategories(lang);
   const todayStr = new Date().toISOString().split('T')[0];
   const [search, setSearch] = useState('');
-  const [selectedCat, setSelectedCat] = useState('All');
+  const [selectedCat, setSelectedCat] = useState(noteCategories[0]);
   const [dateFilterMode, setDateFilterMode] = useState('all'); // 'all', 'today', 'future', 'by_date'
   const [selectedDate, setSelectedDate] = useState(todayStr);
 
@@ -38,7 +34,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
   // Form state
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[lang]?.[1] || 'અંગત');
+  const [category, setCategory] = useState(noteCategories[1] || 'Personal');
   const [noteDate, setNoteDate] = useState(todayStr);
   const [isPinned, setIsPinned] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -51,7 +47,15 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      const voiceLangMap = { gu: 'gu-IN', hi: 'hi-IN', en: 'en-US' };
+      const voiceLangMap = {
+        gu: 'gu-IN',
+        hi: 'hi-IN',
+        en: 'en-US',
+        es: 'es-ES',
+        fr: 'fr-FR',
+        de: 'de-DE',
+        ar: 'ar-SA',
+      };
       recognition.lang = voiceLangMap[lang] || 'gu-IN';
 
       recognition.onresult = (event) => {
@@ -76,7 +80,13 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
 
   const toggleVoiceRecording = () => {
     if (!recognitionRef.current) {
-      alert(lang === 'en' ? 'Voice typing not supported on this browser' : 'તમારા બ્રાઉઝરમાં વોઇસ ટાઇપિંગ સપોર્ટ નથી. ક્રોમ કે સફારી વાપરો.');
+      alert(
+        lang === 'gu'
+          ? 'તમારા બ્રાઉઝરમાં વોઇસ ટાઇપિંગ સપોર્ટ નથી. ક્રોમ કે સફારી વાપરો.'
+          : lang === 'hi'
+          ? 'आपके ब्राउज़र में वॉयस टाइपिंग समर्थित नहीं है।'
+          : 'Voice typing is not supported on this browser. Please use Chrome or Safari.'
+      );
       return;
     }
 
@@ -97,7 +107,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     setEditingNote(null);
     setTitle('');
     setContent('');
-    setCategory(CATEGORIES[lang]?.[1] || 'અંગત');
+    setCategory(noteCategories[1] || 'Personal');
     setNoteDate(targetDate);
     setIsPinned(false);
     setIsModalOpen(true);
@@ -117,12 +127,14 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     e.preventDefault();
     if (!title.trim() && !content.trim()) return;
 
+    const defaultTitle = t('untitled_note', lang) || 'Note';
+
     if (editingNote) {
       const updated = notes.map((n) =>
         n.id === editingNote.id
           ? {
               ...n,
-              title: title || (lang === 'en' ? 'Untitled Note' : 'વિના શીર્ષક નોંધ'),
+              title: title || defaultTitle,
               content,
               category,
               date: noteDate,
@@ -135,7 +147,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     } else {
       const newNote = {
         id: 'note-' + Date.now(),
-        title: title || (lang === 'en' ? 'Untitled Note' : 'વિના શીર્ષક નોંધ'),
+        title: title || defaultTitle,
         content,
         category,
         date: noteDate,
@@ -151,7 +163,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm(lang === 'en' ? 'Delete this note?' : 'શું તમે આ નોંધ કાઢી નાખવા માંગો છો?')) {
+    if (window.confirm(t('delete_note_confirm', lang))) {
       onSaveNotes(notes.filter((n) => n.id !== id));
     }
   };
@@ -169,8 +181,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
       n.content?.toLowerCase().includes(search.toLowerCase());
 
     // Category
-    const currentCats = CATEGORIES[lang] || CATEGORIES.gu;
-    const isAll = selectedCat === currentCats[0] || selectedCat === 'All' || selectedCat === 'બધા';
+    const isAll = selectedCat === noteCategories[0] || selectedCat === 'All' || selectedCat === 'બધા';
     const matchesCategory = isAll || n.category === selectedCat;
 
     // Date Filter
@@ -221,15 +232,15 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
         {/* Date Quick Stats */}
         <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/20 text-center">
           <div className="bg-white/10 rounded-xl p-2 backdrop-blur-xs">
-            <span className="text-[10px] text-blue-200 block">કુલ નોંધો</span>
+            <span className="text-[10px] text-blue-200 block">{t('total_notes', lang)}</span>
             <span className="text-sm font-extrabold">{notes.length}</span>
           </div>
           <div className="bg-white/10 rounded-xl p-2 backdrop-blur-xs">
-            <span className="text-[10px] text-blue-200 block">આજની નોંધો</span>
+            <span className="text-[10px] text-blue-200 block">{t('today_notes', lang)}</span>
             <span className="text-sm font-extrabold">{notes.filter((n) => n.date === todayStr).length}</span>
           </div>
           <div className="bg-white/10 rounded-xl p-2 backdrop-blur-xs">
-            <span className="text-[10px] text-cyan-200 block">🚀 એડવાન્સ નોંધો</span>
+            <span className="text-[10px] text-cyan-200 block">{t('advance_notes', lang)}</span>
             <span className="text-sm font-extrabold text-cyan-300">{futureCount}</span>
           </div>
         </div>
@@ -280,14 +291,14 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
             }`}
           >
             <Calendar size={13} />
-            <span>તારીખ મુજબ</span>
+            <span>{t('by_date', lang)}</span>
           </button>
         </div>
 
         {/* Date picker if 'by_date' is selected */}
         {dateFilterMode === 'by_date' && (
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-            <span className="text-xs text-slate-500 font-semibold">ચોક્કસ તારીખ પસંદ કરો:</span>
+            <span className="text-xs text-slate-500 font-semibold">{t('select_date_label', lang)}</span>
             <input
               type="date"
               value={selectedDate}
@@ -298,7 +309,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
               onClick={() => handleOpenAdd(selectedDate)}
               className="text-xs font-bold text-blue-600 hover:underline"
             >
-              + આ તારીખે નોંધ લખો
+              {t('add_note_on_date', lang)}
             </button>
           </div>
         )}
@@ -319,7 +330,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
 
         {/* Category Filter Chips */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {(CATEGORIES[lang] || CATEGORIES.gu).map((cat) => (
+          {noteCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCat(cat)}
@@ -340,13 +351,13 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
         {sortedNotes.length === 0 ? (
           <div className="text-center py-14 bg-white rounded-3xl border border-dashed border-slate-300 p-6">
             <BookOpen size={40} className="mx-auto text-slate-300 mb-2" />
-            <p className="text-sm font-bold text-slate-600">કોઈ નોંધ મળી નથી</p>
-            <p className="text-xs text-slate-400 mt-1">આ તારીખ કે કેટેગરીમાં નવી નોંધ ઉમેરો</p>
+            <p className="text-sm font-bold text-slate-600">{t('no_notes_found', lang)}</p>
+            <p className="text-xs text-slate-400 mt-1">{t('no_notes_found_sub', lang)}</p>
             <button
               onClick={() => handleOpenAdd(dateFilterMode === 'by_date' ? selectedDate : todayStr)}
               className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition"
             >
-              + નવી નોંધ ઉમેરો
+              {t('add_new_note', lang)}
             </button>
           </div>
         ) : (
@@ -379,7 +390,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
 
                       {isToday && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
-                          આજની નોંધ
+                          {t('today_notes', lang)}
                         </span>
                       )}
 
@@ -404,9 +415,16 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                           ? 'bg-amber-100 text-amber-700'
                           : 'text-slate-300 hover:text-slate-600'
                       }`}
-                      title={note.isPinned ? 'પિન હટાવો' : 'પિન કરો'}
+                      title={note.isPinned ? t('unpin', lang) : t('pin', lang)}
                     >
                       <Pin size={15} className={note.isPinned ? 'fill-current' : ''} />
+                    </button>
+                    <button
+                      onClick={() => whatsappService.shareNote(note, lang)}
+                      className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                      title={t('share_whatsapp', lang)}
+                    >
+                      <Share2 size={15} />
                     </button>
                     <button
                       onClick={() => handleOpenEdit(note)}
@@ -441,7 +459,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
           <div className="bg-white rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <h3 className="text-base font-bold text-slate-800">
-                {editingNote ? 'નોંધ સુધારો' : 'નવી નોંધ / એડવાન્સ ડાયરી'}
+                {editingNote ? t('edit_note', lang) : t('new_note_advance', lang)}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -471,7 +489,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                     onClick={() => setNoteDate(todayStr)}
                     className="px-2.5 py-2 rounded-xl bg-blue-100 text-blue-800 font-bold text-xs"
                   >
-                    આજે
+                    {t('today', lang)}
                   </button>
                   <button
                     type="button"
@@ -481,21 +499,21 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                     }}
                     className="px-2.5 py-2 rounded-xl bg-indigo-100 text-indigo-800 font-bold text-xs"
                   >
-                    આવતીકાલે
+                    {t('tomorrow', lang)}
                   </button>
                 </div>
                 {noteDate > todayStr && (
                   <p className="text-[10px] text-indigo-700 font-bold mt-1.5">
-                    ✨ આ એડવાન્સ નોંધ છે, જે {noteDate} ના ભવિષ્યના આયોજન માટે રહેશે.
+                    ✨ {lang === 'gu' ? `આ એડવાન્સ નોંધ છે, જે ${noteDate} ના ભવિષ્યના આયોજન માટે રહેશે.` : (lang === 'hi' ? `यह आगामी नोट है जो ${noteDate} की भविष्य योजना के लिए रहेगा।` : `✨ Advance note scheduled for ${noteDate}.`)}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">નોંધ શીર્ષક</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">{t('note_title', lang)}</label>
                 <input
                   type="text"
-                  placeholder="દા.ત. મીટિંગના અગત્યના મુદ્દા, ખરીદી યાદી..."
+                  placeholder={t('note_title_placeholder', lang)}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-blue-500 font-bold"
@@ -504,13 +522,13 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">કેટેગરી</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">{t('category', lang)}</label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
                   >
-                    {(CATEGORIES[lang] || CATEGORIES.gu).slice(1).map((c) => (
+                    {noteCategories.slice(1).map((c) => (
                       <option key={c} value={c}>
                         {c}
                       </option>
@@ -526,7 +544,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                       onChange={(e) => setIsPinned(e.target.checked)}
                       className="w-4 h-4 rounded text-blue-600"
                     />
-                    <span>ટોચ પર પિન કરો</span>
+                    <span>{t('pin_to_top', lang)}</span>
                   </label>
                 </div>
               </div>
@@ -534,7 +552,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
               {/* Content with Voice Typing */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700">વિગત / નોંધ લખાણ</label>
+                  <label className="text-xs font-bold text-slate-700">{t('note_content', lang)}</label>
                   <button
                     type="button"
                     onClick={toggleVoiceRecording}
@@ -545,12 +563,12 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                     }`}
                   >
                     {isListening ? <MicOff size={13} /> : <Mic size={13} />}
-                    <span>{isListening ? 'સાંભળે છે...' : t('voice_typing', lang)}</span>
+                    <span>{isListening ? t('listening', lang) : t('voice_typing', lang)}</span>
                   </button>
                 </div>
                 <textarea
                   rows={5}
-                  placeholder="તમારી નોંધ અહીં લખો અથવા માઇક બટન દબાવી બોલીને લખો..."
+                  placeholder={t('note_content_placeholder', lang)}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-blue-500 leading-relaxed"
@@ -563,13 +581,13 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
                 >
-                  રદ કરો
+                  {t('cancel', lang)}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs"
                 >
-                  સાચવો
+                  {t('save', lang)}
                 </button>
               </div>
             </form>

@@ -32,6 +32,7 @@ export default function App() {
   const [finance, setFinance] = useState(() => storageService.getFinance());
   const [accounts, setAccounts] = useState(() => storageService.getAccounts());
   const [khata, setKhata] = useState(() => storageService.getKhata());
+  const [events, setEvents] = useState(() => storageService.getEvents());
   const [water, setWater] = useState(() => storageService.getWater());
   const [shoppingList, setShoppingList] = useState(() => storageService.getShopping());
   const [theme, setTheme] = useState(() => storageService.getTheme());
@@ -94,6 +95,11 @@ export default function App() {
     storageService.saveKhata(updated);
   };
 
+  const handleSaveEvents = (updated) => {
+    setEvents(updated);
+    storageService.saveEvents(updated);
+  };
+
   const handleUpdateFitness = (updated) => {
     setFitness(updated);
     storageService.saveFitness(updated);
@@ -104,6 +110,7 @@ export default function App() {
     setUser(storageService.getUserProfile());
     setNotes(storageService.getNotes());
     setReminders(storageService.getReminders());
+    setEvents(storageService.getEvents());
     setMedicines(storageService.getMedicines());
     setMedicineLogs(storageService.getMedicineLogs());
     setFitness(storageService.getFitness());
@@ -337,6 +344,7 @@ export default function App() {
             user={user}
             notes={notes}
             reminders={reminders}
+            events={events}
             medicines={medicines}
             medicineLogs={medicineLogs}
             finance={finance}
@@ -359,14 +367,17 @@ export default function App() {
         )}
 
         {activeTab === 'notes' && (
-          <NotesTab notes={notes} onSaveNotes={handleSaveNotes} lang={lang} />
+          <NotesTab notes={notes} onSaveNotes={handleSaveNotes} lang={lang} user={user} />
         )}
 
         {activeTab === 'reminders' && (
           <RemindersTab
             reminders={reminders}
             onSaveReminders={handleSaveReminders}
+            events={events}
+            onSaveEvents={handleSaveEvents}
             onTriggerAlarm={handleCustomTriggerAlarm}
+            user={user}
             lang={lang}
           />
         )}
@@ -394,6 +405,7 @@ export default function App() {
             khata={khata}
             onSaveKhata={handleSaveKhata}
             onOpenCalculator={() => setIsCalculatorOpen(true)}
+            user={user}
             lang={lang}
           />
         )}
@@ -403,6 +415,7 @@ export default function App() {
             user={user}
             notes={notes}
             reminders={reminders}
+            events={events}
             medicines={medicines}
             medicineLogs={medicineLogs}
             finance={finance}
@@ -418,6 +431,7 @@ export default function App() {
             user={user}
             onUpdateUser={handleUpdateUser}
             onReloadAllData={handleReloadAllData}
+            lang={lang}
           />
         )}
       </main>
@@ -440,12 +454,14 @@ export default function App() {
         shoppingList={shoppingList}
         onSaveShopping={handleSaveShopping}
         onAddExpense={handleAddShoppingExpense}
+        lang={lang}
       />
 
       {/* Emergency & Bank Helpline Modal */}
       <EmergencyModal
         isOpen={isEmergencyOpen}
         onClose={() => setIsEmergencyOpen(false)}
+        lang={lang}
       />
 
       {/* Calculator Modal */}
@@ -453,6 +469,7 @@ export default function App() {
         isOpen={isCalculatorOpen}
         onClose={() => setIsCalculatorOpen(false)}
         onTransferAmount={handleTransferAmount}
+        lang={lang}
       />
 
       {/* Alarm Ringing Modal */}
@@ -461,6 +478,7 @@ export default function App() {
         onDismiss={handleDismissAlarm}
         onSnooze={handleSnoozeAlarm}
         onMarkDone={handleMarkAlarmDone}
+        lang={lang}
       />
 
       {/* PIN Lock Screen Modal */}
@@ -468,6 +486,7 @@ export default function App() {
         <PinLockModal
           correctPin={user?.pin || '1234'}
           onUnlock={() => setIsLocked(false)}
+          lang={lang}
         />
       )}
     </div>

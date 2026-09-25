@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Plus, CheckCircle2, Trash2, X, ArrowRight, IndianRupee } from 'lucide-react';
+import { t } from '../services/i18n';
 
 export default function ShoppingModal({
   isOpen,
@@ -7,6 +8,7 @@ export default function ShoppingModal({
   shoppingList,
   onSaveShopping,
   onAddExpense,
+  lang = 'gu',
 }) {
   const [newItem, setNewItem] = useState('');
   const [newPrice, setNewPrice] = useState('');
@@ -48,11 +50,12 @@ export default function ShoppingModal({
     .reduce((sum, item) => sum + (item.price || 0), 0);
 
   const handleTransferToFinance = () => {
+    const defaultCat = t('shopping_default_category', lang);
     if (purchasedAmount > 0) {
-      onAddExpense(purchasedAmount, 'કરિયાણું / ખરીદી (Shopping List)');
+      onAddExpense(purchasedAmount, defaultCat);
       onClose();
     } else if (totalAmount > 0) {
-      onAddExpense(totalAmount, 'કરિયાણું / ખરીદી (Shopping List)');
+      onAddExpense(totalAmount, defaultCat);
       onClose();
     }
   };
@@ -67,8 +70,8 @@ export default function ShoppingModal({
               <ShoppingBag size={20} />
             </span>
             <div>
-              <h3 className="font-bold text-base leading-tight">ખરીદી અને કરિયાણું યાદી</h3>
-              <p className="text-xs text-emerald-100">શાકભાજી, દૂધ અને સામાનનું લિસ્ટ</p>
+              <h3 className="font-bold text-base leading-tight">{t('shopping_modal_title', lang)}</h3>
+              <p className="text-xs text-emerald-100">{t('shopping_modal_sub', lang)}</p>
             </div>
           </div>
           <button
@@ -83,7 +86,7 @@ export default function ShoppingModal({
         <form onSubmit={handleAddItem} className="p-3 bg-slate-50 border-b border-slate-200 flex gap-2">
           <input
             type="text"
-            placeholder="વસ્તુનું નામ (e.g. દૂધ, બટાકા, ચા)..."
+            placeholder={t('item_name_placeholder', lang)}
             value={newItem}
             onChange={(e) => setNewItem(e.target.value)}
             className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
@@ -91,7 +94,7 @@ export default function ShoppingModal({
           />
           <input
             type="number"
-            placeholder="અંદાજ ₹"
+            placeholder={t('est_price', lang)}
             value={newPrice}
             onChange={(e) => setNewPrice(e.target.value)}
             className="w-20 px-2 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
@@ -101,7 +104,7 @@ export default function ShoppingModal({
             className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold active:scale-95 transition flex items-center gap-1 shadow-xs"
           >
             <Plus size={16} />
-            ઉમેરો
+            {t('add', lang)}
           </button>
         </form>
 
@@ -110,7 +113,7 @@ export default function ShoppingModal({
           {shoppingList.length === 0 ? (
             <div className="text-center py-8 text-slate-400 text-xs">
               <p className="text-2xl mb-1">🛒</p>
-              યાદી ખાલી છે. આજે ખરીદવાની વસ્તુઓ અહીં ઉમેરો!
+              {t('shopping_empty', lang)}
             </div>
           ) : (
             shoppingList.map((item) => (
@@ -166,10 +169,10 @@ export default function ShoppingModal({
         <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-2">
           <div className="flex justify-between items-center text-xs">
             <span className="text-slate-500 font-semibold">
-              ખરીદેલી વસ્તુઓ: ₹{purchasedAmount} / કુલ: ₹{totalAmount}
+              {t('purchased_items', lang)}: ₹{purchasedAmount} / {t('total_label', lang) || 'Total'}: ₹{totalAmount}
             </span>
             <span className="text-xs font-bold text-slate-800">
-              {shoppingList.filter((i) => i.isDone).length}/{shoppingList.length} પૂર્ણ
+              {shoppingList.filter((i) => i.isDone).length}/{shoppingList.length} {t('completed_label', lang)}
             </span>
           </div>
 
@@ -179,7 +182,7 @@ export default function ShoppingModal({
             className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-2xl text-xs font-bold shadow-md shadow-emerald-500/20 transition disabled:opacity-50"
           >
             <IndianRupee size={15} />
-            <span>આ ખરીદી સીધી ખર્ચમાં ઉમેરો (₹{purchasedAmount || totalAmount})</span>
+            <span>{t('add_purchase_expense', lang)} (₹{purchasedAmount || totalAmount})</span>
             <ArrowRight size={15} />
           </button>
         </div>

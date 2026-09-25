@@ -23,14 +23,22 @@ import {
   Footprints,
   Flame,
   Heart,
+  MessageCircle,
+  Smartphone,
+  Play,
+  Square,
+  X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t } from '../../services/i18n';
+import { whatsappService } from '../../services/whatsappService';
+import { pedometerService } from '../../services/pedometerService';
 
 export default function HomeTab({
   user,
   notes,
   reminders,
+  events = [],
   medicines,
   medicineLogs,
   finance,
@@ -113,6 +121,63 @@ export default function HomeTab({
   const fitnessHeartRate = fitness?.heartRate || 74;
   const fitnessDistance = fitness?.distanceKm || Number(((fitnessSteps * 0.76) / 1000).toFixed(1));
 
+  // Events & Celebrations (Birthdays & Anniversaries)
+  const todayMMDD = new Date().toISOString().slice(5, 10);
+  const tomorrowMMDD = new Date(Date.now() + 86400000).toISOString().slice(5, 10);
+
+  const todayEvents = (events || []).filter((e) => (e.date || '').slice(5, 10) === todayMMDD);
+  const tomorrowEvents = (events || []).filter((e) => (e.date || '').slice(5, 10) === tomorrowMMDD);
+
+  // Live Pedometer & Motion Sensor State
+  const [isSensorActive, setIsSensorActive] = React.useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = React.useState(false);
+  const [customStepsInput, setCustomStepsInput] = React.useState('');
+
+  const toggleStepSensor = async () => {
+    if (isSensorActive) {
+      pedometerService.stopTracking();
+      setIsSensorActive(false);
+    } else {
+      const started = await pedometerService.startTracking((stepInc) => {
+        const nextSteps = (fitness?.steps || 0) + stepInc;
+        const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
+        const nextCal = (fitness?.calories || 0) + Math.round(stepInc * 0.045);
+        onUpdateFitness?.({
+          ...fitness,
+          steps: nextSteps,
+          distanceKm: nextKm,
+          calories: nextCal,
+        });
+      });
+      if (started) {
+        setIsSensorActive(true);
+      } else {
+        alert(
+          lang === 'gu'
+            ? 'આ બ્રાઉઝરમાં મોશન સેન્સર પરમિશન નથી મળી અથવા ડિવાઇસ સેન્સર સપોર્ટ કરતું નથી. તમે ઝડપી બટન અથવા હેલ્થ એપ સિન્ક વાપરી શકો છો.'
+            : 'Motion sensor permission not granted or device not supported.'
+        );
+      }
+    }
+  };
+
+  const handleApplySyncSteps = (stepsCount) => {
+    const s = Number(stepsCount);
+    if (!isNaN(s) && s >= 0) {
+      const nextKm = Number(((s * 0.76) / 1000).toFixed(2));
+      const nextCal = Math.round(s * 0.045);
+      onUpdateFitness?.({
+        ...fitness,
+        steps: s,
+        distanceKm: nextKm,
+        calories: nextCal,
+      });
+      setIsSyncModalOpen(false);
+      setCustomStepsInput('');
+      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+    }
+  };
+
   const handleAddQuickSteps = () => {
     const nextSteps = fitnessSteps + 500;
     const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
@@ -143,7 +208,7 @@ export default function HomeTab({
           </span>
         </div>
         <h2 className="text-xl font-bold mt-1">
-          {t('greeting', lang)}, {user?.name || (lang === 'en' ? 'Friend' : 'મિત્ર')}! 🙏
+          {t('greeting', lang)}, {user?.name || t('default_user_name', lang)}! 🙏
         </h2>
         <p className="text-xs text-blue-100 mt-0.5 leading-relaxed">
           {t('greeting_sub', lang)}
@@ -153,21 +218,21 @@ export default function HomeTab({
         <div className="mt-4 pt-3 border-t border-white/20">
           <div className="grid grid-cols-4 gap-1.5 text-center mb-2.5">
             <div className="bg-white/10 rounded-xl p-1.5 backdrop-blur-xs">
-              <span className="text-[9px] text-cyan-200 block">🏦 બેંક</span>
+              <span className="text-[9px] text-cyan-200 block">🏦 {t('bank', lang)}</span>
               <span className="text-xs font-black text-white">₹{Number(accounts?.bankBalance || 0).toLocaleString()}</span>
             </div>
             <div className="bg-white/10 rounded-xl p-1.5 backdrop-blur-xs">
-              <span className="text-[9px] text-emerald-200 block">💵 રોકડ</span>
+              <span className="text-[9px] text-emerald-200 block">💵 {t('cash', lang)}</span>
               <span className="text-xs font-black text-white">₹{Number(accounts?.cashBalance || 0).toLocaleString()}</span>
             </div>
             <div className="bg-emerald-500/20 rounded-xl p-1.5 border border-emerald-400/20 backdrop-blur-xs">
-              <span className="text-[9px] text-emerald-200 block">📥 લેવાના</span>
+              <span className="text-[9px] text-emerald-200 block">📥 {t('to_receive_short', lang)}</span>
               <span className="text-xs font-black text-emerald-300">
                 ₹{khata.filter((k) => !k.isSettled && k.type === 'to_receive').reduce((s, k) => s + Number(k.amount || 0), 0).toLocaleString()}
               </span>
             </div>
             <div className="bg-red-500/20 rounded-xl p-1.5 border border-red-400/20 backdrop-blur-xs">
-              <span className="text-[9px] text-red-200 block">📤 આપવાના</span>
+              <span className="text-[9px] text-red-200 block">📤 {t('to_pay_short', lang)}</span>
               <span className="text-xs font-black text-red-300">
                 ₹{khata.filter((k) => !k.isSettled && k.type === 'to_pay').reduce((s, k) => s + Number(k.amount || 0), 0).toLocaleString()}
               </span>
@@ -176,7 +241,7 @@ export default function HomeTab({
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-blue-200">{t('total_available', lang) || 'કુલ ઉપલબ્ધ રકમ'}</p>
+              <p className="text-[10px] text-blue-200">{t('total_available', lang)}</p>
               <p className="text-base font-extrabold text-white">
                 ₹{(Number(accounts?.bankBalance || 0) + Number(accounts?.cashBalance || 0)).toLocaleString()}
               </p>
@@ -192,6 +257,89 @@ export default function HomeTab({
         </div>
       </div>
 
+      {/* Birthday & Anniversary Special Celebration Banner (Compact & Sleek) */}
+      {todayEvents.map((ev) => {
+        const isBday = ev.type === 'birthday';
+        const isAnniv = ev.type === 'anniversary';
+        const badgeText = isBday ? t('birthday_today', lang) : isAnniv ? t('anniversary_today', lang) : t('special_day', lang);
+
+        return (
+          <div
+            key={ev.id}
+            className="bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 rounded-2xl p-3 sm:p-3.5 text-white shadow-md shadow-pink-500/15 relative overflow-hidden border border-white/20 animate-in fade-in"
+          >
+            <div className="flex items-center justify-between gap-3">
+              {/* Left: Avatar + Details */}
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-xl shrink-0 shadow-xs">
+                  {isBday ? '🎂' : isAnniv ? '💍' : '🎉'}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                      <span>🎉</span>
+                      <span>{badgeText}</span>
+                    </span>
+                    {ev.relation && (
+                      <span className="text-[10px] text-pink-100 bg-white/15 px-1.5 py-0.5 rounded-md font-semibold">
+                        {ev.relation}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-sm font-bold text-white truncate mt-0.5 leading-snug">
+                    {ev.name}
+                  </h3>
+
+                  {ev.notes && (
+                    <p className="text-[10px] text-pink-100/90 truncate italic">
+                      "{ev.notes}"
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: Compact WhatsApp Wish Button */}
+              <button
+                onClick={() =>
+                  whatsappService.sendWish({
+                    name: ev.name,
+                    type: ev.type,
+                    phone: ev.phone,
+                    relation: ev.relation,
+                    senderName: user?.name,
+                    lang,
+                  })
+                }
+                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-700/25 transition shrink-0 whitespace-nowrap"
+              >
+                <MessageCircle size={15} />
+                <span>{t('wish_whatsapp', lang)}</span>
+              </button>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Upcoming tomorrow celebration notices */}
+      {tomorrowEvents.map((ev) => (
+        <div key={ev.id} className="bg-purple-50 border border-purple-200 rounded-2xl p-2.5 flex items-center justify-between text-xs text-purple-900 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🔔</span>
+            <span className="text-[11px]">
+              <strong>{t('tomorrow', lang)}:</strong> {ev.name} ({ev.type === 'birthday' ? `${t('birthday', lang)} 🎂` : `${t('anniversary', lang)} 💍`})
+            </span>
+          </div>
+          <button
+            onClick={() => onNavigate('reminders')}
+            className="text-[11px] font-bold text-purple-700 hover:underline"
+          >
+            {t('view_details', lang)}
+          </button>
+        </div>
+      ))}
+
       {/* Daily Thought / Suvichar Card */}
       {dailyQuote && (
         <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-3 flex items-start justify-between gap-2.5 shadow-2xs">
@@ -204,7 +352,7 @@ export default function HomeTab({
                   — {dailyQuote.author}
                 </span>
                 <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-200/60 text-amber-800 font-semibold">
-                  {lang === 'gu' ? '🌅 આજનો સુવિચાર' : lang === 'hi' ? '🌅 आज का सुविचार' : '🌅 Daily Thought'}
+                  {t('daily_thought', lang)}
                 </span>
               </div>
             </div>
@@ -212,7 +360,7 @@ export default function HomeTab({
           {onNextQuote && (
             <button
               onClick={onNextQuote}
-              title={lang === 'gu' ? 'નવો વિચાર જુઓ (Refresh)' : lang === 'hi' ? 'नया सुविचार देखें' : 'Next Quote'}
+              title={t('next_quote', lang)}
               className="p-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 active:rotate-180 transition shrink-0"
             >
               <RefreshCw size={13} />
@@ -294,7 +442,7 @@ export default function HomeTab({
             <div>
               <h3 className="text-sm font-bold text-slate-800">{t('fitness_card_title', lang)}</h3>
               <p className="text-[11px] text-slate-500">
-                {fitnessSteps.toLocaleString()} / {fitnessTarget.toLocaleString()} સ્ટેપ ({stepPct}%)
+                {fitnessSteps.toLocaleString()} / {fitnessTarget.toLocaleString()} {t('steps', lang)} ({stepPct}%)
               </p>
             </div>
           </div>
@@ -302,7 +450,7 @@ export default function HomeTab({
             onClick={() => onNavigate('health')}
             className="flex items-center gap-0.5 text-xs text-teal-600 font-bold hover:underline"
           >
-            <span>વિગત જુઓ</span>
+            <span>{t('view_details', lang)}</span>
             <ChevronRight size={14} />
           </button>
         </div>
@@ -315,42 +463,63 @@ export default function HomeTab({
           />
         </div>
 
-        {/* 4 Stats Chips */}
+        {/* 4 Stats Chips - High Contrast in Light & Dark Mode */}
         <div className="grid grid-cols-4 gap-2 pt-1 text-center">
-          <div className="bg-white/80 rounded-xl p-2 border border-slate-100 shadow-2xs">
-            <Footprints size={14} className="mx-auto text-teal-600 mb-0.5" />
-            <span className="text-xs font-black text-slate-800 block">{fitnessSteps.toLocaleString()}</span>
-            <span className="text-[9px] text-slate-400 font-semibold">સ્ટેપ્સ</span>
+          <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs">
+            <Footprints size={16} className="mx-auto text-teal-600 mb-0.5" />
+            <span className="text-xs font-black text-teal-800 block">{fitnessSteps.toLocaleString()}</span>
+            <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{t('steps_today', lang)}</span>
           </div>
 
-          <div className="bg-white/80 rounded-xl p-2 border border-slate-100 shadow-2xs">
-            <Flame size={14} className="mx-auto text-orange-500 mb-0.5" />
+          <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs">
+            <Flame size={16} className="mx-auto text-orange-500 mb-0.5" />
             <span className="text-xs font-black text-orange-600 block">{fitnessCalories}</span>
-            <span className="text-[9px] text-slate-400 font-semibold">kcal બર્ન</span>
+            <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{t('kcal_burned', lang)}</span>
           </div>
 
-          <div className="bg-white/80 rounded-xl p-2 border border-slate-100 shadow-2xs">
-            <Heart size={14} className="mx-auto text-red-500 mb-0.5" />
+          <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs">
+            <Heart size={16} className="mx-auto text-red-500 mb-0.5" />
             <span className="text-xs font-black text-red-600 block">{fitnessHeartRate}</span>
-            <span className="text-[9px] text-slate-400 font-semibold">BPM પલ્સ</span>
+            <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{t('bpm_pulse', lang)}</span>
           </div>
 
-          <div className="bg-white/80 rounded-xl p-2 border border-slate-100 shadow-2xs">
-            <span className="text-xs block mb-0.5">📏</span>
+          <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs">
+            <span className="text-base block mb-0.5">📏</span>
             <span className="text-xs font-black text-slate-800 block">{fitnessDistance} km</span>
-            <span className="text-[9px] text-slate-400 font-semibold">અંતર</span>
+            <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{t('distance_walked', lang)}</span>
           </div>
         </div>
 
-        {/* Quick +500 steps button */}
-        <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
-          <span className="text-[11px] text-slate-500">ઝડપી સ્ટેપ ઉમેરો:</span>
+        {/* Live Step Sensor & Direct Sync Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2 border-t border-slate-100 text-xs">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={toggleStepSensor}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition active:scale-95 text-[11px] ${
+                isSensorActive
+                  ? 'bg-emerald-600 text-white shadow-xs animate-pulse'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+              }`}
+            >
+              {isSensorActive ? <Square size={11} /> : <Play size={11} />}
+              <span>{isSensorActive ? t('live_sensor_active', lang) : t('live_sensor_start', lang)}</span>
+            </button>
+
+            <button
+              onClick={() => setIsSyncModalOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-200 transition active:scale-95 text-[11px]"
+            >
+              <Smartphone size={12} />
+              <span>{t('sync_health_app', lang)}</span>
+            </button>
+          </div>
+
           <button
             onClick={handleAddQuickSteps}
-            className="flex items-center gap-1 px-3 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold rounded-lg border border-teal-200 transition active:scale-95"
+            className="flex items-center gap-1 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold rounded-xl border border-teal-200 transition active:scale-95 text-[11px]"
           >
             <Plus size={12} />
-            <span>+૫૦૦ સ્ટેપ્સ</span>
+            <span>{t('add_500_steps', lang)}</span>
           </button>
         </div>
       </div>
@@ -375,7 +544,7 @@ export default function HomeTab({
               onClick={handleMinusWater}
               disabled={glasses === 0}
               className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 active:scale-95 transition disabled:opacity-30"
-              title="-૧ ગ્લાસ"
+              title="-1"
             >
               <Minus size={14} />
             </button>
@@ -422,9 +591,9 @@ export default function HomeTab({
               <Pill size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-800">આજની દવાઓનું રૂટિન</h3>
+              <h3 className="text-sm font-bold text-slate-800">{t('today_medicines_routine', lang)}</h3>
               <p className="text-[11px] text-slate-500">
-                {takenMedsCount}/{todayMedicines.length} દવાઓ લેવાઈ છે
+                {takenMedsCount}/{todayMedicines.length} {t('medicines_taken_summary', lang)}
               </p>
             </div>
           </div>
@@ -432,7 +601,7 @@ export default function HomeTab({
             onClick={() => onNavigate('medicine')}
             className="text-xs text-teal-600 font-semibold hover:underline"
           >
-            બધી જુઓ
+            {t('view_all', lang)}
           </button>
         </div>
 
@@ -490,13 +659,13 @@ export default function HomeTab({
                             : 'text-emerald-700'
                         }`}
                       >
-                        {med.mealRelation === 'before_food' ? 'ભૂખ્યા પેટે' : 'જમ્યા પછી'}
+                        {med.mealRelation === 'before_food' ? t('before_food', lang) : t('after_food', lang)}
                       </span>
                     </div>
                   </div>
                 </div>
                 <span className="text-[10px] px-2 py-1 rounded-lg bg-white border border-slate-200 font-semibold text-slate-600">
-                  {isTaken ? 'લેવાઈ ગઈ' : 'બાકી'}
+                  {isTaken ? t('taken', lang) : t('not_taken', lang)}
                 </span>
               </div>
             );
@@ -514,7 +683,7 @@ export default function HomeTab({
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-md">
-                  {nextMeetingOrBank.type === 'bank' ? '🏦 બેંકનું અગત્યનું કામ' : '💼 મીટિંગ એલર્ટ'}
+                  {nextMeetingOrBank.type === 'bank' ? t('bank_important_work', lang) : t('meeting_alert', lang)}
                 </span>
                 <h4 className="text-sm font-bold text-slate-800 mt-1">
                   {nextMeetingOrBank.title}
@@ -539,13 +708,13 @@ export default function HomeTab({
               className="text-xs font-semibold text-emerald-700 flex items-center gap-1 hover:underline"
             >
               <CheckCircle2 size={14} />
-              પૂરું થયું તરીકે માર્ક કરો
+              {t('mark_as_done', lang)}
             </button>
             <button
               onClick={() => onNavigate('reminders')}
               className="text-xs text-amber-800 font-semibold flex items-center gap-0.5"
             >
-              બધા કામો જુઓ
+              {t('view_all_tasks', lang)}
               <ChevronRight size={14} />
             </button>
           </div>
@@ -560,27 +729,27 @@ export default function HomeTab({
               <IndianRupee size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-800">મહિનાનો હિસાબ સારાંશ</h3>
-              <p className="text-[11px] text-slate-500">આવક, ખર્ચ અને બચત</p>
+              <h3 className="text-sm font-bold text-slate-800">{t('monthly_finance_summary', lang)}</h3>
+              <p className="text-[11px] text-slate-500">{t('income_expense_savings', lang)}</p>
             </div>
           </div>
           <button
             onClick={() => onNavigate('reports')}
             className="text-xs text-blue-600 font-semibold hover:underline"
           >
-            PDF રિપોર્ટ
+            {t('pdf_report', lang)}
           </button>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-3">
-            <p className="text-[10px] font-semibold text-emerald-700 uppercase">કુલ આવક</p>
+            <p className="text-[10px] font-semibold text-emerald-700 uppercase">{t('total_income', lang)}</p>
             <p className="text-base font-bold text-emerald-900 mt-0.5">
               ₹{totalIncome.toLocaleString()}
             </p>
           </div>
           <div className="bg-red-50/60 border border-red-100 rounded-2xl p-3">
-            <p className="text-[10px] font-semibold text-red-700 uppercase">કુલ ખર્ચ</p>
+            <p className="text-[10px] font-semibold text-red-700 uppercase">{t('total_expense', lang)}</p>
             <p className="text-base font-bold text-red-900 mt-0.5">
               ₹{totalExpense.toLocaleString()}
             </p>
@@ -591,16 +760,16 @@ export default function HomeTab({
       {/* Priority 4: Recent Notes */}
       <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-xs">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold text-slate-800">તાજેતરની નોંધ / ડાયરી</h3>
+          <h3 className="text-sm font-bold text-slate-800">{t('recent_notes', lang)}</h3>
           <button
             onClick={() => onNavigate('notes')}
             className="text-xs text-blue-600 font-semibold hover:underline"
           >
-            બધી નોંધ ({notes.length})
+            {t('all_notes', lang)} ({notes.length})
           </button>
         </div>
         {notes.length === 0 ? (
-          <p className="text-xs text-slate-400 py-3 text-center">કોઈ નોંધ નથી. નવી નોંધ ઉમેરો!</p>
+          <p className="text-xs text-slate-400 py-3 text-center">{t('no_notes_yet', lang)}</p>
         ) : (
           <div className="space-y-2">
             {notes.slice(0, 2).map((note) => (
@@ -621,6 +790,67 @@ export default function HomeTab({
           </div>
         )}
       </div>
+
+      {/* Sync Steps Modal (Mobile Health App Sync) */}
+      {isSyncModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📱</span>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">{t('sync_health_modal_title', lang)}</h3>
+                  <p className="text-[10px] text-slate-500">Google Fit, Apple Health, Samsung Health</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsSyncModalOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {t('sync_health_desc', lang)}
+            </p>
+
+            {/* Quick preset step counts */}
+            <div className="grid grid-cols-4 gap-1.5">
+              {[2000, 5000, 8000, 10000].map((count) => (
+                <button
+                  key={count}
+                  onClick={() => handleApplySyncSteps(count)}
+                  className="py-2 px-1 text-center bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-xl font-bold text-xs border border-teal-200 active:scale-95 transition"
+                >
+                  {count.toLocaleString()}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom input */}
+            <div className="pt-2">
+              <label className="text-xs font-bold text-slate-700 block mb-1">{t('custom_steps_label', lang)}</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="e.g. 6450"
+                  value={customStepsInput}
+                  onChange={(e) => setCustomStepsInput(e.target.value)}
+                  className="flex-1 text-sm font-bold p-2.5 rounded-xl border border-slate-200 focus:outline-teal-500"
+                />
+                <button
+                  onClick={() => handleApplySyncSteps(customStepsInput)}
+                  disabled={!customStepsInput}
+                  className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition disabled:opacity-40"
+                >
+                  {t('save_steps', lang)}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

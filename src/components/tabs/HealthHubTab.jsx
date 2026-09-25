@@ -53,6 +53,34 @@ const MEDICINE_SLOTS = {
     { id: 'evening', label: '🌇 Evening', icon: Sunset },
     { id: 'night', label: '🌙 Night', icon: Moon },
   ],
+  es: [
+    { id: 'all', label: 'Todas las Medicinas', icon: null },
+    { id: 'morning', label: '🌅 Mañana', icon: Sunrise },
+    { id: 'afternoon', label: '☀️ Tarde', icon: Sun },
+    { id: 'evening', label: '🌇 Tarde-Noche', icon: Sunset },
+    { id: 'night', label: '🌙 Noche', icon: Moon },
+  ],
+  fr: [
+    { id: 'all', label: 'Tous Médicaments', icon: null },
+    { id: 'morning', label: '🌅 Matin', icon: Sunrise },
+    { id: 'afternoon', label: '☀️ Midi', icon: Sun },
+    { id: 'evening', label: '🌇 Soir', icon: Sunset },
+    { id: 'night', label: '🌙 Nuit', icon: Moon },
+  ],
+  de: [
+    { id: 'all', label: 'Alle Medikamente', icon: null },
+    { id: 'morning', label: '🌅 Morgen', icon: Sunrise },
+    { id: 'afternoon', label: '☀️ Mittag', icon: Sun },
+    { id: 'evening', label: '🌇 Abend', icon: Sunset },
+    { id: 'night', label: '🌙 Nacht', icon: Moon },
+  ],
+  ar: [
+    { id: 'all', label: 'جميع الأدوية', icon: null },
+    { id: 'morning', label: '🌅 صباحاً', icon: Sunrise },
+    { id: 'afternoon', label: '☀️ ظهراً', icon: Sun },
+    { id: 'evening', label: '🌇 مساءً', icon: Sunset },
+    { id: 'night', label: '🌙 ليلاً', icon: Moon },
+  ],
 };
 
 const WORKOUT_TYPES = {
@@ -80,6 +108,38 @@ const WORKOUT_TYPES = {
     { id: 'cycle', label: '🚴 Cycling', ratePerMin: 7.5 },
     { id: 'cardio', label: '🤸 Cardio & Aerobics', ratePerMin: 8.2 },
   ],
+  es: [
+    { id: 'walk', label: '🚶 Caminata Matutina', ratePerMin: 4.2 },
+    { id: 'run', label: '🏃 Correr / Jogging', ratePerMin: 9.5 },
+    { id: 'gym', label: '🏋️ Gimnasio y Pesas', ratePerMin: 6.8 },
+    { id: 'yoga', label: '🧘 Yoga y Meditación', ratePerMin: 3.5 },
+    { id: 'cycle', label: '🚴 Ciclismo', ratePerMin: 7.5 },
+    { id: 'cardio', label: '🤸 Cardio y Aeróbicos', ratePerMin: 8.2 },
+  ],
+  fr: [
+    { id: 'walk', label: '🚶 Marche Matinale', ratePerMin: 4.2 },
+    { id: 'run', label: '🏃 Course / Jogging', ratePerMin: 9.5 },
+    { id: 'gym', label: '🏋️ Salle de Sport & Musculation', ratePerMin: 6.8 },
+    { id: 'yoga', label: '🧘 Yoga & Méditation', ratePerMin: 3.5 },
+    { id: 'cycle', label: '🚴 Cyclisme / Vélo', ratePerMin: 7.5 },
+    { id: 'cardio', label: '🤸 Cardio & Aérobic', ratePerMin: 8.2 },
+  ],
+  de: [
+    { id: 'walk', label: '🚶 Morgenspaziergang', ratePerMin: 4.2 },
+    { id: 'run', label: '🏃 Laufen / Joggen', ratePerMin: 9.5 },
+    { id: 'gym', label: '🏋️ Fitnessstudio & Krafttraining', ratePerMin: 6.8 },
+    { id: 'yoga', label: '🧘 Yoga & Meditation', ratePerMin: 3.5 },
+    { id: 'cycle', label: '🚴 Radfahren', ratePerMin: 7.5 },
+    { id: 'cardio', label: '🤸 Kardio & Aerobic', ratePerMin: 8.2 },
+  ],
+  ar: [
+    { id: 'walk', label: '🚶 المشي الصباحي', ratePerMin: 4.2 },
+    { id: 'run', label: '🏃 الجري والركض', ratePerMin: 9.5 },
+    { id: 'gym', label: '🏋️ صالة الألعاب ورفع الأثقال', ratePerMin: 6.8 },
+    { id: 'yoga', label: '🧘 اليوغا والتأمل', ratePerMin: 3.5 },
+    { id: 'cycle', label: '🚴 ركوب الدراجة', ratePerMin: 7.5 },
+    { id: 'cardio', label: '🤸 تمارين القلب والأيروبيك', ratePerMin: 8.2 },
+  ],
 };
 
 export default function HealthHubTab({
@@ -96,8 +156,8 @@ export default function HealthHubTab({
   const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
   const todayStr = new Date().toISOString().split('T')[0];
 
-  const currentMedicineSlots = MEDICINE_SLOTS[lang] || MEDICINE_SLOTS.gu;
-  const currentWorkoutTypes = WORKOUT_TYPES[lang] || WORKOUT_TYPES.gu;
+  const currentMedicineSlots = MEDICINE_SLOTS[lang] || MEDICINE_SLOTS.en || MEDICINE_SLOTS.gu;
+  const currentWorkoutTypes = WORKOUT_TYPES[lang] || WORKOUT_TYPES.en || WORKOUT_TYPES.gu;
 
   // ----------------------------------------------------
   // 1. MEDICINES SUB-TAB STATE & LOGIC
@@ -177,7 +237,13 @@ export default function HealthHubTab({
   };
 
   const handleDeleteMed = (id) => {
-    if (window.confirm('શું તમે આ દવા હટાવવા માંગો છો?')) {
+    const confirmMsg =
+      lang === 'gu'
+        ? 'શું તમે આ દવા હટાવવા માંગો છો?'
+        : lang === 'hi'
+        ? 'क्या आप इस दवा को हटाना चाहते हैं?'
+        : 'Do you want to delete this medicine?';
+    if (window.confirm(confirmMsg)) {
       onSaveMedicines(medicines.filter((m) => m.id !== id));
     }
   };
@@ -231,7 +297,7 @@ export default function HealthHubTab({
     const newWorkout = {
       id: 'w-' + Date.now(),
       type: selectedWorkoutType,
-      name: typeObj?.label || 'કસરત',
+      name: typeObj?.label || (lang === 'gu' ? 'કસરત' : 'Workout'),
       durationMinutes: Number(workoutDuration),
       calories: calculatedCals,
       time: nowTime,
@@ -270,13 +336,10 @@ export default function HealthHubTab({
   const handleTapPulse = () => {
     const now = performance.now();
     setIsTapping(true);
-
     if (tapTimeoutRef.current) {
       clearTimeout(tapTimeoutRef.current);
     }
-
     setTapTimes((prev) => {
-      // Keep only taps in the last 4 seconds
       const filtered = [...prev, now].filter((t) => now - t < 4000);
       if (filtered.length >= 3) {
         const intervals = [];
@@ -294,7 +357,6 @@ export default function HealthHubTab({
       return filtered;
     });
 
-    // Reset tapping visual after 1.5s of inactivity
     tapTimeoutRef.current = setTimeout(() => {
       setIsTapping(false);
     }, 1500);
@@ -305,7 +367,13 @@ export default function HealthHubTab({
       ...fitness,
       heartRate: liveBpm,
     });
-    alert(`હાર્ટ રેટ ${liveBpm} BPM સફળતાપૂર્વક સાચવવામાં આવ્યો!`);
+    alert(
+      lang === 'gu'
+        ? `હાર્ટ રેટ ${liveBpm} BPM સફળતાપૂર્વક સાચવવામાં આવ્યો!`
+        : lang === 'hi'
+        ? `हार्ट रेट ${liveBpm} BPM सफलतापूर्वक सहेजा गया!`
+        : `Heart rate ${liveBpm} BPM saved successfully!`
+    );
   };
 
   // Blood Pressure & Sugar & Sleep
@@ -323,20 +391,38 @@ export default function HealthHubTab({
       bloodSugar: { fasting: Number(sugarFasting), postMeal: Number(sugarPostMeal) },
       sleepHours: Number(sleepHours),
     });
-    alert('વાઇટલ્સ અને હેલ્થ લૉગ સફળતાપૂર્વક અપડેટ થયા!');
+    alert(
+      lang === 'gu'
+        ? 'વાઇટલ્સ અને હેલ્થ લૉગ સફળતાપૂર્વક અપડેટ થયા!'
+        : lang === 'hi'
+        ? 'वाइटल्स और हेल्थ लॉग सफलतापूर्वक अपडेट हुए!'
+        : 'Vitals and health log updated successfully!'
+    );
   };
 
   const getBpCategory = (sys, dia) => {
     if (sys < 120 && dia < 80) {
-      return { label: 'સામાન્ય (Normal)', color: 'text-emerald-700 bg-emerald-100 border-emerald-300' };
+      return {
+        label: lang === 'gu' ? 'સામાન્ય (Normal)' : (lang === 'hi' ? 'सामान्य (Normal)' : 'Normal'),
+        color: 'text-emerald-700 bg-emerald-100 border-emerald-300',
+      };
     }
     if (sys <= 129 && dia < 80) {
-      return { label: 'પ્રી-હાયપરટેન્શન (Elevated)', color: 'text-amber-700 bg-amber-100 border-amber-300' };
+      return {
+        label: lang === 'gu' ? 'પ્રી-હાયપરટેન્શન (Elevated)' : (lang === 'hi' ? 'प्री-हाइपरटेंशन (Elevated)' : 'Elevated'),
+        color: 'text-amber-700 bg-amber-100 border-amber-300',
+      };
     }
     if (sys <= 139 || dia <= 89) {
-      return { label: 'સ્ટેજ-૧ હાઇ BP (Hypertension 1)', color: 'text-orange-700 bg-orange-100 border-orange-300' };
+      return {
+        label: lang === 'gu' ? 'સ્ટેજ-૧ હાઇ BP (Hypertension 1)' : (lang === 'hi' ? 'स्टेज-1 हाई BP' : 'Stage 1 Hypertension'),
+        color: 'text-orange-700 bg-orange-100 border-orange-300',
+      };
     }
-    return { label: 'સ્ટેજ-૨ હાઇ BP (Hypertension 2)', color: 'text-red-700 bg-red-100 border-red-300' };
+    return {
+      label: lang === 'gu' ? 'સ્ટેજ-૨ હાઇ BP (Hypertension 2)' : (lang === 'hi' ? 'स्टेज-2 हाई BP' : 'Stage 2 Hypertension'),
+      color: 'text-red-700 bg-red-100 border-red-300',
+    };
   };
 
   // ----------------------------------------------------
@@ -351,33 +437,33 @@ export default function HealthHubTab({
   const getBmiCategory = (bmi) => {
     if (bmi < 18.5) {
       return {
-        label: 'ઓછું વજન (Underweight)',
+        label: lang === 'gu' ? 'ઓછું વજન (Underweight)' : (lang === 'hi' ? 'कम वजन (Underweight)' : 'Underweight'),
         color: 'text-amber-600 bg-amber-50 border-amber-300',
         barColor: 'bg-amber-500',
-        advice: 'પૌષ્ટિક આહાર, ડ્રાયફ્રૂટ્સ, દૂધ અને પ્રોટીનયુક્ત ખોરાક વધારવો હિતાવહ છે.',
+        advice: lang === 'gu' ? 'પૌષ્ટિક આહાર, ડ્રાયફ્રૂટ્સ, દૂધ અને પ્રોટીનયુક્ત ખોરાક વધારવો હિતાવહ છે.' : (lang === 'hi' ? 'पौष्टिक आहार, ड्राई फ्रूट्स और प्रोटीन युक्त भोजन बढ़ाना उचित है।' : 'Increase nutritious food, dry fruits, milk and protein intake.'),
       };
     }
     if (bmi <= 24.9) {
       return {
-        label: 'સામાન્ય અને તંદુરસ્ત (Normal / Healthy)',
+        label: lang === 'gu' ? 'સામાન્ય અને તંદુરસ્ત (Normal / Healthy)' : (lang === 'hi' ? 'सामान्य और स्वस्थ (Normal)' : 'Normal / Healthy'),
         color: 'text-emerald-700 bg-emerald-50 border-emerald-300',
         barColor: 'bg-emerald-500',
-        advice: 'ઉત્તમ! તમારું વજન સંપૂર્ણ તંદુરસ્ત રેન્જમાં છે. આ જ રૂટિન જાળવી રાખો.',
+        advice: lang === 'gu' ? 'ઉત્તમ! તમારું વજન સંપૂર્ણ તંદુરસ્ત રેન્જમાં છે. આ જ રૂટિન જાળવી રાખો.' : (lang === 'hi' ? 'उत्तम! आपका वजन स्वस्थ सीमा में है। इसी दिनचर्या को बनाए रखें।' : 'Great! Your weight is in a healthy range. Keep maintaining this routine.'),
       };
     }
     if (bmi <= 29.9) {
       return {
-        label: 'વધુ વજન (Overweight)',
+        label: lang === 'gu' ? 'વધુ વજન (Overweight)' : (lang === 'hi' ? 'अधिक वजन (Overweight)' : 'Overweight'),
         color: 'text-orange-700 bg-orange-50 border-orange-300',
         barColor: 'bg-orange-500',
-        advice: 'રોજિંદા ૮,૦૦૦+ સ્ટેપ્સ ચાલો, ગળપણ-ચરબી ઘટાડો અને કાર્ડિયો કસરત કરો.',
+        advice: lang === 'gu' ? 'રોજિંદા ૮,૦૦૦+ સ્ટેપ્સ ચાલો, ગળપણ-ચરબી ઘટાડો અને કાર્ડિયો કસરત કરો.' : (lang === 'hi' ? 'रोजाना 8,000+ कदम चलें, मीठा व वसा कम करें और कार्डियो करें।' : 'Walk 8,000+ daily steps, cut down sugars/fats, and do cardio exercise.'),
       };
     }
     return {
-      label: 'મેદસ્વીતા (Obese)',
+      label: lang === 'gu' ? 'મેદસ્વીતા (Obese)' : (lang === 'hi' ? 'मोटापा (Obese)' : 'Obese'),
       color: 'text-red-700 bg-red-50 border-red-300',
       barColor: 'bg-red-500',
-      advice: 'ડૉક્ટર/ન્યુટ્રિશનિસ્ટની સલાહ મુજબ કેલરી-નિયંત્રિત ડાયેટ અને નિયમિત કસરત શરૂ કરો.',
+      advice: lang === 'gu' ? 'ડૉક્ટર/ન્યુટ્રિશનિસ્ટની સલાહ મુજબ કેલરી-નિયંત્રિત ડાયેટ અને નિયમિત કસરત શરૂ કરો.' : (lang === 'hi' ? 'डॉक्टर/आहार विशेषज्ञ की सलाह अनुसार कैलोरी-नियंत्रित आहार लें।' : 'Consult a doctor or nutritionist for a calorie-controlled diet and regular exercise.'),
     };
   };
 
@@ -391,7 +477,13 @@ export default function HealthHubTab({
       weightKg: Number(weightKg),
       heightCm: Number(heightCm),
     });
-    alert('વજન અને ઊંચાઈ સફળતાપૂર્વક સાચવવામાં આવી!');
+    alert(
+      lang === 'gu'
+        ? 'વજન અને ઊંચાઈ સફળતાપૂર્વક સાચવવામાં આવી!'
+        : lang === 'hi'
+        ? 'वजन और ऊंचाई सफलतापूर्वक सहेजी गई!'
+        : 'Weight and height saved successfully!'
+    );
   };
 
   return (
@@ -413,19 +505,19 @@ export default function HealthHubTab({
         {/* Quick Highlights Grid */}
         <div className="grid grid-cols-4 gap-2 mt-4 pt-3 border-t border-white/20 text-center">
           <div className="bg-white/10 rounded-xl p-2 backdrop-blur-xs">
-            <span className="text-[10px] text-teal-200 block">👟 સ્ટેપ્સ</span>
+            <span className="text-[10px] text-teal-200 block">👟 {t('steps_walked', lang)}</span>
             <span className="text-sm font-extrabold">{steps.toLocaleString()}</span>
           </div>
           <div className="bg-white/10 rounded-xl p-2 backdrop-blur-xs">
-            <span className="text-[10px] text-teal-200 block">🔥 બર્ન કેલરી</span>
+            <span className="text-[10px] text-teal-200 block">🔥 {t('calories_burned', lang)}</span>
             <span className="text-sm font-extrabold">{totalCalories} kcal</span>
           </div>
           <div className="bg-white/10 rounded-xl p-2 backdrop-blur-xs">
-            <span className="text-[10px] text-teal-200 block">💓 હાર્ટ રેટ</span>
+            <span className="text-[10px] text-teal-200 block">💓 {t('heart_rate', lang)}</span>
             <span className="text-sm font-extrabold">{fitness?.heartRate || liveBpm} BPM</span>
           </div>
           <div className="bg-white/10 rounded-xl p-2 backdrop-blur-xs">
-            <span className="text-[10px] text-teal-200 block">💊 દવાઓ</span>
+            <span className="text-[10px] text-teal-200 block">💊 {t('tab_medicine', lang)}</span>
             <span className="text-sm font-extrabold">{takenCount}/{activeMeds.length}</span>
           </div>
         </div>
@@ -489,9 +581,9 @@ export default function HealthHubTab({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-slate-800">દવાઓનું દૈનિક આયોજન</h3>
+              <h3 className="text-sm font-bold text-slate-800">{t('daily_medicine_plan', lang)}</h3>
               <p className="text-[11px] text-slate-500">
-                {takenCount} માંથી {activeMeds.length} દવાઓ લેવાઈ ગઈ છે ({Math.round(activeMeds.length ? (takenCount / activeMeds.length) * 100 : 0)}%)
+                {takenCount} / {activeMeds.length} {t('medicines_taken_summary', lang)} ({Math.round(activeMeds.length ? (takenCount / activeMeds.length) * 100 : 0)}%)
               </p>
             </div>
             <button
@@ -499,7 +591,7 @@ export default function HealthHubTab({
               className="flex items-center gap-1 bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-xs active:scale-95 transition"
             >
               <Plus size={14} />
-              નવી દવા
+              {t('new_medicine', lang)}
             </button>
           </div>
 
@@ -530,12 +622,12 @@ export default function HealthHubTab({
             {filteredMedicines.length === 0 ? (
               <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-300 p-6">
                 <Pill size={36} className="mx-auto text-slate-300 mb-2" />
-                <p className="text-xs font-semibold text-slate-600">આ સ્લોટમાં કોઈ દવા શેડ્યૂલ નથી.</p>
+                <p className="text-xs font-semibold text-slate-600">{t('no_meds_in_slot', lang)}</p>
                 <button
                   onClick={handleOpenAddMed}
                   className="mt-3 text-xs text-teal-600 font-bold hover:underline"
                 >
-                  + નવી દવા ઉમેરો
+                  {t('add_new_med', lang)}
                 </button>
               </div>
             ) : (
@@ -589,7 +681,7 @@ export default function HealthHubTab({
                                   : 'bg-emerald-100 text-emerald-800'
                               }`}
                             >
-                              {med.mealRelation === 'before_food' ? '🟢 ભૂખ્યા પેટે' : '🟡 જમ્યા પછી'}
+                              {med.mealRelation === 'before_food' ? t('before_food', lang) : t('after_food', lang)}
                             </span>
                           </div>
 
@@ -607,7 +699,7 @@ export default function HealthHubTab({
                           <button
                             onClick={() =>
                               onTriggerAlarm({
-                                title: `દવાનો સમય: ${med.name}`,
+                                title: `${t('tab_medicine', lang)}: ${med.name}`,
                                 time: med.time,
                                 type: 'medicine',
                                 mealRelation: med.mealRelation,
@@ -615,7 +707,7 @@ export default function HealthHubTab({
                               })
                             }
                             className="p-1.5 rounded-lg hover:bg-slate-100 text-teal-600 transition"
-                            title="ટેસ્ટ એલાર્મ વગાડો"
+                            title={t('test_alarm_ring', lang)}
                           >
                             <Volume2 size={15} />
                           </button>
@@ -657,12 +749,12 @@ export default function HealthHubTab({
                 <div>
                   <h3 className="text-sm font-bold text-slate-800">{t('steps_today', lang)}</h3>
                   <p className="text-[11px] text-slate-500">
-                    {t('step_goal', lang)}: {stepTarget.toLocaleString()} સ્ટેપ
+                    {t('step_goal', lang)}: {stepTarget.toLocaleString()}
                   </p>
                 </div>
               </div>
               <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-teal-50 text-teal-700 border border-teal-200">
-                {stepProgress}% પૂર્ણ
+                {stepProgress}% {t('completed', lang)}
               </span>
             </div>
 
@@ -672,7 +764,7 @@ export default function HealthHubTab({
                 {steps.toLocaleString()}
               </span>
               <span className="text-xs font-semibold text-slate-500 block mt-0.5">
-                સ્ટેપ્સ ચાલ્યા / લક્ષ્ય {stepTarget.toLocaleString()}
+                {steps.toLocaleString()} / {stepTarget.toLocaleString()}
               </span>
 
               {/* Progress bar */}
@@ -695,7 +787,7 @@ export default function HealthHubTab({
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🔥</span>
                   <div>
-                    <span className="text-[10px] text-slate-500 block">ચાલવાની કેલરી</span>
+                    <span className="text-[10px] text-slate-500 block">{t('walking_calories', lang)}</span>
                     <span className="text-sm font-bold text-orange-600">{stepCalories} kcal</span>
                   </div>
                 </div>
@@ -704,7 +796,7 @@ export default function HealthHubTab({
 
             {/* Quick Step Buttons */}
             <div>
-              <p className="text-xs font-bold text-slate-700 mb-2">ઝડપી સ્ટેપ ઉમેરો (Quick Steps):</p>
+              <p className="text-xs font-bold text-slate-700 mb-2">{t('quick_steps', lang)}</p>
               <div className="grid grid-cols-4 gap-2">
                 {[250, 500, 1000, 2000].map((inc) => (
                   <button
@@ -729,7 +821,7 @@ export default function HealthHubTab({
                 <span className="text-xs text-orange-100 font-semibold">{t('calories_burned', lang)}</span>
                 <h3 className="text-2xl font-black">{totalCalories} kcal</h3>
                 <span className="text-[10px] text-orange-100">
-                  (ચાલવું: {stepCalories} + વર્કઆઉટ: {workoutCalories} kcal)
+                  ({t('steps_walked', lang)}: {stepCalories} + {t('gym_workouts', lang)}: {workoutCalories} kcal)
                 </span>
               </div>
             </div>
@@ -744,13 +836,13 @@ export default function HealthHubTab({
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-800">{t('gym_workouts', lang)}</h3>
-                <p className="text-[11px] text-slate-500">કસરત પસંદ કરી સમય લખો, કેલરી આપમેળે ગણાશે</p>
+                <p className="text-[11px] text-slate-500">{t('gym_workout_sub', lang)}</p>
               </div>
             </div>
 
             <form onSubmit={handleAddWorkout} className="space-y-3 pt-1">
               <div>
-                <label className="text-[11px] font-bold text-slate-600 block mb-1">કસરતનો પ્રકાર:</label>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">{t('exercise_type', lang)}</label>
                 <select
                   value={selectedWorkoutType}
                   onChange={(e) => setSelectedWorkoutType(e.target.value)}
@@ -758,7 +850,7 @@ export default function HealthHubTab({
                 >
                   {currentWorkoutTypes.map((w) => (
                     <option key={w.id} value={w.id}>
-                      {w.label} (~{Math.round(w.ratePerMin * 30)} kcal/૩૦ મિ.)
+                      {w.label} (~{Math.round(w.ratePerMin * 30)} kcal / 30m)
                     </option>
                   ))}
                 </select>
@@ -780,7 +872,7 @@ export default function HealthHubTab({
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-600 block mb-1">અંદાજિત કેલરી:</label>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">{t('est_calories', lang)}</label>
                   <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-extrabold text-amber-900 text-center">
                     ~{Math.round((workoutDuration || 0) * (currentWorkoutTypes.find((w) => w.id === selectedWorkoutType)?.ratePerMin || 5))} kcal
                   </div>
@@ -800,7 +892,7 @@ export default function HealthHubTab({
             {workouts.length > 0 && (
               <div className="pt-2 border-t border-slate-100 space-y-2">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                  આજની કસરત લૉગ:
+                  {t('todays_workout_log', lang)}
                 </span>
                 {workouts.map((w) => (
                   <div
@@ -810,7 +902,7 @@ export default function HealthHubTab({
                     <div>
                       <span className="font-bold text-slate-800 block">{w.name}</span>
                       <span className="text-[10px] text-slate-500">
-                        {w.durationMinutes} મિનિટ • {w.calories} kcal • {w.time}
+                        {w.durationMinutes} {t('minutes', lang)} • {w.calories} kcal • {w.time}
                       </span>
                     </div>
                     <button
@@ -864,7 +956,7 @@ export default function HealthHubTab({
                   size={38}
                   className={`fill-current ${isTapping ? 'animate-ping' : 'animate-pulse'}`}
                 />
-                <span className="text-[11px] font-bold mt-1 tracking-tight">ટેપ કરો</span>
+                <span className="text-[11px] font-bold mt-1 tracking-tight">{t('tap_tempo', lang)}</span>
               </button>
 
               <div className="mt-4">
@@ -872,12 +964,12 @@ export default function HealthHubTab({
                 <span className="text-sm font-bold text-red-600 ml-1.5">BPM</span>
                 <p className="text-[11px] text-slate-500 mt-0.5">
                   {liveBpm < 60
-                    ? 'ધીમો ધબકારો (Bradycardia / Athletic)'
+                    ? (lang === 'gu' ? 'ધીમો ધબકારો (Bradycardia / Athletic)' : (lang === 'hi' ? 'धीमी धड़कन (Bradycardia)' : 'Resting / Athletic Rate'))
                     : liveBpm <= 80
-                    ? 'આરામદાયક સામાન્ય દર (Normal Resting Rate)'
+                    ? (lang === 'gu' ? 'આરામદાયક સામાન્ય દર (Normal Resting Rate)' : (lang === 'hi' ? 'सामान्य आराम दर (Normal)' : 'Normal Resting Rate'))
                     : liveBpm <= 120
-                    ? 'ફેટ બર્ન / સામાન્ય કસરત દર (Fat Burn Zone)'
-                    : 'કાર્ડિયો ફિટનેસ દર (Cardio Fitness Zone)'}
+                    ? (lang === 'gu' ? 'ફેટ બર્ન / સામાન્ય કસરત દર (Fat Burn Zone)' : (lang === 'hi' ? 'फैट बर्न दर' : 'Fat Burn Zone'))
+                    : (lang === 'gu' ? 'કાર્ડિયો ફિટનેસ દર (Cardio Fitness Zone)' : (lang === 'hi' ? 'कार्डियो दर' : 'Cardio Fitness Zone'))}
                 </p>
               </div>
 
@@ -885,7 +977,7 @@ export default function HealthHubTab({
                 onClick={handleSaveBpm}
                 className="mt-3 px-4 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs active:scale-95 transition"
               >
-                હાર્ટ રેટ લૉગ સાચવો
+                {t('save_bpm_log', lang)}
               </button>
             </div>
           </div>
@@ -898,8 +990,8 @@ export default function HealthHubTab({
                   <Activity size={20} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800">બ્લડ પ્રેશર & સુગર (BP & Sugar)</h3>
-                  <p className="text-[11px] text-slate-500">દૈનિક સ્વાસ્થ્ય માપન</p>
+                  <h3 className="text-sm font-bold text-slate-800">{t('bp_sugar_card', lang)}</h3>
+                  <p className="text-[11px] text-slate-500">{t('daily_vitals_sub', lang)}</p>
                 </div>
               </div>
             </div>
@@ -919,7 +1011,7 @@ export default function HealthHubTab({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-[10px] text-slate-500 block mb-0.5">ઉપરનું (Systolic - mmHg):</span>
+                  <span className="text-[10px] text-slate-500 block mb-0.5">{t('systolic', lang)}</span>
                   <input
                     type="number"
                     value={bpSystolic}
@@ -928,7 +1020,7 @@ export default function HealthHubTab({
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 block mb-0.5">નીચેનું (Diastolic - mmHg):</span>
+                  <span className="text-[10px] text-slate-500 block mb-0.5">{t('diastolic', lang)}</span>
                   <input
                     type="number"
                     value={bpDiastolic}
@@ -944,7 +1036,7 @@ export default function HealthHubTab({
               <label className="text-xs font-bold text-slate-700 block mb-1.5">{t('blood_sugar', lang)}:</label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-[10px] text-slate-500 block mb-0.5">ભૂખ્યા પેટે (Fasting - mg/dL):</span>
+                  <span className="text-[10px] text-slate-500 block mb-0.5">{t('fasting_sugar', lang)}</span>
                   <input
                     type="number"
                     value={sugarFasting}
@@ -953,7 +1045,7 @@ export default function HealthHubTab({
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 block mb-0.5">જમ્યા પછી (Post-meal - mg/dL):</span>
+                  <span className="text-[10px] text-slate-500 block mb-0.5">{t('post_meal_sugar', lang)}</span>
                   <input
                     type="number"
                     value={sugarPostMeal}
@@ -968,7 +1060,7 @@ export default function HealthHubTab({
             <div className="pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-bold text-slate-700">{t('sleep_hours', lang)}:</label>
-                <span className="text-xs font-bold text-indigo-700">{sleepHours} કલાક</span>
+                <span className="text-xs font-bold text-indigo-700">{sleepHours} {t('hours', lang)}</span>
               </div>
               <input
                 type="range"
@@ -979,14 +1071,14 @@ export default function HealthHubTab({
                 onChange={(e) => setSleepHours(e.target.value)}
                 className="w-full accent-indigo-600"
               />
-              <p className="text-[10px] text-slate-500 mt-1">આદર્શ તંદુરસ્તી માટે ૭ થી ૮ કલાકની ઊંઘ જરૂરી છે.</p>
+              <p className="text-[10px] text-slate-500 mt-1">{t('sleep_health_tip', lang)}</p>
             </div>
 
             <button
               onClick={handleSaveVitals}
               className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs active:scale-95 transition"
             >
-              વાઇટલ્સ સાચવો
+              {t('save_vitals', lang)}
             </button>
           </div>
         </div>
@@ -1005,7 +1097,7 @@ export default function HealthHubTab({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-800">{t('bmi_calculator', lang)}</h3>
-                  <p className="text-[11px] text-slate-500">શરીરના વજન અને ઊંચાઈનું સંતુલન</p>
+                  <p className="text-[11px] text-slate-500">{t('bmi_sub', lang)}</p>
                 </div>
               </div>
             </div>
@@ -1013,7 +1105,7 @@ export default function HealthHubTab({
             {/* BMI Display Meter */}
             <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-5 text-center border border-purple-200">
               <span className="text-xs font-bold text-purple-700 block uppercase tracking-wider">
-                તમારો BMI સ્કોર
+                {t('your_bmi_score', lang)}
               </span>
               <span className="text-5xl font-black text-slate-800 tracking-tight my-1 block">
                 {bmiValue}
@@ -1030,9 +1122,9 @@ export default function HealthHubTab({
                 />
               </div>
               <div className="flex justify-between text-[10px] text-slate-500 mt-1 font-semibold">
-                <span>૧૮.૫ (ઓછું)</span>
-                <span>૨૫ (સામાન્ય)</span>
-                <span>૩૦ (વધુ)</span>
+                <span>18.5 ({lang === 'gu' ? 'ઓછું' : (lang === 'hi' ? 'कम' : 'Under')})</span>
+                <span>25 ({lang === 'gu' ? 'સામાન્ય' : (lang === 'hi' ? 'सामान्य' : 'Normal')})</span>
+                <span>30 ({lang === 'gu' ? 'વધુ' : (lang === 'hi' ? 'अधिक' : 'Over')})</span>
               </div>
             </div>
 
@@ -1077,13 +1169,17 @@ export default function HealthHubTab({
                 💡 {t('ideal_weight', lang)}:
               </span>
               <p className="text-emerald-800">
-                તમારી ઊંચાઈ ({heightCm} cm) માટે તંદુરસ્ત વજન <strong>{minHealthyWeight} kg થી {maxHealthyWeight} kg</strong> વચ્ચે હોવું જોઈએ.
+                {lang === 'gu'
+                  ? `તમારી ઊંચાઈ (${heightCm} cm) માટે તંદુરસ્ત વજન ${minHealthyWeight} kg થી ${maxHealthyWeight} kg વચ્ચે હોવું જોઈએ.`
+                  : lang === 'hi'
+                  ? `आपकी ऊंचाई (${heightCm} cm) के लिए स्वस्थ वजन ${minHealthyWeight} kg से ${maxHealthyWeight} kg के बीच होना चाहिए।`
+                  : `Healthy weight for your height (${heightCm} cm) is between ${minHealthyWeight} kg and ${maxHealthyWeight} kg.`}
               </p>
             </div>
 
             {/* Advice box */}
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700">
-              <span className="font-bold block mb-0.5">આરોગ્ય સૂચન (Health Tip):</span>
+              <span className="font-bold block mb-0.5">{t('health_tip_label', lang)}</span>
               <p className="leading-relaxed text-slate-600">{bmiCat.advice}</p>
             </div>
 
@@ -1091,7 +1187,7 @@ export default function HealthHubTab({
               onClick={handleSaveBmi}
               className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs active:scale-95 transition"
             >
-              પ્રોફાઇલમાં BMI સાચવો
+              {t('save_bmi_profile', lang)}
             </button>
           </div>
         </div>
@@ -1105,7 +1201,7 @@ export default function HealthHubTab({
           <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <h3 className="text-base font-bold text-slate-800">
-                {editingMed ? 'દવાની વિગત સુધારો' : 'નવી દવા ઉમેરો'}
+                {editingMed ? t('edit_medicine', lang) : t('add_new_med', lang)}
               </h3>
               <button
                 onClick={() => setIsMedModalOpen(false)}
@@ -1117,11 +1213,11 @@ export default function HealthHubTab({
 
             <form onSubmit={handleSaveMed} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">દવાનું નામ *</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">{t('med_name_label', lang)}</label>
                 <input
                   type="text"
                   required
-                  placeholder="દા.ત. પેરાસીટામોલ, વિટામિન ડી..."
+                  placeholder={t('med_name_placeholder', lang)}
                   value={medName}
                   onChange={(e) => setMedName(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-teal-500"
@@ -1130,17 +1226,17 @@ export default function HealthHubTab({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">ડોઝ (માપ)</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">{t('dosage_label', lang)}</label>
                   <input
                     type="text"
                     value={medDosage}
                     onChange={(e) => setMedDosage(e.target.value)}
-                    placeholder="દા.ત. ૧ ગોળી / ૫ ml"
+                    placeholder={t('dosage_placeholder', lang)}
                     className="w-full text-xs p-2.5 rounded-xl border border-slate-200"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">સમય</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">{t('time_label', lang)}</label>
                   <input
                     type="time"
                     value={medTime}
@@ -1151,21 +1247,22 @@ export default function HealthHubTab({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">દિવસનો સ્લોટ</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">{t('slot_label', lang)}</label>
                 <select
                   value={medTimeSlot}
                   onChange={(e) => setMedTimeSlot(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
                 >
-                  <option value="morning">🌅 સવાર (Morning)</option>
-                  <option value="afternoon">☀️ બપોર (Afternoon)</option>
-                  <option value="evening">🌇 સાંજ (Evening)</option>
-                  <option value="night">🌙 રાત (Night)</option>
+                  {currentMedicineSlots.filter((s) => s.id !== 'all').map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">જમવાની સ્થિતિ</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">{t('meal_relation_label', lang)}</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -1176,7 +1273,7 @@ export default function HealthHubTab({
                         : 'bg-slate-50 border-slate-200 text-slate-600'
                     }`}
                   >
-                    🟢 ભૂખ્યા પેટે
+                    {t('before_food', lang)}
                   </button>
                   <button
                     type="button"
@@ -1187,18 +1284,18 @@ export default function HealthHubTab({
                         : 'bg-slate-50 border-slate-200 text-slate-600'
                     }`}
                   >
-                    🟡 જમ્યા પછી
+                    {t('after_food', lang)}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">વધારાની નોંધ</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">{t('extra_notes', lang)}</label>
                 <input
                   type="text"
                   value={medNotes}
                   onChange={(e) => setMedNotes(e.target.value)}
-                  placeholder="દા.ત. નવશેકા પાણી સાથે લેવી"
+                  placeholder={t('extra_notes_placeholder', lang)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200"
                 />
               </div>
@@ -1211,7 +1308,7 @@ export default function HealthHubTab({
                     onChange={(e) => setMedHasAlarm(e.target.checked)}
                     className="w-4 h-4 rounded text-teal-600"
                   />
-                  <span>સમયસર એલાર્મ વગાડવું</span>
+                  <span>{t('sound_alarm_timely', lang)}</span>
                 </label>
               </div>
 
@@ -1221,13 +1318,13 @@ export default function HealthHubTab({
                   onClick={() => setIsMedModalOpen(false)}
                   className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
                 >
-                  રદ કરો
+                  {t('cancel', lang)}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-xs"
                 >
-                  સાચવો
+                  {t('save', lang)}
                 </button>
               </div>
             </form>
