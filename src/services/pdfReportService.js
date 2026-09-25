@@ -1,0 +1,470 @@
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas-pro';
+
+// Dictionary for Report in selected language
+const REPORT_TEXTS = {
+  gu: {
+    report_title: 'માસિક પ્રવૃત્તિ, આરોગ્ય અને સંપૂર્ણ હિસાબ રિપોર્ટ',
+    app_subtitle: 'રોજિંદી ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ | વ્યક્તિગત સારાંશ',
+    user_info: 'વપરાશકર્તા વિગત',
+    month: 'મહિનો',
+    bank_and_cash: '૧. બેંક, રોકડ અને ખાતાવહી સારાંશ',
+    bank_balance: 'બેંક બેલેન્સ',
+    cash_balance: 'હાથ પર રોકડ',
+    to_receive: 'મારે લેવાના (ઉધાર)',
+    to_pay: 'મારે આપવાના (દેવાં)',
+    total_available: 'કુલ ઉપલબ્ધ રકમ',
+    income_expense_title: '૨. આવક-ખર્ચ હિસાબ સારાંશ',
+    total_income: 'કુલ આવક',
+    total_expense: 'કુલ ખર્ચ',
+    net_savings: 'ચોખ્ખી બચત / સિલક',
+    transactions_table: 'તાજેતરના આવક-ખર્ચ વ્યવહારો',
+    date: 'તારીખ',
+    type: 'પ્રકાર',
+    category: 'કેટેગરી',
+    description: 'વિગત',
+    payment_mode: 'ચુકવણી',
+    amount: 'રકમ',
+    khata_title: '૩. પાર્ટી ખાતાવહી (લેતી-દેતી સ્થિતિ)',
+    party_name: 'પાર્ટીનું નામ',
+    phone: 'મોબાઈલ',
+    status: 'સ્થિતિ',
+    due_date: 'પાકતી તારીખ',
+    settled: 'ચૂકવાઈ ગયું',
+    pending: 'બાકી',
+    health_title: '૪. આરોગ્ય, ફિટનેસ અને દવાઓ',
+    steps: 'આજના સ્ટેપ',
+    calories: 'બર્ન કેલરી',
+    heart_rate: 'હાર્ટ રેટ',
+    blood_pressure: 'બ્લડ પ્રેશર (BP)',
+    sugar: 'બ્લડ સુગર',
+    sleep: 'ઊંઘ (કલાક)',
+    medicines_list: 'દવાઓનું દૈનિક રૂટિન',
+    med_name: 'દવાનું નામ',
+    dosage: 'ડોઝ',
+    time: 'સમય',
+    food_condition: 'ખોરાકની સ્થિતિ',
+    before_food: 'ભૂખ્યા પેટે',
+    after_food: 'જમ્યા પછી',
+    tasks_and_notes: '૫. કામો, મીટિંગ્સ અને એડવાન્સ નોંધો',
+    tasks: 'કામો / મીટિંગ્સ',
+    notes: 'અગત્યની નોંધો',
+    footer_text: 'રોજિંદી ડાયરી એપ દ્વારા જનરેટ થયેલ અધિકૃત રિપોર્ટ | પ્રાઈવસી સુરક્ષિત',
+  },
+  hi: {
+    report_title: 'मासिक गतिविधि, स्वास्थ्य और वित्तीय रिपोर्ट',
+    app_subtitle: 'दैनिक डायरी और स्मार्ट सहायक | व्यक्तिगत सारांश',
+    user_info: 'उपयोगकर्ता विवरण',
+    month: 'महीना',
+    bank_and_cash: '१. बैंक, नकद और खाता बही सारांश',
+    bank_balance: 'बैंक बैलेंस',
+    cash_balance: 'हाथ में नकद',
+    to_receive: 'मुझे लेने हैं (उधार)',
+    to_pay: 'मुझे देने हैं (देय)',
+    total_available: 'कुल उपलब्ध राशि',
+    income_expense_title: '२. आय-व्यय हिसाब सारांश',
+    total_income: 'कुल आय',
+    total_expense: 'कुल खर्च',
+    net_savings: 'शुद्ध बचत / शेष',
+    transactions_table: 'हाल के आय-व्यय लेन-देन',
+    date: 'तारीख',
+    type: 'प्रकार',
+    category: 'श्रेणी',
+    description: 'विवरण',
+    payment_mode: 'भुगतान माध्यम',
+    amount: 'राशि',
+    khata_title: '३. पार्टी खाता बही (लेना-देना)',
+    party_name: 'पार्टी का नाम',
+    phone: 'मोबाइल',
+    status: 'स्थिति',
+    due_date: 'देय तिथि',
+    settled: 'चुकता',
+    pending: 'बाकी',
+    health_title: '४. स्वास्थ्य, फ़िटनेस और दवाइयाँ',
+    steps: 'आज के स्टेप्स',
+    calories: 'बर्न कैलोरी',
+    heart_rate: 'हार्ट रेट',
+    blood_pressure: 'ब्लड प्रेशर (BP)',
+    sugar: 'ब्लड शुगर',
+    sleep: 'नींद (घंटे)',
+    medicines_list: 'दवाइयों का दैनिक रूटीन',
+    med_name: 'दवा का नाम',
+    dosage: 'खुराक',
+    time: 'समय',
+    food_condition: 'भोजन की स्थिति',
+    before_food: 'खाली पेट',
+    after_food: 'खाने के बाद',
+    tasks_and_notes: '५. कार्य, मीटिंग और एडवांस नोट',
+    tasks: 'कार्य / मीटिंग',
+    notes: 'महत्वपूर्ण नोट',
+    footer_text: 'दैनिक डायरी ऐप द्वारा तैयार की गई रिपोर्ट | गोपनीयता सुरक्षित',
+  },
+  en: {
+    report_title: 'Monthly Activity, Health & Finance Report',
+    app_subtitle: 'Daily Diary & Smart Assistant | Comprehensive Summary',
+    user_info: 'User Information',
+    month: 'Month',
+    bank_and_cash: '1. Bank, Cash & Ledger Overview',
+    bank_balance: 'Bank Balance',
+    cash_balance: 'Cash in Hand',
+    to_receive: "You'll Get (Receivables)",
+    to_pay: "You'll Give (Payables)",
+    total_available: 'Total Available Funds',
+    income_expense_title: '2. Income & Expense Statement',
+    total_income: 'Total Income',
+    total_expense: 'Total Expenses',
+    net_savings: 'Net Savings / Balance',
+    transactions_table: 'Recent Transactions',
+    date: 'Date',
+    type: 'Type',
+    category: 'Category',
+    description: 'Description',
+    payment_mode: 'Payment Mode',
+    amount: 'Amount',
+    khata_title: '3. Party Ledger (Khata Book)',
+    party_name: 'Party Name',
+    phone: 'Phone',
+    status: 'Status',
+    due_date: 'Due Date',
+    settled: 'Settled',
+    pending: 'Pending',
+    health_title: '4. Health, Fitness & Medications',
+    steps: 'Daily Steps',
+    calories: 'Calories Burned',
+    heart_rate: 'Heart Rate',
+    blood_pressure: 'Blood Pressure',
+    sugar: 'Blood Sugar',
+    sleep: 'Sleep (Hours)',
+    medicines_list: 'Daily Medication Schedule',
+    med_name: 'Medicine Name',
+    dosage: 'Dosage',
+    time: 'Time',
+    food_condition: 'Food Condition',
+    before_food: 'Before Food',
+    after_food: 'After Food',
+    tasks_and_notes: '5. Tasks, Meetings & Notes',
+    tasks: 'Tasks / Meetings',
+    notes: 'Important Notes',
+    footer_text: 'Generated by Daily Diary App | Privacy Protected',
+  },
+};
+
+/**
+ * Builds the HTML report string in the user's selected language
+ */
+export const buildReportHtml = ({
+  user,
+  monthYear,
+  financeList = [],
+  accounts = { bankBalance: 42500, cashBalance: 6800 },
+  khata = [],
+  medicineList = [],
+  reminderList = [],
+  notesList = [],
+  fitness = null,
+  lang = 'gu',
+}) => {
+  const L = REPORT_TEXTS[lang] || REPORT_TEXTS.gu;
+
+  const totalIncome = financeList
+    .filter((f) => f.type === 'income')
+    .reduce((sum, f) => sum + Number(f.amount || 0), 0);
+
+  const totalExpense = financeList
+    .filter((f) => f.type === 'expense')
+    .reduce((sum, f) => sum + Number(f.amount || 0), 0);
+
+  const netSavings = totalIncome - totalExpense;
+
+  const bankBal = Number(accounts?.bankBalance || 0);
+  const cashBal = Number(accounts?.cashBalance || 0);
+  const totalAvailable = bankBal + cashBal;
+
+  const toReceive = khata
+    .filter((k) => !k.isSettled && k.type === 'to_receive')
+    .reduce((s, k) => s + Number(k.amount || 0), 0);
+
+  const toPay = khata
+    .filter((k) => !k.isSettled && k.type === 'to_pay')
+    .reduce((s, k) => s + Number(k.amount || 0), 0);
+
+  // Health data
+  const steps = fitness?.steps || 4250;
+  const calories = fitness?.calories || 220;
+  const bpm = fitness?.heartRate || 74;
+  const bp = fitness?.bloodPressure ? `${fitness.bloodPressure.systolic}/${fitness.bloodPressure.diastolic} mmHg` : '120/80 mmHg';
+  const sugar = fitness?.bloodSugar ? `Fast: ${fitness.bloodSugar.fasting} / Post: ${fitness.bloodSugar.postMeal} mg/dL` : '95 / 130 mg/dL';
+  const sleep = fitness?.sleepHours ? `${fitness.sleepHours} hrs` : '7.5 hrs';
+
+  return `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Gujarati', 'Noto Sans Devanagari', sans-serif; color: #1e293b; background: #ffffff; padding: 28px; width: 794px; min-height: 1123px; box-sizing: border-box; line-height: 1.45;">
+      
+      <!-- Top Banner Header -->
+      <div style="background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%); color: #ffffff; padding: 22px 26px; border-radius: 16px; margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.3px;">${L.report_title}</h1>
+            <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">${L.app_subtitle} | ${L.month}: <strong>${monthYear}</strong></p>
+          </div>
+          <div style="text-align: right; font-size: 11px; opacity: 0.95; line-height: 1.5;">
+            <div><strong>${user?.name || 'User'}</strong></div>
+            <div>📱 ${user?.mobile || 'N/A'}</div>
+            <div>✉️ ${user?.email || 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. Bank, Cash & Khata Overview Grid -->
+      <div style="margin-bottom: 22px;">
+        <h2 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">
+          ${L.bank_and_cash}
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px;">
+            <div style="font-size: 11px; color: #64748b; font-weight: 600;">🏦 ${L.bank_balance}</div>
+            <div style="font-size: 16px; font-weight: 800; color: #0284c7; margin-top: 4px;">₹${bankBal.toLocaleString()}</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px;">
+            <div style="font-size: 11px; color: #64748b; font-weight: 600;">💵 ${L.cash_balance}</div>
+            <div style="font-size: 16px; font-weight: 800; color: #16a34a; margin-top: 4px;">₹${cashBal.toLocaleString()}</div>
+          </div>
+          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px;">
+            <div style="font-size: 11px; color: #047857; font-weight: 600;">📥 ${L.to_receive}</div>
+            <div style="font-size: 16px; font-weight: 800; color: #059669; margin-top: 4px;">₹${toReceive.toLocaleString()}</div>
+          </div>
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px;">
+            <div style="font-size: 11px; color: #b91c1c; font-weight: 600;">📤 ${L.to_pay}</div>
+            <div style="font-size: 16px; font-weight: 800; color: #dc2626; margin-top: 4px;">₹${toPay.toLocaleString()}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Financial Summary (Income, Expense, Net) -->
+      <div style="margin-bottom: 22px;">
+        <h2 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">
+          ${L.income_expense_title}
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px;">
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 14px;">
+            <span style="font-size: 11px; color: #15803d; font-weight: 600;">${L.total_income}:</span>
+            <div style="font-size: 17px; font-weight: 800; color: #16a34a; margin-top: 2px;">₹${totalIncome.toLocaleString()}</div>
+          </div>
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 10px 14px;">
+            <span style="font-size: 11px; color: #b91c1c; font-weight: 600;">${L.total_expense}:</span>
+            <div style="font-size: 17px; font-weight: 800; color: #dc2626; margin-top: 2px;">₹${totalExpense.toLocaleString()}</div>
+          </div>
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 10px 14px;">
+            <span style="font-size: 11px; color: #1d4ed8; font-weight: 600;">${L.net_savings}:</span>
+            <div style="font-size: 17px; font-weight: 800; color: #2563eb; margin-top: 2px;">₹${netSavings.toLocaleString()}</div>
+          </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+          <thead>
+            <tr style="background: #2563eb; color: #ffffff;">
+              <th style="padding: 7px 10px; border-radius: 8px 0 0 0;">${L.date}</th>
+              <th style="padding: 7px 10px;">${L.type}</th>
+              <th style="padding: 7px 10px;">${L.category}</th>
+              <th style="padding: 7px 10px;">${L.description}</th>
+              <th style="padding: 7px 10px;">${L.payment_mode}</th>
+              <th style="padding: 7px 10px; text-align: right; border-radius: 0 8px 0 0;">${L.amount}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              financeList.length === 0
+                ? `<tr><td colspan="6" style="padding: 10px; text-align: center; color: #94a3b8;">No transactions found</td></tr>`
+                : financeList.slice(0, 10).map((f, idx) => `
+                    <tr style="background: ${idx % 2 === 0 ? '#f8fafc' : '#ffffff'}; border-bottom: 1px solid #e2e8f0;">
+                      <td style="padding: 6px 10px;">${f.date}</td>
+                      <td style="padding: 6px 10px; font-weight: bold; color: ${f.type === 'income' ? '#16a34a' : '#dc2626'};">${f.type === 'income' ? '+ આવક' : '- ખર્ચ'}</td>
+                      <td style="padding: 6px 10px; font-weight: 600;">${f.category}</td>
+                      <td style="padding: 6px 10px; color: #475569;">${f.description || '-'}</td>
+                      <td style="padding: 6px 10px; color: #64748b;">${f.paymentMode || 'Cash'}</td>
+                      <td style="padding: 6px 10px; text-align: right; font-weight: bold; color: ${f.type === 'income' ? '#16a34a' : '#dc2626'};">₹${Number(f.amount).toLocaleString()}</td>
+                    </tr>
+                  `).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3. Party Khata (Lena / Dena) -->
+      ${khata.length > 0 ? `
+        <div style="margin-bottom: 22px;">
+          <h2 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">
+            ${L.khata_title}
+          </h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+            <thead>
+              <tr style="background: #475569; color: #ffffff;">
+                <th style="padding: 7px 10px; border-radius: 8px 0 0 0;">${L.party_name}</th>
+                <th style="padding: 7px 10px;">${L.phone}</th>
+                <th style="padding: 7px 10px;">${L.type}</th>
+                <th style="padding: 7px 10px;">${L.due_date}</th>
+                <th style="padding: 7px 10px;">${L.status}</th>
+                <th style="padding: 7px 10px; text-align: right; border-radius: 0 8px 0 0;">${L.amount}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${khata.slice(0, 6).map((k, idx) => `
+                <tr style="background: ${idx % 2 === 0 ? '#f8fafc' : '#ffffff'}; border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 6px 10px; font-weight: bold;">${k.partyName}</td>
+                  <td style="padding: 6px 10px; color: #64748b;">${k.phone || '-'}</td>
+                  <td style="padding: 6px 10px; font-weight: 600; color: ${k.type === 'to_receive' ? '#059669' : '#dc2626'};">
+                    ${k.type === 'to_receive' ? 'મારે લેવાના' : 'મારે આપવાના'}
+                  </td>
+                  <td style="padding: 6px 10px; color: #d97706; font-weight: 600;">${k.dueDate || '-'}</td>
+                  <td style="padding: 6px 10px;">
+                    <span style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; background: ${k.isSettled ? '#e2e8f0' : '#fef3c7'}; color: ${k.isSettled ? '#475569' : '#b45309'};">
+                      ${k.isSettled ? L.settled : L.pending}
+                    </span>
+                  </td>
+                  <td style="padding: 6px 10px; text-align: right; font-weight: bold; color: ${k.type === 'to_receive' ? '#059669' : '#dc2626'};">
+                    ₹${Number(k.amount).toLocaleString()}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : ''}
+
+      <!-- 4. Health, Fitness & Medications -->
+      <div style="margin-bottom: 22px;">
+        <h2 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">
+          ${L.health_title}
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px;">
+          <div style="background: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 12px; padding: 10px;">
+            <div style="font-size: 10px; color: #0d9488; font-weight: 600;">👟 ${L.steps}</div>
+            <div style="font-size: 14px; font-weight: 800; color: #0f766e; margin-top: 2px;">${steps.toLocaleString()}</div>
+          </div>
+          <div style="background: #fff7ed; border: 1px solid #ffedd5; border-radius: 12px; padding: 10px;">
+            <div style="font-size: 10px; color: #ea580c; font-weight: 600;">🔥 ${L.calories}</div>
+            <div style="font-size: 14px; font-weight: 800; color: #c2410c; margin-top: 2px;">${calories} kcal</div>
+          </div>
+          <div style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; padding: 10px;">
+            <div style="font-size: 10px; color: #e11d48; font-weight: 600;">💓 ${L.heart_rate}</div>
+            <div style="font-size: 14px; font-weight: 800; color: #be123c; margin-top: 2px;">${bpm} BPM</div>
+          </div>
+          <div style="background: #eff6ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 10px;">
+            <div style="font-size: 10px; color: #2563eb; font-weight: 600;">🩺 BP & ઊંઘ</div>
+            <div style="font-size: 12px; font-weight: 800; color: #1e40af; margin-top: 2px;">${bp} (${sleep})</div>
+          </div>
+        </div>
+
+        <!-- Medicines Routine -->
+        ${medicineList.length > 0 ? `
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px;">
+            <span style="font-size: 11px; font-weight: bold; color: #475569; display: block; margin-bottom: 6px;">💊 ${L.medicines_list}:</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${medicineList.slice(0, 6).map((m) => `
+                <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 4px 8px; font-size: 10px;">
+                  <strong>${m.name}</strong> (${m.dosage}) • <span style="color: #0d9488;">${m.time}</span> • 
+                  <span style="color: ${m.mealRelation === 'before_food' ? '#b45309' : '#15803d'}; font-weight: bold;">
+                    ${m.mealRelation === 'before_food' ? L.before_food : L.after_food}
+                  </span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Footer Note -->
+      <div style="margin-top: 24px; padding-top: 12px; border-top: 1px solid #cbd5e1; text-align: center; font-size: 10px; color: #94a3b8;">
+        ${L.footer_text} | ${new Date().toLocaleDateString()}
+      </div>
+
+    </div>
+  `;
+};
+
+/**
+ * Generates and downloads the pixel-perfect Unicode PDF using html2canvas & jsPDF
+ */
+export const generateMonthlyReportPDF = async ({
+  user,
+  monthYear,
+  financeList = [],
+  accounts = { bankBalance: 42500, cashBalance: 6800 },
+  khata = [],
+  medicineList = [],
+  reminderList = [],
+  notesList = [],
+  fitness = null,
+  lang = 'gu',
+}) => {
+  // 1. Create a hidden rendering container in the DOM
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.top = '-9999px';
+  container.style.left = '-9999px';
+  container.style.width = '794px';
+  container.style.zIndex = '-999';
+  container.innerHTML = buildReportHtml({
+    user,
+    monthYear,
+    financeList,
+    accounts,
+    khata,
+    medicineList,
+    reminderList,
+    notesList,
+    fitness,
+    lang,
+  });
+
+  document.body.appendChild(container);
+
+  try {
+    // 2. Render to high-DPI canvas
+    const targetElement = container.firstElementChild;
+    const canvas = await html2canvas(targetElement, {
+      scale: 2, // High resolution for crisp print quality
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+    // 3. Create PDF with multi-page handling if content exceeds 1 page
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfPageHeight = pdf.internal.pageSize.getHeight();
+    const totalPdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    if (totalPdfHeight <= pdfPageHeight) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, totalPdfHeight);
+    } else {
+      let heightLeft = totalPdfHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, totalPdfHeight);
+      heightLeft -= pdfPageHeight;
+
+      while (heightLeft > 0) {
+        position -= pdfPageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, totalPdfHeight);
+        heightLeft -= pdfPageHeight;
+      }
+    }
+
+    // 4. Download file
+    const langSuffix = lang.toUpperCase();
+    const sanitizedMonth = monthYear.replace(/\s+/g, '_');
+    pdf.save(`DailyDiary_Report_${langSuffix}_${sanitizedMonth}.pdf`);
+  } finally {
+    // Clean up
+    document.body.removeChild(container);
+  }
+};

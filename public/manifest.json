@@ -1,0 +1,22 @@
+{
+  "name": "રોજિંદી ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ",
+  "short_name": "Daily Diary",
+  "description": "દૈનિક નોંધ, હેલ્થ/દવા એલાર્મ, મીટિંગ્સ, બેંક કામો, હિસાબ અને માસિક રિપોર્ટ એપ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📔</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📔</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

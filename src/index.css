@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Hind Vadodara', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Custom scrollbar for mobile feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Mobile viewport container */
+.mobile-app-wrapper {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-alarm {
+  animation: pulse-subtle 1.2s infinite;
+}
+
+/* Dark Theme Overrides */
+.dark-theme {
+  background-color: #0b0f19 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark-theme header,
+.dark-theme nav {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: #1e293b !important;
+}
+
+.dark-theme .bg-white {
+  background-color: #151e32 !important;
+  color: #f8fafc !important;
+}
+
+.dark-theme .bg-slate-50,
+.dark-theme .bg-slate-100 {
+  background-color: #0b0f19 !important;
+  color: #e2e8f0 !important;
+}
+
+.dark-theme .border-slate-200,
+.dark-theme .border-slate-100 {
+  border-color: #24324d !important;
+}
+
+.dark-theme .text-slate-800,
+.dark-theme .text-slate-900,
+.dark-theme .text-slate-700 {
+  color: #f8fafc !important;
+}
+
+.dark-theme .text-slate-600,
+.dark-theme .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+.dark-theme input,
+.dark-theme select,
+.dark-theme textarea {
+  background-color: #0b0f19 !important;
+  color: #f8fafc !important;
+  border-color: #24324d !important;
+}
+
+.dark-theme .bg-cyan-50,
+.dark-theme .bg-amber-50,
+.dark-theme .bg-emerald-50,
+.dark-theme .bg-red-50,
+.dark-theme .bg-teal-50,
+.dark-theme .bg-indigo-50 {
+  background-color: #151e32 !important;
+  border-color: #24324d !important;
+}
+
+
