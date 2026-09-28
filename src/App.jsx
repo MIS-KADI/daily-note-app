@@ -7,6 +7,9 @@ import PinLockModal from './components/PinLockModal';
 import ShoppingModal from './components/ShoppingModal';
 import EmergencyModal from './components/EmergencyModal';
 import LanguageModal from './components/LanguageModal';
+import SmartAssistantModal from './components/SmartAssistantModal';
+import BankSmsParserModal from './components/BankSmsParserModal';
+import UpiPaymentModal from './components/UpiPaymentModal';
 
 // Tabs
 import HomeTab from './components/tabs/HomeTab';
@@ -20,6 +23,7 @@ import ProfileTab from './components/tabs/ProfileTab';
 // Services
 import { storageService } from './services/storageService';
 import { notificationService } from './services/notificationService';
+import { streakService } from './services/streakService';
 
 export default function App() {
   // State from LocalStorage
@@ -48,6 +52,9 @@ export default function App() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [isSmsParserOpen, setIsSmsParserOpen] = useState(false);
+  const [upiModalData, setUpiModalData] = useState(null);
 
   // Track fired alarms to prevent duplicate ringing in the same minute
   const firedAlarmsRef = useRef(new Set());
@@ -201,6 +208,80 @@ export default function App() {
     handleSaveFinance([newEntry, ...finance]);
   };
 
+  // Smart Voice Assistant & Bank SMS Handlers
+  const handleAddParsedFinance = (tx) => {
+    setActiveTab('finance');
+    const newEntry = {
+      id: 'fin-' + Date.now(),
+      type: tx.type || 'expense',
+      amount: Number(tx.amount || 0),
+      category: tx.category || (tx.type === 'income' ? 'પગાર / આવક' : 'અન્ય ખર્ચ'),
+      description: tx.description || '',
+      paymentMode: tx.paymentMode || 'UPI (GPay/PhonePe)',
+      date: tx.date || new Date().toISOString().split('T')[0],
+    };
+    handleSaveFinance([newEntry, ...finance]);
+    streakService.recordActivityToday();
+  };
+
+  const handleAddParsedReminder = (rem) => {
+    setActiveTab('reminders');
+    const newRem = {
+      id: 'rem-' + Date.now(),
+      title: rem.title || 'નવું રીમાઇન્ડર',
+      description: rem.description || '',
+      date: rem.date || new Date().toISOString().split('T')[0],
+      time: rem.time || '10:00',
+      type: rem.type || 'task',
+      hasAlarm: true,
+      isCompleted: false,
+    };
+    handleSaveReminders([newRem, ...reminders]);
+    streakService.recordActivityToday();
+  };
+
+  const handleAddParsedKhata = (k) => {
+    setActiveTab('finance');
+    const newKhata = {
+      id: 'kh-' + Date.now(),
+      partyName: k.partyName || 'ગ્રાહક',
+      phone: k.phone || '',
+      type: k.type || 'to_receive',
+      amount: Number(k.amount || 0),
+      date: k.date || new Date().toISOString().split('T')[0],
+      dueDate: k.dueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      description: k.description || '',
+      isSettled: false,
+    };
+    handleSaveKhata([newKhata, ...khata]);
+    streakService.recordActivityToday();
+  };
+
+  const handleAddParsedNote = (n) => {
+    setActiveTab('notes');
+    const newNote = {
+      id: 'note-' + Date.now(),
+      title: n.title || 'નવી નોંધ',
+      content: n.content || n.title || '',
+      category: n.category || 'સામાન્ય',
+      date: n.date || new Date().toISOString().split('T')[0],
+      isPinned: false,
+      tags: ['AI Voice'],
+    };
+    handleSaveNotes([newNote, ...notes]);
+    streakService.recordActivityToday();
+  };
+
+  const handleAddParsedWater = (glassesCount = 1) => {
+    const current = water?.glasses || 0;
+    const updated = {
+      ...water,
+      glasses: current + glassesCount,
+    };
+    handleUpdateWater(updated);
+    streakService.recordActivityToday();
+  };
+
 
   // Test Alarm trigger
   const handleTestAlarm = () => {
@@ -312,10 +393,57 @@ export default function App() {
           });
         }
       });
+
+      // 3. Daily 9:00 PM Diary Writing Reminder
+      const diaryReminderEnabled = localStorage.getItem('diary_reminder_enabled') !== 'false';
+      const diaryAlarmKey = `diary-9pm-${todayDateStr}`;
+      if (currentTimeStr === '21:00' && diaryReminderEnabled && !firedAlarmsRef.current.has(diaryAlarmKey)) {
+        firedAlarmsRef.current.add(diaryAlarmKey);
+        notificationService.send(
+          lang === 'hi'
+            ? '📔 डायरी लिखने का समय हो गया!'
+            : lang === 'en'
+            ? '📔 Time for your Daily Diary!'
+            : '📔 ડાયરી લખવાનો સમય થયો!',
+          {
+            body:
+              lang === 'hi'
+                ? 'आज के दिन की यादें और खर्च दर्ज करें। अपनी 🔥 स्ट्रीक बनाए रखें!'
+                : lang === 'en'
+                ? 'Record today\'s memories and expenses. Keep your 🔥 streak alive!'
+                : 'આજના દિવસની યાદો અને હિસાબ નોંધી લો અને તમારી 🔥 સ્ટ્રીક જાળવી રાખો!',
+          }
+        );
+      }
+
+      // 4. Periodic 2-Hour Water Reminder (10:00, 12:00, 14:00, 16:00, 18:00, 20:00)
+      const waterReminderEnabled = localStorage.getItem('water_reminder_enabled') === 'true';
+      const waterTimes = ['10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
+      if (waterReminderEnabled && waterTimes.includes(currentTimeStr)) {
+        const waterAlarmKey = `water-${todayDateStr}-${currentTimeStr}`;
+        if (!firedAlarmsRef.current.has(waterAlarmKey)) {
+          firedAlarmsRef.current.add(waterAlarmKey);
+          notificationService.send(
+            lang === 'hi'
+              ? '💧 पानी पीने का समय!'
+              : lang === 'en'
+              ? '💧 Hydration Time!'
+              : '💧 પાણી પીવાનો સમય થયો છે!',
+            {
+              body:
+                lang === 'hi'
+                  ? 'स्वस्थ रहने के लिए 1 गिलास पानी पी लें 🥛'
+                  : lang === 'en'
+                  ? 'Drink 1 glass of water to stay fresh and healthy 🥛'
+                  : 'સ્વસ્થ અને હાઇડ્રેટેડ રહેવા માટે ૧ ગ્લાસ પાણી પી લો 🥛',
+            }
+          );
+        }
+      }
     }, 10000); // Check every 10 seconds
 
     return () => clearInterval(timer);
-  }, [medicines, reminders, medicineLogs]);
+  }, [medicines, reminders, medicineLogs, lang]);
 
   return (
     <div className={`mobile-app-wrapper ${theme === 'dark' ? 'dark-theme' : ''}`}>
@@ -329,6 +457,7 @@ export default function App() {
         onOpenCalculator={() => setIsCalculatorOpen(true)}
         onOpenShopping={() => setIsShoppingOpen(true)}
         onOpenEmergency={() => setIsEmergencyOpen(true)}
+        onOpenAssistant={() => setIsAssistantOpen(true)}
         onTestAlarm={handleTestAlarm}
         onLockApp={() => setIsLocked(true)}
         activeAlarmCount={
@@ -363,6 +492,7 @@ export default function App() {
             onToggleMedicine={handleToggleMedicine}
             onToggleReminder={handleToggleReminder}
             onOpenCalculator={() => setIsCalculatorOpen(true)}
+            onOpenAssistant={() => setIsAssistantOpen(true)}
           />
         )}
 
@@ -405,6 +535,8 @@ export default function App() {
             khata={khata}
             onSaveKhata={handleSaveKhata}
             onOpenCalculator={() => setIsCalculatorOpen(true)}
+            onOpenSmsParser={() => setIsSmsParserOpen(true)}
+            onOpenUpiModal={(party) => setUpiModalData({ isOpen: true, party })}
             user={user}
             lang={lang}
           />
@@ -489,6 +621,36 @@ export default function App() {
           lang={lang}
         />
       )}
+
+      {/* Smart Voice & NLP Assistant Modal */}
+      <SmartAssistantModal
+        isOpen={isAssistantOpen}
+        onClose={() => setIsAssistantOpen(false)}
+        lang={lang}
+        onAddFinance={handleAddParsedFinance}
+        onAddReminder={handleAddParsedReminder}
+        onAddKhata={handleAddParsedKhata}
+        onAddNote={handleAddParsedNote}
+        onAddWater={handleAddParsedWater}
+      />
+
+      {/* Bank SMS Auto-Expense Parser Modal */}
+      <BankSmsParserModal
+        isOpen={isSmsParserOpen}
+        onClose={() => setIsSmsParserOpen(false)}
+        lang={lang}
+        onAddTransaction={handleAddParsedFinance}
+      />
+
+      {/* UPI QR Code & WhatsApp Payment Link Modal */}
+      <UpiPaymentModal
+        isOpen={!!upiModalData?.isOpen}
+        onClose={() => setUpiModalData(null)}
+        party={upiModalData?.party}
+        userUpiId={user?.upiId || ''}
+        user={user}
+        lang={lang}
+      />
     </div>
   );
 }

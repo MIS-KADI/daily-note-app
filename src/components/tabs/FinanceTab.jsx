@@ -21,6 +21,8 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   MessageCircle,
+  QrCode,
+  Smartphone,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t, getExpenseCategories, getIncomeCategories, getPaymentModes } from '../../services/i18n';
@@ -34,6 +36,9 @@ export default function FinanceTab({
   khata = [],
   onSaveKhata,
   onOpenCalculator,
+  onOpenSmsParser,
+  onOpenUpiModal,
+  user,
   lang = 'gu',
 }) {
   const [activeSubView, setActiveSubView] = useState('transactions'); // 'transactions' | 'khata'
@@ -333,6 +338,16 @@ export default function FinanceTab({
             <Users size={14} />
             <span>{t('khata_book', lang)}</span>
           </button>
+          {onOpenSmsParser && (
+            <button
+              onClick={onOpenSmsParser}
+              className="py-2 px-2.5 rounded-xl bg-violet-500/80 hover:bg-violet-600 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-xs active:scale-95 transition"
+              title={lang === 'hi' ? 'SMS से खर्च' : lang === 'en' ? 'Scan SMS' : 'SMS થી ખર્ચ'}
+            >
+              <Smartphone size={13} />
+              <span>SMS</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -397,15 +412,29 @@ export default function FinanceTab({
               </button>
             </div>
 
-            {onOpenCalculator && (
-              <button
-                onClick={onOpenCalculator}
-                className="p-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 transition shadow-2xs"
-                title={t('smart_calc_title', lang)}
-              >
-                <Calculator size={16} />
-              </button>
-            )}
+            <div className="flex items-center gap-1.5">
+              {onOpenSmsParser && (
+                <button
+                  onClick={onOpenSmsParser}
+                  className="px-2.5 py-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-800 transition shadow-2xs text-xs font-bold flex items-center gap-1"
+                  title={lang === 'hi' ? 'बैंक SMS से खर्च जोड़ें' : lang === 'en' ? 'Scan Bank SMS' : 'બેંક SMS થી ઓટો-ખર્ચ'}
+                >
+                  <Smartphone size={13} className="text-violet-700" />
+                  <span className="hidden sm:inline">
+                    {lang === 'hi' ? 'SMS से खर्च' : lang === 'en' ? 'Scan SMS' : 'SMS થી ખર્ચ'}
+                  </span>
+                </button>
+              )}
+              {onOpenCalculator && (
+                <button
+                  onClick={onOpenCalculator}
+                  className="p-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 transition shadow-2xs"
+                  title={t('smart_calc_title', lang)}
+                >
+                  <Calculator size={16} />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Transactions List */}
@@ -601,6 +630,16 @@ export default function FinanceTab({
                             <MessageCircle size={12} />
                             <span>WhatsApp</span>
                           </button>
+                          {onOpenUpiModal && !k.isSettled && (
+                            <button
+                              onClick={() => onOpenUpiModal(k)}
+                              className="flex items-center gap-1 text-indigo-700 bg-indigo-100 hover:bg-indigo-200 px-2 py-0.5 rounded-lg font-bold transition active:scale-95"
+                              title="UPI QR & Payment Link"
+                            >
+                              <QrCode size={12} />
+                              <span>UPI QR</span>
+                            </button>
+                          )}
                           <span className="flex items-center gap-1">
                             <Calendar size={12} />
                             {t('date', lang)}: {k.date}

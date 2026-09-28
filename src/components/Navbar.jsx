@@ -10,6 +10,7 @@ import {
   ShoppingBag,
   ShieldAlert,
   Globe,
+  Sparkles,
 } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
 import { t } from '../services/i18n';
@@ -23,6 +24,7 @@ export default function Navbar({
   onOpenCalculator,
   onOpenShopping,
   onOpenEmergency,
+  onOpenAssistant,
   onTestAlarm,
   onLockApp,
   activeAlarmCount = 0,
@@ -73,6 +75,20 @@ export default function Navbar({
 
         {/* Action Controls */}
         <div className="flex items-center gap-1">
+          {/* AI Smart Voice Assistant Button */}
+          {onOpenAssistant && (
+            <button
+              onClick={onOpenAssistant}
+              className="px-2 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold text-xs shadow-sm shadow-indigo-500/25 flex items-center gap-1.5 transition active:scale-95 animate-pulse"
+              title={lang === 'hi' ? 'स्मार्ट वॉइस सहायक' : lang === 'en' ? 'Smart AI Assistant' : 'સ્માર્ટ વોઈસ આસિસ્ટન્ટ'}
+            >
+              <Sparkles size={14} className="text-amber-300" />
+              <span className="text-[11px] font-bold">
+                {lang === 'hi' ? 'AI सहायक' : lang === 'en' ? 'AI Voice' : '🎙️ આસિસ્ટન્ટ'}
+              </span>
+            </button>
+          )}
+
           {/* Language Selector Button */}
           <button
             onClick={onOpenLanguage}

@@ -33,6 +33,7 @@ import confetti from 'canvas-confetti';
 import { t } from '../../services/i18n';
 import { whatsappService } from '../../services/whatsappService';
 import { pedometerService } from '../../services/pedometerService';
+import MoodTrackerCard from '../MoodTrackerCard';
 
 export default function HomeTab({
   user,
@@ -50,6 +51,7 @@ export default function HomeTab({
   onUpdateFitness,
   onOpenShopping,
   onOpenEmergency,
+  onOpenAssistant,
   dailyQuote,
   onNextQuote,
   lang = 'gu',
@@ -368,6 +370,44 @@ export default function HomeTab({
           )}
         </div>
       )}
+
+      {/* AI Smart Voice Assistant Quick Launch Banner */}
+      {onOpenAssistant && (
+        <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 rounded-3xl p-3.5 text-white shadow-md shadow-indigo-600/20 flex items-center justify-between gap-3 border border-white/20">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shrink-0 shadow-xs border border-white/30 animate-pulse">
+              🎙️
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black tracking-wide text-amber-300">
+                  {lang === 'hi' ? 'स्मार्ट AI वॉइस सहायक' : lang === 'en' ? 'Smart AI Voice Assistant' : 'સ્માર્ટ AI વોઈસ આસિસ્ટન્ટ'}
+                </span>
+                <span className="text-[9px] bg-white/25 px-1.5 py-0.2 rounded-full uppercase font-bold text-white">
+                  LIVE
+                </span>
+              </div>
+              <p className="text-[11px] text-indigo-100 truncate mt-0.5">
+                {lang === 'hi'
+                  ? 'बोलें: "₹500 का पेट्रोल भराया" या "कल 10 बजे मीटिंग"'
+                  : lang === 'en'
+                  ? 'Say: "Spent 500 on fuel" or "Meeting tomorrow at 10 AM"'
+                  : 'બોલો: "૫૦૦ રૂપિયા પેટ્રોલ પુરાવ્યું" કે "કાલે ૧૦ વાગ્યે મિટિંગ"'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenAssistant}
+            className="px-3 py-1.5 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs shadow-md shadow-black/10 transition active:scale-95 shrink-0 flex items-center gap-1.5"
+          >
+            <Sparkles size={13} className="text-amber-500" />
+            <span>{lang === 'hi' ? 'बोलें' : lang === 'en' ? 'Speak' : 'બોલો'}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Daily Streak & Mood Tracker Card */}
+      <MoodTrackerCard lang={lang} />
 
       {/* Quick Action Grid */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">

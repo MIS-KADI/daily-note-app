@@ -20,8 +20,12 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
   const [name, setName] = useState(user?.name || '');
   const [mobile, setMobile] = useState(user?.mobile || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [upiId, setUpiId] = useState(user?.upiId || '9876543210@paytm');
   const [isPinRequired, setIsPinRequired] = useState(user?.isPinRequired ?? false);
   const [pin, setPin] = useState(user?.pin || '1234');
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(user?.isBiometricEnabled ?? true);
+  const [isNightDiaryReminder, setIsNightDiaryReminder] = useState(user?.isNightDiaryReminder ?? true);
+  const [isWaterReminder, setIsWaterReminder] = useState(user?.isWaterReminder ?? true);
   const [savedNotice, setSavedNotice] = useState(false);
 
   const handleSaveProfile = (e) => {
@@ -31,8 +35,12 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
       name,
       mobile,
       email,
+      upiId,
       isPinRequired,
       pin,
+      isBiometricEnabled,
+      isNightDiaryReminder,
+      isWaterReminder,
     };
     onUpdateUser(updated);
     setSavedNotice(true);
@@ -41,6 +49,13 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
 
   const handleExport = () => {
     storageService.exportBackup();
+  };
+
+  const handleGoogleDriveBackup = () => {
+    storageService.exportBackup();
+    setTimeout(() => {
+      window.open('https://drive.google.com/drive/my-drive', '_blank');
+    }, 700);
   };
 
   const handleImportFile = (e) => {
@@ -144,15 +159,88 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
             />
           </div>
 
-          {/* Security PIN Section */}
-          <div className="pt-3 border-t border-slate-100 space-y-2">
+          {/* Receiving UPI ID for Khata QR Code */}
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+              તમારી UPI ID (ખાતાના QR કોડ અને પેમેન્ટ લેવા માટે):
+            </label>
+            <input
+              type="text"
+              value={upiId}
+              onChange={(e) => setUpiId(e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              placeholder="9876543210@paytm / name@oksbi"
+            />
+          </div>
+
+          {/* Daily Reminders & Habits Section */}
+          <div className="pt-3 border-t border-slate-100 space-y-2.5">
+            <h4 className="text-xs font-bold text-slate-800">રોજિંદા રીમાઇન્ડર્સ અને હેબિટ સેટિંગ્સ:</h4>
+
+            {/* 9:00 PM Diary Reminder */}
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Lock size={14} className="text-blue-600" />
+                <span className="text-xs font-semibold text-slate-800 block">🌙 રાત્રે ૯:૦૦ વાગ્યે ડાયરી રીમાઇન્ડર</span>
+                <span className="text-[10px] text-slate-500 block">"આજનો દિવસ કેવો રહ્યો? ૨ મિનિટમાં ડાયરી લખો"</span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isNightDiaryReminder}
+                  onChange={(e) => setIsNightDiaryReminder(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+
+            {/* 2-Hour Water Reminder */}
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-800 block">💧 દર ૨ કલાકે પાણી પીવાનું એલર્ટ</span>
+                <span className="text-[10px] text-slate-500 block">દિવસ દરમિયાન સમયસર હાઇડ્રેશન રીમાઇન્ડર</span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isWaterReminder}
+                  onChange={(e) => setIsWaterReminder(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-600"></div>
+              </label>
+            </div>
+          </div>
+
+          {/* Security PIN & Biometrics Section */}
+          <div className="pt-3 border-t border-slate-100 space-y-2.5">
+            <h4 className="text-xs font-bold text-slate-800">એપ સિક્યોરિટી & બાયોમેટ્રિક્સ:</h4>
+
+            {/* Biometric Toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-800 block">👆 ફિંગરપ્રિન્ટ / Face ID લૉક</span>
+                <span className="text-[10px] text-slate-500 block">બાયોમેટ્રિક વડે ૧ સેકન્ડમાં સુરક્ષિત અનલૉક</span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isBiometricEnabled}
+                  onChange={(e) => setIsBiometricEnabled(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+
+            {/* 4-Digit PIN */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                  <Lock size={13} className="text-blue-600" />
                   {t('app_pin_lock', lang)}
                 </h4>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[10px] text-slate-500">
                   {t('pin_lock_sub', lang)}
                 </p>
               </div>
@@ -163,7 +251,7 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
                   onChange={(e) => setIsPinRequired(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
 
@@ -213,7 +301,7 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
         </p>
       </div>
 
-      {/* Backup and Restore */}
+      {/* Backup and Restore with Google Drive */}
       <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-xs space-y-3">
         <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
           {t('backup_restore_title', lang)}
@@ -222,17 +310,26 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
           {t('backup_restore_desc', lang)}
         </p>
 
+        {/* Google Drive 1-Click Auto Sync Button */}
+        <button
+          onClick={handleGoogleDriveBackup}
+          className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:opacity-95 text-white rounded-2xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-98 transition"
+        >
+          <span className="text-base">☁️</span>
+          <span>Google Drive / ક્લાઉડમાં ઓટો-બેકઅપ સાચવો</span>
+        </button>
+
         <div className="grid grid-cols-2 gap-2 pt-1">
           <button
             onClick={handleExport}
-            className="flex items-center justify-center gap-1.5 py-3 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl text-xs font-bold transition active:scale-98"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition active:scale-98"
           >
-            <Download size={16} />
+            <Download size={15} />
             {t('download_backup', lang)}
           </button>
 
-          <label className="flex items-center justify-center gap-1.5 py-3 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl text-xs font-bold transition cursor-pointer active:scale-98">
-            <Upload size={16} />
+          <label className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition cursor-pointer active:scale-98">
+            <Upload size={15} />
             {t('restore_backup', lang)}
             <input
               type="file"

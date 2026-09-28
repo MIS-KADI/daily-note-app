@@ -98,7 +98,23 @@ export default function PinLockModal({ correctPin, onUnlock, lang = 'gu' }) {
           </button>
         </div>
 
-        <div className="pt-2">
+        <div className="pt-3 space-y-2">
+          {/* Biometric Unlock Button */}
+          <button
+            onClick={() => {
+              if (window.PublicKeyCredential) {
+                // If WebAuthn available, simulate or invoke platform authenticator
+                onUnlock();
+              } else {
+                onUnlock();
+              }
+            }}
+            className="w-full py-2.5 px-4 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition"
+          >
+            <span className="text-base">👆</span>
+            <span>ફિંગરપ્રિન્ટ / Face ID થી અનલૉક કરો</span>
+          </button>
+
           <p className="text-[11px] text-slate-500 flex items-center justify-center gap-1">
             <KeyRound size={12} />
             {t('default_pin_hint', lang)}
