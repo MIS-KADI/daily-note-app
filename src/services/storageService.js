@@ -553,6 +553,24 @@ export const storageService = {
   saveWeeklyStepHistory(history) {
     localStorage.setItem('weekly_step_history', JSON.stringify(history));
   },
+
+  // Daily Diary Writing Reminder Settings
+  getDiaryReminderConfig() {
+    try {
+      const data = localStorage.getItem('daily_diary_reminder_config');
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.warn('Error reading diary reminder config:', e);
+    }
+    return {
+      enabled: true,
+      time: '21:30', // Default 9:30 PM
+    };
+  },
+
+  saveDiaryReminderConfig(config) {
+    localStorage.setItem('daily_diary_reminder_config', JSON.stringify(config));
+  },
 };
 
 

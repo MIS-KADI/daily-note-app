@@ -39,6 +39,8 @@ export default function ReportsTab({
   );
   const [selectedCategory, setSelectedCategory] = useState('all'); // 'all', 'finance', 'health', 'reminders', 'notes'
   const [downloading, setDownloading] = useState(false);
+  const [usePdfPassword, setUsePdfPassword] = useState(false);
+  const [pdfPassword, setPdfPassword] = useState('');
 
   // Month options for selector
   const monthOptions = [
@@ -117,6 +119,7 @@ export default function ReportsTab({
         events,
         fitness,
         reportCategory: selectedCategory,
+        pdfPassword: usePdfPassword ? pdfPassword : '',
         lang,
       });
 
@@ -289,6 +292,35 @@ export default function ReportsTab({
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Optional PDF Password Protection Box */}
+      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+        <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={usePdfPassword}
+            onChange={(e) => setUsePdfPassword(e.target.checked)}
+            className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+          />
+          <span>{t('password_protect', lang)}</span>
+        </label>
+        {usePdfPassword && (
+          <div className="pt-1 animate-in fade-in">
+            <input
+              type="password"
+              placeholder={lang === 'gu' ? 'PDF ખોલવા માટે પાસવર્ડ દાખલ કરો (દા.ત. 1234)' : 'Enter password to unlock PDF'}
+              value={pdfPassword}
+              onChange={(e) => setPdfPassword(e.target.value)}
+              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-bold focus:outline-blue-500"
+            />
+            <p className="text-[10px] text-slate-400 mt-1">
+              {lang === 'gu'
+                ? 'ℹ️ આ PDF ઓપન કરતી વખતે પાસવર્ડ માંગવામાં આવશે.'
+                : 'ℹ️ Anyone opening this PDF will be prompted for this password.'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Main Download & Print CTA Buttons */}

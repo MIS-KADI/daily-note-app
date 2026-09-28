@@ -860,11 +860,12 @@ export const buildReportHtml = ({
                 : notesList.slice(0, notesLimit).map((n) => `
                     <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 14px;">
                       <div style="display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-bottom: 3px;">
-                        <span>📅 ${n.date || 'Today'} • <strong style="color: #2563eb;">${n.category || L.general_note}</strong></span>
+                        <span>📅 ${n.date || 'Today'} • <strong style="color: #2563eb;">${n.category || L.general_note}</strong> ${n.mood ? `• ${n.mood === 'good' ? '😊' : n.mood === 'awesome' ? '🤩' : n.mood === 'neutral' ? '😌' : n.mood === 'tired' ? '😔' : '😤'}` : ''} ${n.location ? `• 📍 ${n.location}` : ''}</span>
                         ${n.isPinned ? `<span style="color: #d97706; font-weight: bold;">📌 ${L.pinned}</span>` : ''}
                       </div>
                       <div style="font-size: 12px; font-weight: 800; color: #0f172a;">${n.title}</div>
-                      <div style="font-size: 11px; color: #334155; margin-top: 3px; line-height: 1.4;">${n.content}</div>
+                      <div style="font-size: 11px; color: #334155; margin-top: 3px; line-height: 1.4; white-space: pre-wrap;">${n.content}</div>
+                      ${n.photo ? `<div style="margin-top: 6px;"><img src="${n.photo}" style="max-height: 100px; max-width: 180px; border-radius: 6px; object-fit: cover;" /></div>` : ''}
                     </div>
                   `).join('')
             }
@@ -896,6 +897,7 @@ export const generateMonthlyReportPDF = async ({
   events = [],
   fitness = null,
   reportCategory = 'all', // 'all', 'finance', 'health', 'reminders', 'notes'
+  pdfPassword = '',
   lang = 'gu',
 }) => {
   // 1. Create a hidden rendering container in the DOM
@@ -939,6 +941,13 @@ export const generateMonthlyReportPDF = async ({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4',
+      encryption: pdfPassword?.trim()
+        ? {
+            userPassword: pdfPassword.trim(),
+            ownerPassword: pdfPassword.trim(),
+            userPermissions: ['print', 'copy'],
+          }
+        : undefined,
     });
 
     const pdfWidth = pdf.internal.pageSize.getWidth();

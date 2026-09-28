@@ -59,6 +59,19 @@ export default function App() {
   const [isStepSensorActive, setIsStepSensorActive] = useState(false);
   const [needsSensorPermission, setNeedsSensorPermission] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // Monitor network online/offline state
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Track fired alarms to prevent duplicate ringing in the same minute
   const firedAlarmsRef = useRef(new Set());
@@ -483,10 +496,11 @@ export default function App() {
         }
       });
 
-      // 3. Daily 9:00 PM Diary Writing Reminder
-      const diaryReminderEnabled = localStorage.getItem('diary_reminder_enabled') !== 'false';
-      const diaryAlarmKey = `diary-9pm-${todayDateStr}`;
-      if (currentTimeStr === '21:00' && diaryReminderEnabled && !firedAlarmsRef.current.has(diaryAlarmKey)) {
+      // 3. Daily Diary Writing Reminder (Configurable time e.g., 21:00, 21:30, 22:00)
+      const diaryConfig = storageService.getDiaryReminderConfig();
+      const targetDiaryTime = diaryConfig?.time || '21:30';
+      const diaryAlarmKey = `diary-${targetDiaryTime}-${todayDateStr}`;
+      if (currentTimeStr === targetDiaryTime && diaryConfig?.enabled && !firedAlarmsRef.current.has(diaryAlarmKey)) {
         firedAlarmsRef.current.add(diaryAlarmKey);
         notificationService.send(
           lang === 'hi'
@@ -499,8 +513,8 @@ export default function App() {
               lang === 'hi'
                 ? 'आज के दिन की यादें और खर्च दर्ज करें। अपनी 🔥 स्ट्रीक बनाए रखें!'
                 : lang === 'en'
-                ? 'Record today\'s memories and expenses. Keep your 🔥 streak alive!'
-                : 'આજના દિવસની યાદો અને હિસાબ નોંધી લો અને તમારી 🔥 સ્ટ્રીક જાળવી રાખો!',
+                ? 'Record today\'s memories and thoughts. Keep your 🔥 streak alive!'
+                : 'આજના દિવસની યાદો અને વિચારો નોંધી લો અને તમારી 🔥 સ્ટ્રીક જાળવી રાખો!',
           }
         );
       }
@@ -554,6 +568,22 @@ export default function App() {
           medicines.filter((m) => m.active && m.hasAlarm).length
         }
       />
+
+      {/* Offline Mode Banner */}
+      {isOffline && (
+        <div className="bg-slate-900 text-white px-3.5 py-1.5 flex items-center justify-between text-xs border-b border-slate-800 animate-in slide-in-from-top">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-semibold text-[11px]">
+              {lang === 'gu'
+                ? '🟢 ઓફલાઈન મોડ સક્ષમ - ઇન્ટરનેટ વગર પણ તમામ ડેટા સેવ થાય છે.'
+                : lang === 'hi'
+                ? '🟢 ऑफ़लाइन मोड सक्रिय - इंटरनेट के बिना भी सारा डेटा सुरक्षित रहेगा।'
+                : '🟢 Offline Mode Active - Everything is saved locally.'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* 1-Tap Sensor Permission Banner for iOS / Browsers */}
       {needsSensorPermission && (

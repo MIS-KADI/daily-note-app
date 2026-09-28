@@ -24,38 +24,134 @@ import {
   List,
   CornerDownLeft,
   Quote,
+  Image as ImageIcon,
+  MapPin,
+  Volume2,
+  Download,
+  Flame,
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Lock,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t, getNoteCategories } from '../../services/i18n';
 import { whatsappService } from '../../services/whatsappService';
+import { streakService, MOODS } from '../../services/streakService';
+import { storageService } from '../../services/storageService';
+import { generateMonthlyReportPDF } from '../../services/pdfReportService';
+import { notificationService } from '../../services/notificationService';
 
-export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
+export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user }) {
   const noteCategories = getNoteCategories(lang);
   const todayStr = new Date().toISOString().split('T')[0];
+
+  // View state: 'list', 'calendar', 'timeline'
+  const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
   const [selectedCat, setSelectedCat] = useState(noteCategories[0]);
   const [dateFilterMode, setDateFilterMode] = useState('all'); // 'all', 'today', 'future', 'by_date'
   const [selectedDate, setSelectedDate] = useState(todayStr);
 
+  // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
+  const [isMoodModalOpen, setIsMoodModalOpen] = useState(false);
+  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
+  const [isOnThisDayOpen, setIsOnThisDayOpen] = useState(false);
+  const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
+  const [activePhotoPreview, setActivePhotoPreview] = useState(null);
 
-  // Form state
+  // Form State
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState(noteCategories[1] || 'Personal');
   const [noteDate, setNoteDate] = useState(todayStr);
   const [isPinned, setIsPinned] = useState(false);
-  const [fontFamily, setFontFamily] = useState('handwriting'); // 'handwriting', 'serif', 'sans', 'mono'
-  const [fontSize, setFontSize] = useState('md'); // 'sm', 'md', 'lg', 'xl'
+  const [fontFamily, setFontFamily] = useState('handwriting');
+  const [fontSize, setFontSize] = useState('md');
+  const [mood, setMood] = useState('good');
+  const [photo, setPhoto] = useState('');
+  const [location, setLocation] = useState('');
+  const [audio, setAudio] = useState('');
+
+  // Toggles inside Form
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showKeyboardHelper, setShowKeyboardHelper] = useState(false);
+  const [showPromptsDrawer, setShowPromptsDrawer] = useState(false);
   const [selectedEmojiCat, setSelectedEmojiCat] = useState('smilies');
   const [copiedNoteId, setCopiedNoteId] = useState(null);
   const [isListening, setIsListening] = useState(false);
 
+  // Audio Recording State
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  // Diary Reminder Settings
+  const [reminderConfig, setReminderConfig] = useState(() => storageService.getDiaryReminderConfig());
+
+  // PDF Export Modal State
+  const [exportMonth, setExportMonth] = useState('all');
+  const [pdfPassword, setPdfPassword] = useState('');
+  const [usePdfPassword, setUsePdfPassword] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  // Calendar State
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+
   const contentRef = useRef(null);
   const recognitionRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  // Streak Information
+  const streakData = streakService.getStreakData();
+  const streakBadge = streakService.getBadge(streakData.currentStreak);
+
+  // Weekly Mood Analysis
+  const weeklyMood = streakService.getWeeklyMoodAnalysis(notes, lang);
+
+  // AI Prompts / Questions
+  const aiPromptsList = [
+    {
+      q: lang === 'gu' ? '🌟 આજે દિવસનો શ્રેષ્ઠ અને ખુશીભર્યો અનુભવ કયો હતો?' : lang === 'hi' ? '🌟 आज दिन का सबसे अच्छा और खुशी भरा अनुभव कौन सा था?' : '🌟 What was the best moment of your day today?',
+      category: 'આનંદ',
+    },
+    {
+      q: lang === 'gu' ? '🙏 આજે તમે કોનો અને કઈ બાબત માટે આભાર માનવા માંગો છો?' : lang === 'hi' ? '🙏 आज आप किसका और किस बात के लिए आभार व्यक्त करना चाहते हैं?' : '🙏 Who and what are you most grateful for today?',
+      category: 'કૃતજ્ઞતા',
+    },
+    {
+      q: lang === 'gu' ? '🧠 આજે તમે નવું શું શીખ્યા, વાંચ્યું કે વિચાર્યું?' : lang === 'hi' ? '🧠 आज आपने नया क्या सीखा, पढ़ा या सोचा?' : '🧠 What new thing did you learn or discover today?',
+      category: 'જ્ઞાન',
+    },
+    {
+      q: lang === 'gu' ? '🎯 આજના કયા કામ કે સફળતા પર તમને સૌથી વધુ ગર્વ છે?' : lang === 'hi' ? '🎯 आज के किस कार्य या उपलब्धि पर आपको सबसे ज्यादा गर्व है?' : '🎯 Which accomplishment made you proud today?',
+      category: 'સિદ્ધિ',
+    },
+    {
+      q: lang === 'gu' ? '☕ આજે શાંતિ અને આંતરિક સુખ આપે તેવી કઈ નાની ક્ષણ બની?' : lang === 'hi' ? '☕ आज मन को शांति देने वाला कौन सा छोटा पल था?' : '☕ What small peaceful moment brought you inner calm?',
+      category: 'શાંતિ',
+    },
+    {
+      q: lang === 'gu' ? '💪 આજે કયો મોટો પડકાર આવ્યો અને તમે કેવી રીતે લડ્યા?' : lang === 'hi' ? '💪 आज कौन सी चुनौती आई और आपने कैसे उसका सामना किया?' : '💪 What challenge did you face and overcome today?',
+      category: 'સાહસ',
+    },
+    {
+      q: lang === 'gu' ? '💖 આજે પરિવાર કે મિત્ર સાથે કઈ સુંદર વાતચીત થઈ?' : lang === 'hi' ? '💖 आज परिवार या मित्र के साथ कौन सी अच्छी बातचीत हुई?' : '💖 What meaningful conversation did you have today?',
+      category: 'સંબંધ',
+    },
+    {
+      q: lang === 'gu' ? '🌱 આવતીકાલે તમે જીવનમાં કયો નાનો સારો ફેરફાર કરવા માંગો છો?' : lang === 'hi' ? '🌱 कल आप अपने जीवन में कौन सा छोटा सकारात्मक बदलाव करना चाहते हैं?' : '🌱 What positive habit do you want to nurture tomorrow?',
+      category: 'આયોજન',
+    },
+    {
+      q: lang === 'gu' ? '🧘 આજે તમે તમારા સ્વાસ્થ્ય, મન અને શરીર માટે શું સારું કર્યું?' : lang === 'hi' ? '🧘 आज आपने अपने स्वास्थ्य और मन के लिए क्या अच्छा किया?' : '🧘 How did you take care of your body and mind today?',
+      category: 'આરોગ્ય',
+    },
+  ];
 
   // Categorized Emojis for Diary
   const emojiCategories = {
@@ -191,7 +287,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     { id: 'xl', label: 'A++', title: 'Extra Large' },
   ];
 
-  // Helper to insert character / emoji at textarea cursor
+  // Helper to insert character/emoji at cursor
   const insertAtCursor = (str) => {
     const textarea = contentRef.current;
     if (!textarea) {
@@ -208,7 +304,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     }, 0);
   };
 
-  // Helper to wrap selected text in markdown styling
+  // Helper to wrap selected text in markdown
   const wrapSelectedText = (prefix, suffix = prefix) => {
     const textarea = contentRef.current;
     if (!textarea) return;
@@ -232,6 +328,100 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
       setCopiedNoteId(note.id);
       setTimeout(() => setCopiedNoteId(null), 2000);
     });
+  };
+
+  // Compress & upload image
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 800;
+
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+        setPhoto(compressedBase64);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Audio Memo Recording Handlers
+  const handleStartAudioRecord = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAudio(reader.result);
+        };
+        reader.readAsDataURL(audioBlob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecordingAudio(true);
+    } catch {
+      alert(lang === 'gu' ? 'માઇક્રોફોનની પરવાનગી આપો.' : 'Please allow microphone access.');
+    }
+  };
+
+  const handleStopAudioRecord = () => {
+    if (mediaRecorderRef.current && isRecordingAudio) {
+      mediaRecorderRef.current.stop();
+      setIsRecordingAudio(false);
+    }
+  };
+
+  // Location Fetcher
+  const handleGetLocation = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          const place = prompt(
+            lang === 'gu' ? 'શહેર / સ્થળનું નામ દાખલ કરો:' : 'Enter city / place name:',
+            lang === 'gu' ? 'કડી, ગુજરાત' : 'Kadi, Gujarat'
+          );
+          if (place) setLocation(place.trim());
+        },
+        () => {
+          const place = prompt(lang === 'gu' ? 'શહેર / સ્થળનું નામ લખો:' : 'Enter city / location:');
+          if (place) setLocation(place.trim());
+        }
+      );
+    } else {
+      const place = prompt(lang === 'gu' ? 'શહેર / સ્થળનું નામ લખો:' : 'Enter city / location:');
+      if (place) setLocation(place.trim());
+    }
   };
 
   // Speech Recognition Setup
@@ -264,30 +454,17 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
         }
       };
 
-      recognition.onerror = () => {
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
       recognitionRef.current = recognition;
     }
   }, [lang]);
 
   const toggleVoiceRecording = () => {
     if (!recognitionRef.current) {
-      alert(
-        lang === 'gu'
-          ? 'તમારા બ્રાઉઝરમાં વોઇસ ટાઇપિંગ સપોર્ટ નથી. ક્રોમ કે સફારી વાપરો.'
-          : lang === 'hi'
-          ? 'आपके ब्राउज़र में वॉयस टाइपिंग समर्थित नहीं है। क्रोम या सफारी का उपयोग करें।'
-          : 'Voice typing is not supported on this browser. Please use Chrome or Safari.'
-      );
+      alert(lang === 'gu' ? 'તમારા બ્રાઉઝરમાં વોઇસ ટાઇપિંગ સપોર્ટ નથી.' : 'Voice typing is not supported.');
       return;
     }
-
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
@@ -301,6 +478,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     }
   };
 
+  // Open Add Note Modal
   const handleOpenAdd = (targetDate = todayStr) => {
     setEditingNote(null);
     setTitle('');
@@ -310,11 +488,17 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     setIsPinned(false);
     setFontFamily('handwriting');
     setFontSize('md');
+    setMood('good');
+    setPhoto('');
+    setLocation('');
+    setAudio('');
     setShowEmojiPicker(false);
     setShowKeyboardHelper(false);
+    setShowPromptsDrawer(false);
     setIsModalOpen(true);
   };
 
+  // Open Edit Note Modal
   const handleOpenEdit = (note) => {
     setEditingNote(note);
     setTitle(note.title);
@@ -324,16 +508,25 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     setIsPinned(note.isPinned);
     setFontFamily(note.fontFamily || 'sans');
     setFontSize(note.fontSize || 'md');
+    setMood(note.mood || 'good');
+    setPhoto(note.photo || '');
+    setLocation(note.location || '');
+    setAudio(note.audio || '');
     setShowEmojiPicker(false);
     setShowKeyboardHelper(false);
+    setShowPromptsDrawer(false);
     setIsModalOpen(true);
   };
 
+  // Save Note
   const handleSave = (e) => {
     e.preventDefault();
     if (!title.trim() && !content.trim()) return;
 
     const defaultTitle = t('untitled_note', lang) || 'Note';
+
+    // Auto-detect mood if none set or neutral
+    const finalMood = mood || streakService.detectSentimentMood(content) || 'good';
 
     if (editingNote) {
       const updated = notes.map((n) =>
@@ -347,6 +540,10 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
               isPinned,
               fontFamily,
               fontSize,
+              mood: finalMood,
+              photo,
+              location,
+              audio,
               updatedAt: new Date().toISOString(),
             }
           : n
@@ -362,11 +559,16 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
         isPinned,
         fontFamily,
         fontSize,
+        mood: finalMood,
+        photo,
+        location,
+        audio,
         color: '#eff6ff',
         createdAt: new Date().toISOString(),
       };
       onSaveNotes([newNote, ...notes]);
-      confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } });
+      streakService.recordActivityToday();
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
     }
 
     setIsModalOpen(false);
@@ -383,18 +585,102 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     onSaveNotes(updated);
   };
 
+  // Apply Prompt to Note
+  const handleSelectPrompt = (promptText) => {
+    setTitle(promptText);
+    setContent((prev) => (prev ? prev + '\n\n' : '') + `✨ ${promptText}\n\n📝 `);
+    setShowPromptsDrawer(false);
+    if (!isModalOpen) {
+      setIsModalOpen(true);
+    }
+  };
+
+  // Find "On This Day" Memory
+  const getOnThisDayMemory = () => {
+    const [, todayM, todayD] = todayStr.split('-');
+    const pastYearNote = notes.find((n) => {
+      if (!n.date) return false;
+      const [y, m, d] = n.date.split('-');
+      return m === todayM && d === todayD && y !== todayStr.split('-')[0];
+    });
+
+    if (pastYearNote) {
+      const yearsAgo = Number(todayStr.split('-')[0]) - Number(pastYearNote.date.split('-')[0]);
+      return {
+        note: pastYearNote,
+        label: lang === 'gu' ? `✨ ${yearsAgo} વર્ષ પહેલાં આજના દિવસે` : `✨ ${yearsAgo} year(s) ago today`,
+      };
+    }
+
+    if (notes.length > 0) {
+      const oldest = [...notes].sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+      return {
+        note: oldest,
+        label: lang === 'gu' ? '✨ અગાઉની યાદગાર ક્ષણ (Throwback Memory)' : '✨ Memorable Throwback',
+      };
+    }
+    return null;
+  };
+
+  const onThisDay = getOnThisDayMemory();
+
+  // Save Reminder Config
+  const handleSaveReminderSettings = (e) => {
+    e.preventDefault();
+    storageService.saveDiaryReminderConfig(reminderConfig);
+    setIsReminderModalOpen(false);
+    alert(lang === 'gu' ? 'ડાયરી રીમાઇન્ડર સેટ થઈ ગયું!' : 'Diary reminder saved!');
+  };
+
+  // Test Diary Reminder Notification
+  const handleTestDiaryNotification = async () => {
+    const hasPerm = await notificationService.requestPermission();
+    if (hasPerm) {
+      notificationService.send('📔 ડાયરી લખવાનો સમય થયો!', {
+        body: 'આજના દિવસની યાદો, વિચારો અને મૂડ નોંધી લો. તમારી 🔥 સ્ટ્રીક જાળવી રાખો!',
+      });
+    } else {
+      alert(lang === 'gu' ? 'કૃપા કરીને નોટિફિકેશનની પરવાનગી આપો.' : 'Please allow notifications.');
+    }
+  };
+
+  // Download PDF with optional Password
+  const handleExportDiaryPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      const notesToExport = exportMonth === 'all'
+        ? notes
+        : notes.filter((n) => n.date && n.date.startsWith(exportMonth));
+
+      await generateMonthlyReportPDF({
+        user,
+        monthYear: exportMonth === 'all' ? 'All Diary Notes' : exportMonth,
+        notesList: notesToExport,
+        reportCategory: 'notes',
+        pdfPassword: usePdfPassword ? pdfPassword : '',
+        lang,
+      });
+
+      confetti({ particleCount: 70, spread: 60 });
+      setIsPdfExportOpen(false);
+    } catch (e) {
+      console.error(e);
+      alert('PDF export failed. Try again.');
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   // Filter notes
   const filteredNotes = notes.filter((n) => {
-    // Search
     const matchesSearch =
       n.title?.toLowerCase().includes(search.toLowerCase()) ||
-      n.content?.toLowerCase().includes(search.toLowerCase());
+      n.content?.toLowerCase().includes(search.toLowerCase()) ||
+      n.location?.toLowerCase().includes(search.toLowerCase());
 
-    // Category
     const isAll = selectedCat === noteCategories[0] || selectedCat === 'All' || selectedCat === 'બધા';
     const matchesCategory = isAll || n.category === selectedCat;
 
-    // Date Filter
     let matchesDate = true;
     if (dateFilterMode === 'today') {
       matchesDate = n.date === todayStr;
@@ -407,7 +693,6 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     return matchesSearch && matchesCategory && matchesDate;
   });
 
-  // Sort pinned first, then by date descending
   const sortedNotes = [...filteredNotes].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
@@ -417,10 +702,20 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
   const futureCount = notes.filter((n) => n.date > todayStr).length;
   const activeHelper = keyboardHelpers[lang] || keyboardHelpers.gu;
 
+  // Calendar calculations
+  const daysInCalMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const firstDayOfCalMonth = new Date(calYear, calMonth, 1).getDay();
+  const calMonthName = new Date(calYear, calMonth).toLocaleString(lang === 'gu' ? 'gu-IN' : 'default', {
+    month: 'long',
+    year: 'numeric',
+  });
+
   return (
     <div className="space-y-4 pb-20 animate-in fade-in duration-200">
-      {/* Top Header Card */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-3xl p-5 text-white shadow-md shadow-blue-500/15 relative overflow-hidden">
+      {/* ======================================================= */}
+      {/* TOP HEADER: TITLE, STREAK, MOOD ANALYTICS & CTA         */}
+      {/* ======================================================= */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-3xl p-5 text-white shadow-md shadow-blue-500/15 relative overflow-hidden space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-2xl bg-white/20 backdrop-blur-md">
@@ -440,8 +735,53 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
           </button>
         </div>
 
+        {/* Action Pills Row: AI Prompts, Mood Analysis, Streak, PDF Export, Reminder */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1">
+          {/* Habit Streak Pill */}
+          <div className="px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md text-amber-300 font-extrabold text-xs flex items-center gap-1.5 shrink-0 border border-white/10">
+            <Flame size={14} className="text-orange-400 fill-orange-400 animate-pulse" />
+            <span>{streakData.currentStreak} {lang === 'gu' ? 'દિવસની સ્ટ્રીક' : 'Day Streak'}</span>
+          </div>
+
+          {/* AI Prompts Button */}
+          <button
+            onClick={() => setShowPromptsDrawer(true)}
+            className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold text-xs flex items-center gap-1.5 shrink-0 transition active:scale-95 border border-white/10"
+          >
+            <Sparkles size={14} className="text-yellow-300" />
+            <span>{t('ai_prompts', lang)}</span>
+          </button>
+
+          {/* Mood Analysis Button */}
+          <button
+            onClick={() => setIsMoodModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold text-xs flex items-center gap-1.5 shrink-0 transition active:scale-95 border border-white/10"
+          >
+            <span>{weeklyMood.dominantEmoji}</span>
+            <span>{t('mood_analysis', lang)}</span>
+          </button>
+
+          {/* Diary Reminder Button */}
+          <button
+            onClick={() => setIsReminderModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold text-xs flex items-center gap-1.5 shrink-0 transition active:scale-95 border border-white/10"
+          >
+            <Bell size={14} className="text-cyan-300" />
+            <span>{t('diary_reminder', lang)}</span>
+          </button>
+
+          {/* PDF Export Button */}
+          <button
+            onClick={() => setIsPdfExportOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold text-xs flex items-center gap-1.5 shrink-0 transition active:scale-95 border border-white/10"
+          >
+            <Download size={14} className="text-emerald-300" />
+            <span>PDF {lang === 'gu' ? 'એક્સપોર્ટ' : 'Export'}</span>
+          </button>
+        </div>
+
         {/* Date Quick Stats */}
-        <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/20 text-center">
+        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/20 text-center">
           <div className="bg-white/10 rounded-xl p-2 backdrop-blur-xs">
             <span className="text-[10px] text-blue-200 block">{t('total_notes', lang)}</span>
             <span className="text-sm font-extrabold">{notes.length}</span>
@@ -457,76 +797,262 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
         </div>
       </div>
 
-      {/* Date Filter Tabs (Today, Upcoming/Advance, All, Pick Date) */}
-      <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-        <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-none text-xs">
-          <button
-            onClick={() => setDateFilterMode('all')}
-            className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
-              dateFilterMode === 'all'
-                ? 'bg-blue-600 text-white shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            {t('filter_all', lang)} ({notes.length})
-          </button>
-
-          <button
-            onClick={() => setDateFilterMode('today')}
-            className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
-              dateFilterMode === 'today'
-                ? 'bg-blue-600 text-white shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            {t('filter_today', lang)}
-          </button>
-
-          <button
-            onClick={() => setDateFilterMode('future')}
-            className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
-              dateFilterMode === 'future'
-                ? 'bg-indigo-600 text-white shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            {t('filter_future', lang)} ({futureCount})
-          </button>
-
-          <button
-            onClick={() => setDateFilterMode('by_date')}
-            className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition flex items-center gap-1 ${
-              dateFilterMode === 'by_date'
-                ? 'bg-cyan-600 text-white shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Calendar size={13} />
-            <span>{t('by_date', lang)}</span>
+      {/* ======================================================= */}
+      {/* "ON THIS DAY" (MEMORIES / સ્મૃતિઓ) BANNER              */}
+      {/* ======================================================= */}
+      {onThisDay && (
+        <div
+          onClick={() => setIsOnThisDayOpen(true)}
+          className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-3xl p-4 text-white shadow-md cursor-pointer hover:shadow-lg transition active:scale-98 flex items-center justify-between gap-3 relative overflow-hidden"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shrink-0">
+              📸
+            </div>
+            <div>
+              <span className="text-[11px] font-extrabold text-amber-100 flex items-center gap-1 uppercase tracking-wider">
+                <Sparkles size={12} className="text-yellow-200" />
+                {onThisDay.label}
+              </span>
+              <h4 className="text-sm font-black text-white line-clamp-1">
+                "{onThisDay.note.title}"
+              </h4>
+              <p className="text-[11px] text-amber-100 line-clamp-1 opacity-90">
+                {onThisDay.note.content}
+              </p>
+            </div>
+          </div>
+          <button className="px-3 py-1.5 bg-white text-amber-800 rounded-xl text-xs font-black shrink-0 shadow-xs">
+            {lang === 'gu' ? 'જુઓ' : 'View'}
           </button>
         </div>
+      )}
 
-        {/* Date picker if 'by_date' is selected */}
-        {dateFilterMode === 'by_date' && (
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-            <span className="text-xs text-slate-500 font-semibold">{t('select_date_label', lang)}</span>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="text-xs font-bold p-1.5 rounded-xl border border-slate-200 bg-slate-50"
-            />
-            <button
-              onClick={() => handleOpenAdd(selectedDate)}
-              className="text-xs font-bold text-blue-600 hover:underline"
-            >
-              {t('add_note_on_date', lang)}
-            </button>
-          </div>
-        )}
+      {/* ======================================================= */}
+      {/* VIEW MODE SWITCHER: LIST, CALENDAR, TIMELINE            */}
+      {/* ======================================================= */}
+      <div className="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between gap-1 text-xs">
+        <button
+          onClick={() => setViewMode('list')}
+          className={`flex-1 py-2 rounded-xl font-bold transition flex items-center justify-center gap-1.5 ${
+            viewMode === 'list'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <List size={14} />
+          <span>{t('view_list', lang)}</span>
+        </button>
+
+        <button
+          onClick={() => setViewMode('calendar')}
+          className={`flex-1 py-2 rounded-xl font-bold transition flex items-center justify-center gap-1.5 ${
+            viewMode === 'calendar'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Calendar size={14} />
+          <span>{t('view_calendar', lang)}</span>
+        </button>
+
+        <button
+          onClick={() => setViewMode('timeline')}
+          className={`flex-1 py-2 rounded-xl font-bold transition flex items-center justify-center gap-1.5 ${
+            viewMode === 'timeline'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Clock size={14} />
+          <span>{t('view_timeline', lang)}</span>
+        </button>
       </div>
 
-      {/* Search & Category Chips Bar */}
+      {/* ======================================================= */}
+      {/* CALENDAR VIEW MODE                                      */}
+      {/* ======================================================= */}
+      {viewMode === 'calendar' && (
+        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-xs space-y-3 animate-in fade-in">
+          {/* Calendar Month Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-extrabold text-slate-800">{calMonthName}</h3>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  if (calMonth === 0) {
+                    setCalMonth(11);
+                    setCalYear((y) => y - 1);
+                  } else {
+                    setCalMonth((m) => m - 1);
+                  }
+                }}
+                className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  setCalMonth(new Date().getMonth());
+                  setCalYear(new Date().getFullYear());
+                }}
+                className="px-2 py-1 rounded-xl text-xs font-bold text-blue-600 hover:bg-blue-50"
+              >
+                {t('today', lang)}
+              </button>
+              <button
+                onClick={() => {
+                  if (calMonth === 11) {
+                    setCalMonth(0);
+                    setCalYear((y) => y + 1);
+                  } else {
+                    setCalMonth((m) => m + 1);
+                  }
+                }}
+                className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Weekday headers */}
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-slate-400">
+            {['રવિ', 'સોમ', 'મંગળ', 'બુધ', 'ગુરુ', 'શુક્ર', 'શનિ'].map((d) => (
+              <span key={d} className="py-1">
+                {d}
+              </span>
+            ))}
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-1.5">
+            {Array.from({ length: firstDayOfCalMonth }).map((_, i) => (
+              <div key={'empty-' + i} className="h-10 rounded-xl bg-slate-50/50" />
+            ))}
+
+            {Array.from({ length: daysInCalMonth }).map((_, idx) => {
+              const dayNum = idx + 1;
+              const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+              const dayNotes = notes.filter((n) => n.date === dateStr);
+              const isToday = dateStr === todayStr;
+              const isSelected = dateStr === selectedDate;
+              const dominantDayMood = dayNotes[0]?.mood;
+
+              return (
+                <button
+                  key={dayNum}
+                  onClick={() => setSelectedDate(dateStr)}
+                  className={`h-11 rounded-2xl flex flex-col items-center justify-between p-1 text-xs transition border relative ${
+                    isSelected
+                      ? 'bg-blue-600 text-white font-black border-blue-600 shadow-xs'
+                      : isToday
+                      ? 'bg-blue-50 text-blue-700 font-extrabold border-blue-300 ring-2 ring-blue-100'
+                      : dayNotes.length > 0
+                      ? 'bg-slate-50 text-slate-900 font-bold border-slate-200 hover:bg-slate-100'
+                      : 'text-slate-600 border-transparent hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="text-[11px]">{dayNum}</span>
+                  <div className="flex items-center gap-0.5">
+                    {dayNotes.length > 0 && (
+                      <span className="text-[10px]">
+                        {dominantDayMood === 'awesome' ? '🤩' : dominantDayMood === 'neutral' ? '😌' : dominantDayMood === 'tired' ? '😔' : dominantDayMood === 'stressed' ? '😤' : '😊'}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Selected Date Summary */}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-700">
+              📅 {selectedDate}: {notes.filter((n) => n.date === selectedDate).length} {lang === 'gu' ? 'નોંધ' : 'notes'}
+            </span>
+            <button
+              onClick={() => handleOpenAdd(selectedDate)}
+              className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+            >
+              <Plus size={14} />
+              <span>{t('add_note_on_date', lang)}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Date Filter Tabs for List & Timeline View */}
+      {viewMode !== 'calendar' && (
+        <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-none text-xs">
+            <button
+              onClick={() => setDateFilterMode('all')}
+              className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
+                dateFilterMode === 'all'
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {t('filter_all', lang)} ({notes.length})
+            </button>
+
+            <button
+              onClick={() => setDateFilterMode('today')}
+              className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
+                dateFilterMode === 'today'
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {t('filter_today', lang)}
+            </button>
+
+            <button
+              onClick={() => setDateFilterMode('future')}
+              className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
+                dateFilterMode === 'future'
+                  ? 'bg-indigo-600 text-white shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {t('filter_future', lang)} ({futureCount})
+            </button>
+
+            <button
+              onClick={() => setDateFilterMode('by_date')}
+              className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition flex items-center gap-1 ${
+                dateFilterMode === 'by_date'
+                  ? 'bg-cyan-600 text-white shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Calendar size={13} />
+              <span>{t('by_date', lang)}</span>
+            </button>
+          </div>
+
+          {dateFilterMode === 'by_date' && (
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+              <span className="text-xs text-slate-500 font-semibold">{t('select_date_label', lang)}</span>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="text-xs font-bold p-1.5 rounded-xl border border-slate-200 bg-slate-50"
+              />
+              <button
+                onClick={() => handleOpenAdd(selectedDate)}
+                className="text-xs font-bold text-blue-600 hover:underline"
+              >
+                {t('add_note_on_date', lang)}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Search & Category Chips */}
       <div className="space-y-2">
         <div className="relative">
           <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
@@ -539,7 +1065,6 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
           />
         </div>
 
-        {/* Category Filter Chips */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {noteCategories.map((cat) => (
             <button
@@ -557,146 +1082,219 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
         </div>
       </div>
 
-      {/* Notes Grid */}
-      <div className="space-y-3">
-        {sortedNotes.length === 0 ? (
-          <div className="text-center py-14 bg-white rounded-3xl border border-dashed border-slate-300 p-6">
-            <BookOpen size={40} className="mx-auto text-slate-300 mb-2" />
-            <p className="text-sm font-bold text-slate-600">{t('no_notes_found', lang)}</p>
-            <p className="text-xs text-slate-400 mt-1">{t('no_notes_found_sub', lang)}</p>
-            <button
-              onClick={() => handleOpenAdd(dateFilterMode === 'by_date' ? selectedDate : todayStr)}
-              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition"
-            >
-              {t('add_new_note', lang)}
-            </button>
-          </div>
-        ) : (
-          sortedNotes.map((note) => {
-            const isFuture = note.date > todayStr;
-            const isToday = note.date === todayStr;
+      {/* ======================================================= */}
+      {/* TIMELINE VIEW MODE                                      */}
+      {/* ======================================================= */}
+      {viewMode === 'timeline' && (
+        <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-blue-200">
+          {sortedNotes.length === 0 ? (
+            <div className="text-center py-10 bg-white rounded-3xl border border-dashed border-slate-300 p-6">
+              <p className="text-xs text-slate-500">{t('no_notes_found', lang)}</p>
+            </div>
+          ) : (
+            sortedNotes.map((note) => (
+              <div key={note.id} className="relative group">
+                <span className="absolute -left-6 top-1.5 w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] ring-4 ring-white shadow-xs">
+                  {note.mood === 'awesome' ? '🤩' : note.mood === 'neutral' ? '😌' : note.mood === 'tired' ? '😔' : note.mood === 'stressed' ? '😤' : '😊'}
+                </span>
 
-            // Compute font class
-            const fontClass =
-              note.fontFamily === 'handwriting'
-                ? 'font-handwriting text-slate-800'
-                : note.fontFamily === 'serif'
-                ? 'font-serif-diary text-slate-900'
-                : note.fontFamily === 'mono'
-                ? 'font-mono-diary text-slate-800'
-                : 'font-sans-diary text-slate-700';
-
-            const sizeClass =
-              note.fontSize === 'sm'
-                ? 'text-xs'
-                : note.fontSize === 'lg'
-                ? 'text-base'
-                : note.fontSize === 'xl'
-                ? 'text-lg'
-                : 'text-sm';
-
-            return (
-              <div
-                key={note.id}
-                className={`bg-white rounded-2xl p-4 border transition-all shadow-xs space-y-2 relative overflow-hidden ${
-                  note.isPinned ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                {/* Note Header */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
-                        {note.category}
-                      </span>
-
-                      {/* Advance Date Badge */}
-                      {isFuture && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 flex items-center gap-1">
-                          <Calendar size={11} />
-                          {t('advance_badge', lang)}: {note.date}
-                        </span>
-                      )}
-
-                      {isToday && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
-                          {t('today_notes', lang)}
-                        </span>
-                      )}
-
-                      {!isToday && !isFuture && note.date && (
-                        <span className="text-[10px] font-semibold text-slate-400">
-                          {note.date}
-                        </span>
-                      )}
-
-                      {/* Typography tag */}
-                      {note.fontFamily && note.fontFamily !== 'sans' && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold border border-amber-200/60">
-                          {note.fontFamily === 'handwriting' ? '✍️ હસ્તલિખિત' : note.fontFamily === 'serif' ? '📖 ક્લાસિક' : '⌨️ ટાઈપરાઈટર'}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className={`text-sm font-bold text-slate-900 leading-snug ${note.fontFamily === 'serif' ? 'font-serif-diary' : ''}`}>
-                      {note.title}
-                    </h3>
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2 hover:border-blue-300 transition">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-extrabold text-blue-600">📅 {note.date || 'Today'}</span>
+                    <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-md font-semibold text-slate-600">{note.category}</span>
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => handleTogglePin(note.id)}
-                      className={`p-1.5 rounded-lg transition ${
-                        note.isPinned
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'text-slate-300 hover:text-slate-600'
-                      }`}
-                      title={note.isPinned ? t('unpin', lang) : t('pin', lang)}
-                    >
-                      <Pin size={15} className={note.isPinned ? 'fill-current' : ''} />
-                    </button>
-                    <button
-                      onClick={() => handleCopyNote(note)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                      title={t('copy_content', lang)}
-                    >
-                      {copiedNoteId === note.id ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
-                    </button>
-                    <button
-                      onClick={() => whatsappService.shareNote(note, lang)}
-                      className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
-                      title={t('share_whatsapp', lang)}
-                    >
-                      <Share2 size={15} />
-                    </button>
-                    <button
-                      onClick={() => handleOpenEdit(note)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg transition"
-                    >
-                      <Edit3 size={15} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(note.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg transition"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+                  <h4 className="font-bold text-sm text-slate-900">{note.title}</h4>
+                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed whitespace-pre-wrap">{note.content}</p>
+                  {note.photo && (
+                    <img
+                      src={note.photo}
+                      alt="Thumbnail"
+                      onClick={() => setActivePhotoPreview(note.photo)}
+                      className="h-20 w-32 object-cover rounded-xl border border-slate-200 cursor-pointer"
+                    />
+                  )}
+                  {note.location && (
+                    <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                      <MapPin size={11} className="text-rose-500" />
+                      {note.location}
+                    </span>
+                  )}
                 </div>
-
-                {/* Content with user-chosen typography */}
-                <p className={`leading-relaxed whitespace-pre-wrap ${fontClass} ${sizeClass}`}>
-                  {note.content}
-                </p>
               </div>
-            );
-          })
-        )}
-      </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* ======================================================= */}
-      {/* NOTE ADD / EDIT MODAL WITH FONTS, EMOJIS & KEYBOARD     */}
+      {/* STANDARD LIST VIEW MODE (CARDS)                         */}
+      {/* ======================================================= */}
+      {viewMode !== 'timeline' && (
+        <div className="space-y-3">
+          {sortedNotes.length === 0 ? (
+            <div className="text-center py-14 bg-white rounded-3xl border border-dashed border-slate-300 p-6">
+              <BookOpen size={40} className="mx-auto text-slate-300 mb-2" />
+              <p className="text-sm font-bold text-slate-600">{t('no_notes_found', lang)}</p>
+              <p className="text-xs text-slate-400 mt-1">{t('no_notes_found_sub', lang)}</p>
+              <button
+                onClick={() => handleOpenAdd(dateFilterMode === 'by_date' ? selectedDate : todayStr)}
+                className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition"
+              >
+                {t('add_new_note', lang)}
+              </button>
+            </div>
+          ) : (
+            sortedNotes.map((note) => {
+              const isFuture = note.date > todayStr;
+              const isToday = note.date === todayStr;
+
+              const fontClass =
+                note.fontFamily === 'handwriting'
+                  ? 'font-handwriting text-slate-800'
+                  : note.fontFamily === 'serif'
+                  ? 'font-serif-diary text-slate-900'
+                  : note.fontFamily === 'mono'
+                  ? 'font-mono-diary text-slate-800'
+                  : 'font-sans-diary text-slate-700';
+
+              const sizeClass =
+                note.fontSize === 'sm'
+                  ? 'text-xs'
+                  : note.fontSize === 'lg'
+                  ? 'text-base'
+                  : note.fontSize === 'xl'
+                  ? 'text-lg'
+                  : 'text-sm';
+
+              return (
+                <div
+                  key={note.id}
+                  className={`bg-white rounded-3xl p-4 sm:p-5 border transition-all shadow-xs space-y-2.5 relative overflow-hidden ${
+                    note.isPinned ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  {/* Note Card Header */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                        {/* Mood Badge */}
+                        {note.mood && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200/80 font-bold">
+                            {note.mood === 'awesome' ? '🤩 ઉત્સાહી' : note.mood === 'neutral' ? '😌 શાંત' : note.mood === 'tired' ? '😔 થાકેલા' : note.mood === 'stressed' ? '😤 તણાવ' : '😊 ખુશ'}
+                          </span>
+                        )}
+
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                          {note.category}
+                        </span>
+
+                        {isFuture && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 flex items-center gap-1">
+                            <Calendar size={11} />
+                            {t('advance_badge', lang)}: {note.date}
+                          </span>
+                        )}
+
+                        {isToday && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
+                            {t('today_notes', lang)}
+                          </span>
+                        )}
+
+                        {!isToday && !isFuture && note.date && (
+                          <span className="text-[10px] font-semibold text-slate-400">
+                            {note.date}
+                          </span>
+                        )}
+
+                        {note.location && (
+                          <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200/60">
+                            <MapPin size={10} />
+                            {note.location}
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className={`text-sm sm:text-base font-bold text-slate-900 leading-snug ${note.fontFamily === 'serif' ? 'font-serif-diary' : ''}`}>
+                        {note.title}
+                      </h3>
+                    </div>
+
+                    {/* Actions Toolbar */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleTogglePin(note.id)}
+                        className={`p-1.5 rounded-lg transition ${
+                          note.isPinned
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'text-slate-300 hover:text-slate-600'
+                        }`}
+                        title={note.isPinned ? t('unpin', lang) : t('pin', lang)}
+                      >
+                        <Pin size={15} className={note.isPinned ? 'fill-current' : ''} />
+                      </button>
+                      <button
+                        onClick={() => handleCopyNote(note)}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                        title={t('copy_content', lang)}
+                      >
+                        {copiedNoteId === note.id ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
+                      </button>
+                      <button
+                        onClick={() => whatsappService.shareNote(note, lang)}
+                        className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                        title={t('share_whatsapp', lang)}
+                      >
+                        <Share2 size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleOpenEdit(note)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg transition"
+                      >
+                        <Edit3 size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(note.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg transition"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Photo Attachment if present */}
+                  {note.photo && (
+                    <div className="relative group">
+                      <img
+                        src={note.photo}
+                        alt="Note memory"
+                        onClick={() => setActivePhotoPreview(note.photo)}
+                        className="w-full max-h-56 object-cover rounded-2xl border border-slate-200 cursor-pointer shadow-2xs hover:opacity-95 transition"
+                      />
+                    </div>
+                  )}
+
+                  {/* Audio Voice Memo Player if present */}
+                  {note.audio && (
+                    <div className="p-2.5 bg-blue-50/80 rounded-2xl border border-blue-200 flex items-center gap-2">
+                      <Volume2 size={18} className="text-blue-600 shrink-0" />
+                      <audio controls src={note.audio} className="w-full h-8" />
+                    </div>
+                  )}
+
+                  {/* Note Content */}
+                  <p className={`leading-relaxed whitespace-pre-wrap ${fontClass} ${sizeClass}`}>
+                    {note.content}
+                  </p>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* ======================================================= */}
+      {/* NOTE ADD / EDIT MODAL                                   */}
       {/* ======================================================= */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
@@ -720,7 +1318,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
             </div>
 
             <form onSubmit={handleSave} className="space-y-3">
-              {/* Note Scheduled Date */}
+              {/* Note Date & Quick buttons */}
               <div className="p-2.5 bg-blue-50/70 rounded-2xl border border-blue-200/80">
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
@@ -761,49 +1359,200 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                 </div>
               </div>
 
-              {/* Title & Category Row */}
-              <div className="space-y-2">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{t('note_title', lang)}</label>
-                  <input
-                    type="text"
-                    lang={lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : lang}
-                    inputMode="text"
-                    placeholder={t('note_title_placeholder', lang)}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-blue-500 font-bold"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">{t('category', lang)}</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
+              {/* Mood Selector Row */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>આજનો મૂડ (Today's Mood):</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const detected = streakService.detectSentimentMood(content);
+                      if (detected) setMood(detected);
+                    }}
+                    className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    <Sparkles size={11} />
+                    <span>AI મૂડ ઓળખો</span>
+                  </button>
+                </label>
+                <div className="grid grid-cols-5 gap-1 text-center">
+                  {MOODS.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setMood(m.id)}
+                      className={`p-1.5 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-0.5 ${
+                        mood === m.id
+                          ? 'bg-blue-50 border-blue-400 text-blue-900 ring-2 ring-blue-100'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
                     >
-                      {noteCategories.slice(1).map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                      <span className="text-base">{m.emoji}</span>
+                      <span className="text-[10px] truncate max-w-full">
+                        {m.id === 'good' ? 'ખુશ' : m.id === 'awesome' ? 'ઉત્સાહી' : m.id === 'neutral' ? 'શાંત' : m.id === 'tired' ? 'થાકેલા' : 'તણાવ'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                  <div className="flex items-center justify-end pt-5">
-                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={isPinned}
-                        onChange={(e) => setIsPinned(e.target.checked)}
-                        className="w-4 h-4 rounded text-blue-600 cursor-pointer"
-                      />
-                      <span>{t('pin_to_top', lang)}</span>
-                    </label>
+              {/* Note Title & AI Prompts button */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700">{t('note_title', lang)}</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPromptsDrawer(!showPromptsDrawer)}
+                    className="text-[11px] font-extrabold text-indigo-600 hover:underline flex items-center gap-1"
+                  >
+                    <Sparkles size={12} className="text-amber-500" />
+                    <span>💡 {t('ai_prompts', lang)}</span>
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  lang={lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : lang}
+                  inputMode="text"
+                  placeholder={t('note_title_placeholder', lang)}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-blue-500 font-bold"
+                />
+              </div>
+
+              {/* Inline AI Prompts Accordion */}
+              {showPromptsDrawer && (
+                <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200 space-y-2 animate-in fade-in">
+                  <span className="text-[11px] font-bold text-amber-900 block">
+                    ✨ કોઈ એક પ્રશ્ન પસંદ કરો, એપ આપમેળે ડાયરી શરૂ કરી આપશે:
+                  </span>
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                    {aiPromptsList.map((item, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectPrompt(item.q)}
+                        className="w-full text-left p-2 rounded-xl bg-white hover:bg-amber-100 border border-amber-200/80 text-xs font-semibold text-slate-800 transition leading-snug"
+                      >
+                        {item.q}
+                      </button>
+                    ))}
                   </div>
                 </div>
+              )}
+
+              {/* Category & Pin */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">{t('category', lang)}</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
+                  >
+                    {noteCategories.slice(1).map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end pt-5">
+                  <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isPinned}
+                      onChange={(e) => setIsPinned(e.target.checked)}
+                      className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                    />
+                    <span>{t('pin_to_top', lang)}</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* ======================================================= */}
+              {/* MULTIMEDIA ATTACHMENTS BAR (PHOTO, AUDIO, LOCATION)     */}
+              {/* ======================================================= */}
+              <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <span className="text-xs font-bold text-slate-700 block">
+                  મલ્ટીમીડિયા અટેચમેન્ટ (Photos, Audio, Location):
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Photo Upload */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
+                      photo ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <ImageIcon size={14} className="text-emerald-600" />
+                    <span>{photo ? '✓ ફોટો ઉમેરાયો' : t('add_photo', lang)}</span>
+                  </button>
+
+                  {/* Audio Recording */}
+                  <button
+                    type="button"
+                    onClick={isRecordingAudio ? handleStopAudioRecord : handleStartAudioRecord}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
+                      isRecordingAudio
+                        ? 'bg-red-500 text-white animate-pulse'
+                        : audio
+                        ? 'bg-blue-50 border-blue-300 text-blue-800'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Mic size={14} className={isRecordingAudio ? 'text-white' : 'text-blue-600'} />
+                    <span>{isRecordingAudio ? '⏹️ રેકોર્ડિંગ બંધ કરો' : audio ? '✓ ઓડિયો મેમો' : t('record_audio', lang)}</span>
+                  </button>
+
+                  {/* Location Tag */}
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
+                      location ? 'bg-rose-50 border-rose-300 text-rose-800' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <MapPin size={14} className="text-rose-600" />
+                    <span>{location ? `✓ ${location}` : t('add_location', lang)}</span>
+                  </button>
+                </div>
+
+                {/* Previews if any attachment */}
+                {photo && (
+                  <div className="relative inline-block mt-1">
+                    <img src={photo} alt="Preview" className="h-20 w-32 object-cover rounded-xl border border-slate-200 shadow-2xs" />
+                    <button
+                      type="button"
+                      onClick={() => setPhoto('')}
+                      className="absolute -top-1.5 -right-1.5 p-1 bg-red-600 text-white rounded-full shadow-md"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+
+                {audio && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <audio controls src={audio} className="h-7 w-48" />
+                    <button
+                      type="button"
+                      onClick={() => setAudio('')}
+                      className="text-xs font-bold text-red-600 hover:underline"
+                    >
+                      {t('clear_text', lang)}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* ======================================================= */}
@@ -816,7 +1565,6 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                     <span>{t('font_style', lang)}:</span>
                   </span>
 
-                  {/* Font Size Pills (A-, A, A+, A++) */}
                   <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
                     {fontSizeOptions.map((opt) => (
                       <button
@@ -836,7 +1584,6 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                   </div>
                 </div>
 
-                {/* Font Choices (Handwriting, Serif, Sans, Mono) */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                   {fontOptions.map((f) => (
                     <button
@@ -855,14 +1602,14 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                   ))}
                 </div>
 
-                {/* Markdown Formatting quick buttons */}
+                {/* Markdown Formatting Quick Buttons */}
                 <div className="flex items-center justify-between pt-1 border-t border-slate-200/80">
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => wrapSelectedText('**')}
                       className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 font-extrabold text-xs"
-                      title="Bold (**text**)"
+                      title="Bold"
                     >
                       <Bold size={13} />
                     </button>
@@ -870,7 +1617,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                       type="button"
                       onClick={() => wrapSelectedText('*')}
                       className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 italic text-xs"
-                      title="Italic (*text*)"
+                      title="Italic"
                     >
                       <Italic size={13} />
                     </button>
@@ -894,14 +1641,12 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                       type="button"
                       onClick={() => insertAtCursor('\n')}
                       className="px-2 py-1 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-0.5"
-                      title={t('new_line', lang)}
                     >
                       <CornerDownLeft size={11} />
                       <span>{t('new_line', lang)}</span>
                     </button>
                   </div>
 
-                  {/* Clean text button */}
                   {content.length > 0 && (
                     <button
                       type="button"
@@ -956,7 +1701,6 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                   </button>
                 </div>
 
-                {/* Voice Typing Button */}
                 <button
                   type="button"
                   onClick={toggleVoiceRecording}
@@ -971,7 +1715,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                 </button>
               </div>
 
-              {/* Quick Emojis Horizontal Strip */}
+              {/* 1-Tap Quick Emojis Strip */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none bg-slate-50/80 p-1.5 rounded-xl border border-slate-100">
                 <span className="text-[10px] text-slate-400 font-bold px-1 shrink-0">✨ 1-Tap:</span>
                 {quickEmojiBar.map((emoji) => (
@@ -1021,7 +1765,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                 </div>
               )}
 
-              {/* Expandable Smart Language Keyboard Bar (કાનો-માત્રા & સ્વરો) */}
+              {/* Expandable Smart Language Keyboard Bar */}
               {showKeyboardHelper && (
                 <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-200 space-y-2 animate-in fade-in zoom-in-95">
                   <div className="flex items-center justify-between text-xs">
@@ -1034,7 +1778,6 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                     </span>
                   </div>
 
-                  {/* Matras row */}
                   {activeHelper.matras && (
                     <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
                       {activeHelper.matras.map((m, idx) => (
@@ -1051,7 +1794,6 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                     </div>
                   )}
 
-                  {/* Vowels & Conjuncts */}
                   {activeHelper.vowels && (
                     <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
                       <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
@@ -1067,21 +1809,19 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                           {v}
                         </button>
                       ))}
-                      {activeHelper.conjuncts &&
-                        activeHelper.conjuncts.map((c, idx) => (
-                          <button
-                            key={'c-' + idx}
-                            type="button"
-                            onClick={() => insertAtCursor(c)}
-                            className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-900 rounded-lg border border-amber-200 transition active:scale-90"
-                          >
-                            {c}
-                          </button>
-                        ))}
+                      {activeHelper.conjuncts?.map((c, idx) => (
+                        <button
+                          key={'c-' + idx}
+                          type="button"
+                          onClick={() => insertAtCursor(c)}
+                          className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-900 rounded-lg border border-amber-200 transition active:scale-90"
+                        >
+                          {c}
+                        </button>
+                      ))}
                     </div>
                   )}
 
-                  {/* Consonants (Pills) */}
                   {activeHelper.consonants && (
                     <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70 max-h-28 overflow-y-auto">
                       <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
@@ -1100,7 +1840,6 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                     </div>
                   )}
 
-                  {/* Symbols & Accents for English / Other languages */}
                   {activeHelper.symbols && (
                     <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
                       {activeHelper.symbols.map((s, idx) => (
@@ -1113,45 +1852,17 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                           {s}
                         </button>
                       ))}
-                      {activeHelper.accents &&
-                        activeHelper.accents.map((a, idx) => (
-                          <button
-                            key={'acc-' + idx}
-                            type="button"
-                            onClick={() => insertAtCursor(a)}
-                            className="min-w-[32px] h-8 px-2 flex items-center justify-center text-sm font-bold bg-indigo-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 transition active:scale-90"
-                          >
-                            {a}
-                          </button>
-                        ))}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Voice Typing Active Indicator */}
-              {isListening && (
-                <div className="p-2.5 bg-red-50 rounded-2xl border border-red-200 flex items-center justify-between gap-2 animate-pulse">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping" />
-                    <span className="text-xs font-bold text-red-700">{t('voice_instruction', lang)}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={toggleVoiceRecording}
-                    className="text-xs font-bold text-red-600 hover:underline px-2 py-1 rounded bg-white border border-red-200"
-                  >
-                    ⏹️ {lang === 'gu' ? 'રોકો' : 'Stop'}
-                  </button>
-                </div>
-              )}
-
-              {/* Note Content Textarea with Dynamic Typography */}
+              {/* Textarea */}
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">{t('note_content', lang)}</label>
                 <textarea
                   ref={contentRef}
-                  rows={7}
+                  rows={6}
                   lang={lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : lang}
                   inputMode="text"
                   autoCapitalize="sentences"
@@ -1180,7 +1891,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                 />
               </div>
 
-              {/* Modal Action Buttons */}
+              {/* Form Actions */}
               <div className="flex gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
@@ -1197,6 +1908,345 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================= */}
+      {/* WEEKLY MOOD ANALYSIS MODAL                              */}
+      {/* ======================================================= */}
+      {isMoodModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{weeklyMood.dominantEmoji}</span>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-800">
+                    {lang === 'gu' ? 'સાપ્તાહિક મૂડ એનાલિસિસ' : 'Weekly Mood Analysis'}
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {lang === 'gu' ? 'છેલ્લા ૭ દિવસની ભાવનાત્મક સ્થિતિ' : 'Last 7 days emotional trend'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsMoodModalOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Dominant Highlight Card */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3.5 rounded-2xl border border-blue-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-900">{weeklyMood.summaryTitle}</span>
+                <span className="text-xs font-black text-indigo-700 bg-white px-2.5 py-0.5 rounded-full border border-blue-200">
+                  {weeklyMood.score}/10
+                </span>
+              </div>
+              <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                {weeklyMood.advice}
+              </p>
+            </div>
+
+            {/* Breakdown Percentage Bars */}
+            <div className="space-y-2 pt-1">
+              <span className="text-xs font-bold text-slate-700 block">
+                {lang === 'gu' ? 'મૂડ વિતરણ ટકાવારી:' : 'Mood Breakdown (%):'}
+              </span>
+
+              {MOODS.map((m) => {
+                const pct = weeklyMood.stats[m.id] || 0;
+                return (
+                  <div key={m.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                        <span>{m.emoji}</span>
+                        <span>{m.labelGu}</span>
+                      </span>
+                      <span className="font-extrabold text-slate-900">{pct}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full bg-gradient-to-r ${m.color} transition-all duration-500`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setIsMoodModalOpen(false)}
+              className="w-full py-2.5 rounded-xl bg-slate-800 text-white font-bold text-xs"
+            >
+              {lang === 'gu' ? 'બંધ કરો' : 'Close'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================= */}
+      {/* DIARY REMINDER SETTINGS MODAL                           */}
+      {/* ======================================================= */}
+      {isReminderModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-cyan-100 text-cyan-700">
+                  <Bell size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">
+                    {lang === 'gu' ? 'દૈનિક ડાયરી રીમાઇન્ડર & હેબિટ' : 'Daily Diary Reminder'}
+                  </h3>
+                  <span className="text-xs text-slate-500">
+                    {lang === 'gu' ? 'રોજ રાત્રે ડાયરી લખવાની યાદ અપાવો' : 'Nightly habit reminder'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsReminderModalOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveReminderSettings} className="space-y-3.5">
+              <div className="p-3 bg-cyan-50/70 rounded-2xl border border-cyan-200/80 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-cyan-950 block">
+                    {lang === 'gu' ? 'રોજિંદી ડાયરી નોટિફિકેશન' : 'Daily Diary Notification'}
+                  </span>
+                  <span className="text-[10px] text-cyan-800">
+                    {lang === 'gu' ? 'નિયમિત ડાયરી લખવાની હેબિટ જાળવી રાખો' : 'Keep your writing streak alive'}
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={reminderConfig.enabled}
+                  onChange={(e) => setReminderConfig({ ...reminderConfig, enabled: e.target.checked })}
+                  className="w-5 h-5 rounded text-cyan-600 cursor-pointer"
+                />
+              </div>
+
+              {reminderConfig.enabled && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 block">
+                    {lang === 'gu' ? 'રીમાઇન્ડરનો સમય (Reminder Time):' : 'Preferred Notification Time:'}
+                  </label>
+                  <input
+                    type="time"
+                    value={reminderConfig.time}
+                    onChange={(e) => setReminderConfig({ ...reminderConfig, time: e.target.value })}
+                    className="w-full text-sm font-bold p-2.5 rounded-xl border border-slate-200 bg-slate-50"
+                  />
+                  <div className="flex gap-1.5 pt-1">
+                    {['21:00', '21:30', '22:00'].map((tVal) => (
+                      <button
+                        key={tVal}
+                        type="button"
+                        onClick={() => setReminderConfig({ ...reminderConfig, time: tVal })}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition border ${
+                          reminderConfig.time === tVal
+                            ? 'bg-cyan-600 text-white border-cyan-600'
+                            : 'bg-white border-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {tVal === '21:00' ? '9:00 PM' : tVal === '21:30' ? '9:30 PM' : '10:00 PM'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-slate-100 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleTestDiaryNotification}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50"
+                >
+                  🔔 {lang === 'gu' ? 'ટેસ્ટ એલાર્મ' : 'Test Alert'}
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs shadow-xs"
+                >
+                  {t('save', lang)}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================= */}
+      {/* "ON THIS DAY" STORY POPUP MODAL                         */}
+      {/* ======================================================= */}
+      {isOnThisDayOpen && onThisDay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/70 backdrop-blur-xs">
+          <div className="bg-gradient-to-b from-amber-50 to-white rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 border border-amber-200 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b pb-3 border-amber-200/60">
+              <span className="text-xs font-black text-amber-900 flex items-center gap-1.5 uppercase">
+                <Sparkles size={14} className="text-yellow-600" />
+                {onThisDay.label}
+              </span>
+              <button
+                onClick={() => setIsOnThisDayOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-amber-700 block">
+                📅 {onThisDay.note.date} • {onThisDay.note.category}
+              </span>
+              <h3 className="text-lg font-black text-slate-900 leading-snug">
+                {onThisDay.note.title}
+              </h3>
+              <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-medium">
+                {onThisDay.note.content}
+              </p>
+              {onThisDay.note.photo && (
+                <img
+                  src={onThisDay.note.photo}
+                  alt="Past memory"
+                  className="w-full max-h-56 object-cover rounded-2xl border border-amber-200"
+                />
+              )}
+            </div>
+
+            <button
+              onClick={() => setIsOnThisDayOpen(false)}
+              className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs"
+            >
+              {lang === 'gu' ? 'સરસ! બંધ કરો' : 'Wonderful! Close'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================= */}
+      {/* PDF EXPORT MODAL WITH PASSWORD PROTECTION               */}
+      {/* ======================================================= */}
+      {isPdfExportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
+                  <Download size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">
+                    {lang === 'gu' ? 'ડાયરી PDF એક્સપોર્ટ & પ્રિન્ટ' : 'Export Diary to PDF'}
+                  </h3>
+                  <span className="text-xs text-slate-500">
+                    {lang === 'gu' ? 'પાસવર્ડ સુરક્ષા સાથે પુસ્તક શૈલીમાં ડાઉનલોડ' : 'Download with password security'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPdfExportOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {lang === 'gu' ? 'સમયગાળો (Timeframe):' : 'Select Timeframe:'}
+                </label>
+                <select
+                  value={exportMonth}
+                  onChange={(e) => setExportMonth(e.target.value)}
+                  className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 bg-slate-50"
+                >
+                  <option value="all">{lang === 'gu' ? 'તમામ નોંધો (All Notes)' : 'All Notes'}</option>
+                  <option value={todayStr.substring(0, 7)}>{lang === 'gu' ? 'ચાલુ મહિનો' : 'This Month'}</option>
+                </select>
+              </div>
+
+              {/* Password Protection */}
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={usePdfPassword}
+                    onChange={(e) => setUsePdfPassword(e.target.checked)}
+                    className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                  />
+                  <Lock size={14} className="text-slate-600" />
+                  <span>{t('password_protect', lang)}</span>
+                </label>
+
+                {usePdfPassword && (
+                  <div className="pt-1 animate-in fade-in space-y-1">
+                    <input
+                      type="password"
+                      placeholder={lang === 'gu' ? 'PDF ખોલવા માટે પાસવર્ડ સેટ કરો (દા.ત. 1234)' : 'Enter PDF password'}
+                      value={pdfPassword}
+                      onChange={(e) => setPdfPassword(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white font-bold"
+                    />
+                    <span className="text-[10px] text-slate-400 block">
+                      {lang === 'gu' ? 'ℹ️ જ્યારે કોઈ આ PDF ઓપન કરશે ત્યારે પાસવર્ડ માંગવામાં આવશે.' : 'Password will be required to open this PDF.'}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPdfExportOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
+                >
+                  {t('cancel', lang)}
+                </button>
+                <button
+                  type="button"
+                  disabled={isExportingPdf}
+                  onClick={handleExportDiaryPdf}
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs disabled:opacity-50"
+                >
+                  {isExportingPdf ? 'જનરેટ થઈ રહ્યું છે...' : 'PDF ડાઉનલોડ'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================= */}
+      {/* PHOTO PREVIEW FULL MODAL                                */}
+      {/* ======================================================= */}
+      {activePhotoPreview && (
+        <div
+          onClick={() => setActivePhotoPreview(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-xs cursor-pointer animate-in fade-in"
+        >
+          <div className="relative max-w-xl w-full max-h-[85vh] p-2">
+            <img
+              src={activePhotoPreview}
+              alt="Full Preview"
+              className="w-full h-auto max-h-[80vh] object-contain rounded-2xl shadow-2xl"
+            />
+            <button
+              onClick={() => setActivePhotoPreview(null)}
+              className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full hover:bg-black/90"
+            >
+              <X size={20} />
+            </button>
           </div>
         </div>
       )}
