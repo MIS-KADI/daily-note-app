@@ -610,7 +610,6 @@ export default function App() {
         onOpenShopping={() => setIsShoppingOpen(true)}
         onOpenEmergency={() => setIsEmergencyOpen(true)}
         onOpenAssistant={() => setIsAssistantOpen(true)}
-        onOpenVideoGuide={() => setIsVideoGuideOpen(true)}
         onTestAlarm={handleTestAlarm}
         onLockApp={() => setIsLocked(true)}
         activeAlarmCount={

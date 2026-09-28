@@ -11,7 +11,6 @@ import {
   ShieldAlert,
   Globe,
   Sparkles,
-  Video,
 } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
 import { t } from '../services/i18n';
@@ -26,7 +25,6 @@ export default function Navbar({
   onOpenShopping,
   onOpenEmergency,
   onOpenAssistant,
-  onOpenVideoGuide,
   onTestAlarm,
   onLockApp,
   activeAlarmCount = 0,
@@ -87,20 +85,6 @@ export default function Navbar({
               <Sparkles size={14} className="text-amber-300" />
               <span className="text-[11px] font-bold">
                 {lang === 'hi' ? 'AI सहायक' : lang === 'en' ? 'AI Voice' : '🎙️ આસિસ્ટન્ટ'}
-              </span>
-            </button>
-          )}
-
-          {/* AI Video Guide Button */}
-          {onOpenVideoGuide && (
-            <button
-              onClick={onOpenVideoGuide}
-              className="px-2 py-1.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white font-bold text-xs shadow-sm shadow-rose-500/25 flex items-center gap-1 transition active:scale-95"
-              title={lang === 'hi' ? 'वीडियो गाइड' : lang === 'en' ? 'AI Video Guide' : 'AI વિડીયો ગાઈડ'}
-            >
-              <Video size={13} className="text-white animate-pulse" />
-              <span className="text-[11px] font-bold">
-                {lang === 'hi' ? 'वीडियो' : lang === 'en' ? 'Video' : '🎬 વિડીયો'}
               </span>
             </button>
           )}
