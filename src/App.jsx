@@ -21,6 +21,7 @@ import ReportsTab from './components/tabs/ReportsTab';
 import ProfileTab from './components/tabs/ProfileTab';
 
 // Services
+import { Capacitor } from '@capacitor/core';
 import { storageService } from './services/storageService';
 import { notificationService } from './services/notificationService';
 import { streakService } from './services/streakService';
@@ -91,6 +92,52 @@ export default function App() {
       document.referrer.includes('android-app://');
     setIsStandalone(Boolean(isStandaloneMode));
   }, []);
+
+  // Sync background alarms with Android native AlarmManager (via Capacitor)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      notificationService.requestPermission();
+
+      // Schedule reminder alarms in Android AlarmManager
+      reminders.forEach((rem) => {
+        if (rem.hasAlarm && !rem.isCompleted && rem.time && rem.date) {
+          notificationService.scheduleNativeAlarm({
+            id: rem.id,
+            title: `⏰ કામનું એલાર્મ: ${rem.title}`,
+            body: rem.description || `સમય: ${rem.time}`,
+            dateStr: rem.date,
+            timeStr: rem.time,
+          });
+        }
+      });
+
+      // Schedule active medicines in Android AlarmManager
+      const today = new Date().toISOString().split('T')[0];
+      medicines.forEach((med) => {
+        if (med.active && med.hasAlarm && med.time) {
+          notificationService.scheduleNativeAlarm({
+            id: med.id,
+            title: `💊 દવા લેવાનો સમય: ${med.name}`,
+            body: `${med.dosage} - ${med.mealRelation === 'before_food' ? 'ભૂખ્યા પેટે' : 'જમ્યા પછી'} (${med.time})`,
+            dateStr: today,
+            timeStr: med.time,
+          });
+        }
+      });
+
+      // Schedule daily diary habit notification in Android AlarmManager
+      const diaryConfig = storageService.getDiaryReminderConfig();
+      if (diaryConfig?.enabled && diaryConfig?.time) {
+        notificationService.scheduleNativeAlarm({
+          id: 'diary-nightly-reminder',
+          title: '📔 ડાયરી લખવાનો સમય થયો!',
+          body: 'આજના દિવસની યાદો, વિચારો અને મૂડ નોંધી લો. તમારી 🔥 સ્ટ્રીક જાળવી રાખો!',
+          dateStr: today,
+          timeStr: diaryConfig.time,
+        });
+      }
+    }
+  }, [reminders, medicines]);
 
   // Save changes to storage whenever states change
   const handleUpdateUser = (updated) => {
