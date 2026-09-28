@@ -112,5 +112,19 @@
   color: #94a3b8 !important;
 }
 
+/* Diary Typography Font Families */
+.font-handwriting {
+  font-family: 'Kalam', 'Caveat', cursive, -apple-system, sans-serif !important;
+}
+.font-serif-diary {
+  font-family: 'Noto Serif Gujarati', 'Rozha One', Georgia, Cambria, serif !important;
+}
+.font-sans-diary {
+  font-family: 'Hind Vadodara', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.font-mono-diary {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
 
 

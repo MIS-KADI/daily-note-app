@@ -15,6 +15,15 @@ import {
   Clock,
   Tag,
   Share2,
+  Smile,
+  Keyboard,
+  Type,
+  Copy,
+  Bold,
+  Italic,
+  List,
+  CornerDownLeft,
+  Quote,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t, getNoteCategories } from '../../services/i18n';
@@ -37,10 +46,195 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
   const [category, setCategory] = useState(noteCategories[1] || 'Personal');
   const [noteDate, setNoteDate] = useState(todayStr);
   const [isPinned, setIsPinned] = useState(false);
+  const [fontFamily, setFontFamily] = useState('handwriting'); // 'handwriting', 'serif', 'sans', 'mono'
+  const [fontSize, setFontSize] = useState('md'); // 'sm', 'md', 'lg', 'xl'
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showKeyboardHelper, setShowKeyboardHelper] = useState(false);
+  const [selectedEmojiCat, setSelectedEmojiCat] = useState('smilies');
+  const [copiedNoteId, setCopiedNoteId] = useState(null);
   const [isListening, setIsListening] = useState(false);
 
+  const contentRef = useRef(null);
   const recognitionRef = useRef(null);
 
+  // Categorized Emojis for Diary
+  const emojiCategories = {
+    smilies: {
+      label: lang === 'gu' ? '😊 સ્માઈલી' : lang === 'hi' ? '😊 भाव/मुद्रा' : '😊 Smilies',
+      emojis: ['😊', '🥰', '😍', '😇', '🤩', '😎', '😂', '🥺', '😴', '🥳', '😌', '🤔', '😭', '🤗', '🙌', '🙏', '💖', '✨'],
+    },
+    love: {
+      label: lang === 'gu' ? '💖 લાગણી/પ્રેમ' : lang === 'hi' ? '💖 प्रेम/स्नेह' : '💖 Love',
+      emojis: ['❤️', '💖', '💕', '🌹', '💐', '🎁', '💌', '💍', '🕊️', '🤝', '🎂', '🎉', '🌟', '💫', '👑', '💝', '🕯️', '🌸'],
+    },
+    nature: {
+      label: lang === 'gu' ? '🌸 પ્રકૃતિ' : lang === 'hi' ? '🌸 प्रकृति' : '🌸 Nature',
+      emojis: ['🌸', '🌺', '🌻', '🌿', '🍀', '🍃', '☀️', '🌙', '⭐', '🌧️', '🌈', '⛅', '🍁', '🌊', '🌴', '🍂', '🌾', '🍄'],
+    },
+    life: {
+      label: lang === 'gu' ? '☕ જીવનશૈલી' : lang === 'hi' ? '☕ दिनचर्या' : '☕ Lifestyle',
+      emojis: ['☕', '🍵', '🍎', '🍕', '🍫', '🎂', '🍦', '🧘', '🏃', '🚴', '📖', '🎶', '🎨', '🎬', '🛍️', '🍽️', '🏋️', '🎧'],
+    },
+    work: {
+      label: lang === 'gu' ? '💡 આઈડિયા/કામ' : lang === 'hi' ? '💡 विचार/कार्य' : '💡 Ideas',
+      emojis: ['💡', '📌', '📝', '📅', '🎯', '🚀', '🏆', '💰', '📈', '🔑', '🔔', '⚖️', '💻', '💼', '✅', '🔥', '📚', '🪙'],
+    },
+    travel: {
+      label: lang === 'gu' ? '✈️ પ્રવાસ' : lang === 'hi' ? '✈️ यात्रा' : '✈️ Travel',
+      emojis: ['✈️', '🚗', '🚂', '🏖️', '🏕️', '🏡', '🛕', '🚩', '🌄', '🌍', '📸', '🚢', '🗺️', '🏰', '⛺', '🛵', '🚍', '⛵'],
+    },
+  };
+
+  const quickEmojiBar = ['😊', '❤️', '🙏', '🌸', '✨', '☕', '💡', '📝', '🎯', '🎉', '✈️', '🌟'];
+
+  // Language-Adaptive Keyboard Helper Dataset
+  const keyboardHelpers = {
+    gu: {
+      matras: [
+        { label: 'ા', name: 'કાનો' },
+        { label: 'િ', name: 'હ્રસ્વ ઇ' },
+        { label: 'ી', name: 'દીર્ઘ ઈ' },
+        { label: 'ુ', name: 'હ્રસ્વ ઉ' },
+        { label: 'ૂ', name: 'દીર્ઘ ઊ' },
+        { label: 'ૃ', name: 'ઋ' },
+        { label: 'ે', name: 'એક માત્ર' },
+        { label: 'ૈ', name: 'બે માત્ર' },
+        { label: 'ો', name: 'કાનો-માત્ર' },
+        { label: 'ૌ', name: 'કાનો-બે માત્ર' },
+        { label: 'ં', name: 'અનુસ્વાર' },
+        { label: 'ઃ', name: 'વિસર્ગ' },
+        { label: '્', name: 'હલંત / જોડાક્ષર' },
+        { label: 'ૐ', name: 'ઓમ' },
+        { label: '₹', name: 'રૂપિયો' },
+        { label: '।', name: 'પૂર્ણવિરામ' },
+      ],
+      vowels: ['અ', 'આ', 'ઇ', 'ઈ', 'ઉ', 'ઊ', 'એ', 'ઐ', 'ઓ', 'ઔ', 'ઋ'],
+      conjuncts: ['ક્ષ', 'જ્ઞ', 'શ્ર', 'ત્ર', 'દ્વ', 'દ્ધ', 'દ્ભ', 'હ્મ'],
+      consonants: [
+        'ક', 'ખ', 'ગ', 'ઘ', 'ચ', 'છ', 'જ', 'ઝ',
+        'ટ', 'ઠ', 'ડ', 'ઢ', 'ણ', 'ત', 'થ', 'દ',
+        'ધ', 'ન', 'પ', 'ફ', 'બ', 'ભ', 'મ', 'ય',
+        'ર', 'લ', 'વ', 'શ', 'ષ', 'સ', 'હ', 'ળ',
+      ],
+    },
+    hi: {
+      matras: [
+        { label: 'ा', name: 'आ' },
+        { label: 'ि', name: 'इ' },
+        { label: 'ी', name: 'ई' },
+        { label: 'ु', name: 'उ' },
+        { label: 'ू', name: 'ऊ' },
+        { label: 'ृ', name: 'ऋ' },
+        { label: 'े', name: 'ए' },
+        { label: 'ै', name: 'ऐ' },
+        { label: 'ो', name: 'ओ' },
+        { label: 'ौ', name: 'औ' },
+        { label: 'ं', name: 'अनुस्वार' },
+        { label: 'ँ', name: 'चन्द्रबिन्दु' },
+        { label: 'ः', name: 'विसर्ग' },
+        { label: '्', name: 'हलंत' },
+        { label: 'ॐ', name: 'ओम' },
+        { label: '₹', name: 'रुपया' },
+        { label: '।', name: 'विराम' },
+      ],
+      vowels: ['अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', 'ए', 'ऐ', 'ओ', 'औ', 'ऋ'],
+      conjuncts: ['क्ष', 'त्र', 'ज्ञ', 'श्र', 'ड़', 'ढ़', 'द्व', 'द्ध'],
+      consonants: [
+        'क', 'ख', 'ग', 'घ', 'च', 'छ', 'ज', 'झ',
+        'ट', 'ठ', 'ड', 'ढ', 'ण', 'त', 'थ', 'द',
+        'ध', 'न', 'प', 'फ', 'ब', 'भ', 'म', 'य',
+        'र', 'ल', 'व', 'श', 'ष', 'स', 'ह',
+      ],
+    },
+    en: {
+      symbols: ['“', '”', '‘', '’', '—', '…', '•', '★', '❤️', '₹', '$', '€', '£', '✓', '©', '®', '™'],
+      accents: ['é', 'è', 'ê', 'ë', 'á', 'à', 'ä', 'ñ', 'í', 'ó', 'ö', 'ú', 'ü', 'ß', '¿', '¡'],
+    },
+    es: {
+      symbols: ['¿', '¡', '“', '”', '—', '…', '•', '★', '❤️', '€', '$', '✓'],
+      accents: ['á', 'é', 'í', 'ó', 'ú', 'ñ', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'ü', 'Ü'],
+    },
+    fr: {
+      symbols: ['«', '»', '“', '”', '—', '…', '•', '★', '❤️', '€', '$', '✓'],
+      accents: ['é', 'è', 'ê', 'ë', 'à', 'â', 'ç', 'î', 'ï', 'ô', 'ù', 'û', 'ü', 'œ', 'æ'],
+    },
+    de: {
+      symbols: ['„', '“', '«', '»', '—', '…', '•', '★', '❤️', '€', '$', '✓'],
+      accents: ['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'],
+    },
+    ar: {
+      symbols: ['،', '؛', '؟', '«', '»', '•', '✨', '❤️', 'ﷺ', 'ﷻ', '٪'],
+      matras: [
+        { label: 'َ', name: 'فتحة' },
+        { label: 'ً', name: 'تنوين فتح' },
+        { label: 'ُ', name: 'ضمة' },
+        { label: 'ٌ', name: 'تنوين ضم' },
+        { label: 'ِ', name: 'كسرة' },
+        { label: 'ٍ', name: 'تنوين كسر' },
+        { label: 'ْ', name: 'سكون' },
+        { label: 'ّ', name: 'شدة' },
+      ],
+    },
+  };
+
+  const fontOptions = [
+    { id: 'handwriting', label: t('font_handwriting', lang), fontClass: 'font-handwriting', preview: '✍️' },
+    { id: 'serif', label: t('font_serif', lang), fontClass: 'font-serif-diary', preview: '📖' },
+    { id: 'sans', label: t('font_sans', lang), fontClass: 'font-sans-diary', preview: '📱' },
+    { id: 'mono', label: t('font_mono', lang), fontClass: 'font-mono-diary', preview: '⌨️' },
+  ];
+
+  const fontSizeOptions = [
+    { id: 'sm', label: 'A-', title: 'Small' },
+    { id: 'md', label: 'A', title: 'Normal' },
+    { id: 'lg', label: 'A+', title: 'Large' },
+    { id: 'xl', label: 'A++', title: 'Extra Large' },
+  ];
+
+  // Helper to insert character / emoji at textarea cursor
+  const insertAtCursor = (str) => {
+    const textarea = contentRef.current;
+    if (!textarea) {
+      setContent((prev) => prev + str);
+      return;
+    }
+    const start = textarea.selectionStart ?? content.length;
+    const end = textarea.selectionEnd ?? content.length;
+    const newContent = content.substring(0, start) + str + content.substring(end);
+    setContent(newContent);
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + str.length, start + str.length);
+    }, 0);
+  };
+
+  // Helper to wrap selected text in markdown styling
+  const wrapSelectedText = (prefix, suffix = prefix) => {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const selected = content.substring(start, end);
+    const replacement = prefix + (selected || '') + suffix;
+    const newContent = content.substring(0, start) + replacement + content.substring(end);
+    setContent(newContent);
+    setTimeout(() => {
+      textarea.focus();
+      const cursorTarget = selected ? start + replacement.length : start + prefix.length;
+      textarea.setSelectionRange(cursorTarget, cursorTarget);
+    }, 0);
+  };
+
+  // Copy note content
+  const handleCopyNote = (note) => {
+    const textToCopy = `${note.title ? note.title + '\n\n' : ''}${note.content}`;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopiedNoteId(note.id);
+      setTimeout(() => setCopiedNoteId(null), 2000);
+    });
+  };
+
+  // Speech Recognition Setup
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -61,9 +255,13 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
       recognition.onresult = (event) => {
         let currentTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          currentTranscript += event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            currentTranscript += event.results[i][0].transcript;
+          }
         }
-        setContent((prev) => (prev ? prev + ' ' : '') + currentTranscript);
+        if (currentTranscript.trim()) {
+          setContent((prev) => (prev ? prev.trim() + ' ' : '') + currentTranscript.trim() + ' ');
+        }
       };
 
       recognition.onerror = () => {
@@ -84,7 +282,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
         lang === 'gu'
           ? 'તમારા બ્રાઉઝરમાં વોઇસ ટાઇપિંગ સપોર્ટ નથી. ક્રોમ કે સફારી વાપરો.'
           : lang === 'hi'
-          ? 'आपके ब्राउज़र में वॉयस टाइपिंग समर्थित नहीं है।'
+          ? 'आपके ब्राउज़र में वॉयस टाइपिंग समर्थित नहीं है। क्रोम या सफारी का उपयोग करें।'
           : 'Voice typing is not supported on this browser. Please use Chrome or Safari.'
       );
       return;
@@ -110,6 +308,10 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     setCategory(noteCategories[1] || 'Personal');
     setNoteDate(targetDate);
     setIsPinned(false);
+    setFontFamily('handwriting');
+    setFontSize('md');
+    setShowEmojiPicker(false);
+    setShowKeyboardHelper(false);
     setIsModalOpen(true);
   };
 
@@ -120,6 +322,10 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
     setCategory(note.category);
     setNoteDate(note.date || todayStr);
     setIsPinned(note.isPinned);
+    setFontFamily(note.fontFamily || 'sans');
+    setFontSize(note.fontSize || 'md');
+    setShowEmojiPicker(false);
+    setShowKeyboardHelper(false);
     setIsModalOpen(true);
   };
 
@@ -139,6 +345,8 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
               category,
               date: noteDate,
               isPinned,
+              fontFamily,
+              fontSize,
               updatedAt: new Date().toISOString(),
             }
           : n
@@ -152,6 +360,8 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
         category,
         date: noteDate,
         isPinned,
+        fontFamily,
+        fontSize,
         color: '#eff6ff',
         createdAt: new Date().toISOString(),
       };
@@ -205,6 +415,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
   });
 
   const futureCount = notes.filter((n) => n.date > todayStr).length;
+  const activeHelper = keyboardHelpers[lang] || keyboardHelpers.gu;
 
   return (
     <div className="space-y-4 pb-20 animate-in fade-in duration-200">
@@ -365,6 +576,25 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
             const isFuture = note.date > todayStr;
             const isToday = note.date === todayStr;
 
+            // Compute font class
+            const fontClass =
+              note.fontFamily === 'handwriting'
+                ? 'font-handwriting text-slate-800'
+                : note.fontFamily === 'serif'
+                ? 'font-serif-diary text-slate-900'
+                : note.fontFamily === 'mono'
+                ? 'font-mono-diary text-slate-800'
+                : 'font-sans-diary text-slate-700';
+
+            const sizeClass =
+              note.fontSize === 'sm'
+                ? 'text-xs'
+                : note.fontSize === 'lg'
+                ? 'text-base'
+                : note.fontSize === 'xl'
+                ? 'text-lg'
+                : 'text-sm';
+
             return (
               <div
                 key={note.id}
@@ -399,9 +629,16 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                           {note.date}
                         </span>
                       )}
+
+                      {/* Typography tag */}
+                      {note.fontFamily && note.fontFamily !== 'sans' && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold border border-amber-200/60">
+                          {note.fontFamily === 'handwriting' ? '✍️ હસ્તલિખિત' : note.fontFamily === 'serif' ? '📖 ક્લાસિક' : '⌨️ ટાઈપરાઈટર'}
+                        </span>
+                      )}
                     </div>
 
-                    <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                    <h3 className={`text-sm font-bold text-slate-900 leading-snug ${note.fontFamily === 'serif' ? 'font-serif-diary' : ''}`}>
                       {note.title}
                     </h3>
                   </div>
@@ -418,6 +655,13 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                       title={note.isPinned ? t('unpin', lang) : t('pin', lang)}
                     >
                       <Pin size={15} className={note.isPinned ? 'fill-current' : ''} />
+                    </button>
+                    <button
+                      onClick={() => handleCopyNote(note)}
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                      title={t('copy_content', lang)}
+                    >
+                      {copiedNoteId === note.id ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
                     </button>
                     <button
                       onClick={() => whatsappService.shareNote(note, lang)}
@@ -441,8 +685,8 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                   </div>
                 </div>
 
-                {/* Content */}
-                <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">
+                {/* Content with user-chosen typography */}
+                <p className={`leading-relaxed whitespace-pre-wrap ${fontClass} ${sizeClass}`}>
                   {note.content}
                 </p>
               </div>
@@ -452,30 +696,43 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
       </div>
 
       {/* ======================================================= */}
-      {/* NOTE ADD / EDIT MODAL WITH ADVANCE DATE PICKER          */}
+      {/* NOTE ADD / EDIT MODAL WITH FONTS, EMOJIS & KEYBOARD     */}
       {/* ======================================================= */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-3xl p-4 sm:p-5 max-w-lg w-full shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 my-auto max-h-[92vh] overflow-y-auto">
+            {/* Header */}
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
-              <h3 className="text-base font-bold text-slate-800">
-                {editingNote ? t('edit_note', lang) : t('new_note_advance', lang)}
-              </h3>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-xl bg-blue-100 text-blue-700">
+                  <BookOpen size={18} />
+                </div>
+                <h3 className="text-base font-bold text-slate-800">
+                  {editingNote ? t('edit_note', lang) : t('new_note_advance', lang)}
+                </h3>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
               >
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleSave} className="space-y-3">
-              {/* Note Scheduled Date (Allows Future / Advance Date) */}
-              <div className="p-3 bg-blue-50/60 rounded-2xl border border-blue-200/80">
-                <label className="text-xs font-bold text-blue-900 flex items-center gap-1.5 mb-1.5">
-                  <Calendar size={14} className="text-blue-600" />
-                  <span>{t('note_date', lang)}:</span>
-                </label>
+              {/* Note Scheduled Date */}
+              <div className="p-2.5 bg-blue-50/70 rounded-2xl border border-blue-200/80">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                    <Calendar size={13} className="text-blue-600" />
+                    <span>{t('note_date', lang)}:</span>
+                  </label>
+                  {noteDate > todayStr && (
+                    <span className="text-[10px] text-indigo-700 font-bold bg-indigo-100/80 px-2 py-0.5 rounded-md">
+                      ✨ {t('advance', lang)}
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="date"
@@ -487,7 +744,7 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                   <button
                     type="button"
                     onClick={() => setNoteDate(todayStr)}
-                    className="px-2.5 py-2 rounded-xl bg-blue-100 text-blue-800 font-bold text-xs"
+                    className="px-2.5 py-2 rounded-xl bg-blue-100 text-blue-800 font-bold text-xs hover:bg-blue-200 transition"
                   >
                     {t('today', lang)}
                   </button>
@@ -497,95 +754,444 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu' }) {
                       const tom = new Date(Date.now() + 86400000).toISOString().split('T')[0];
                       setNoteDate(tom);
                     }}
-                    className="px-2.5 py-2 rounded-xl bg-indigo-100 text-indigo-800 font-bold text-xs"
+                    className="px-2.5 py-2 rounded-xl bg-indigo-100 text-indigo-800 font-bold text-xs hover:bg-indigo-200 transition"
                   >
                     {t('tomorrow', lang)}
                   </button>
                 </div>
-                {noteDate > todayStr && (
-                  <p className="text-[10px] text-indigo-700 font-bold mt-1.5">
-                    ✨ {lang === 'gu' ? `આ એડવાન્સ નોંધ છે, જે ${noteDate} ના ભવિષ્યના આયોજન માટે રહેશે.` : (lang === 'hi' ? `यह आगामी नोट है जो ${noteDate} की भविष्य योजना के लिए रहेगा।` : `✨ Advance note scheduled for ${noteDate}.`)}
-                  </p>
-                )}
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">{t('note_title', lang)}</label>
-                <input
-                  type="text"
-                  placeholder={t('note_title_placeholder', lang)}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-blue-500 font-bold"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
+              {/* Title & Category Row */}
+              <div className="space-y-2">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{t('category', lang)}</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
-                  >
-                    {noteCategories.slice(1).map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">{t('note_title', lang)}</label>
+                  <input
+                    type="text"
+                    lang={lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : lang}
+                    inputMode="text"
+                    placeholder={t('note_title_placeholder', lang)}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-blue-500 font-bold"
+                  />
                 </div>
 
-                <div className="flex items-center justify-end pt-5">
-                  <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isPinned}
-                      onChange={(e) => setIsPinned(e.target.checked)}
-                      className="w-4 h-4 rounded text-blue-600"
-                    />
-                    <span>{t('pin_to_top', lang)}</span>
-                  </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">{t('category', lang)}</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
+                    >
+                      {noteCategories.slice(1).map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center justify-end pt-5">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={isPinned}
+                        onChange={(e) => setIsPinned(e.target.checked)}
+                        className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                      />
+                      <span>{t('pin_to_top', lang)}</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              {/* Content with Voice Typing */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700">{t('note_content', lang)}</label>
+              {/* ======================================================= */}
+              {/* TYPOGRAPHY, FONT STYLE & FORMATTING TOOLBAR             */}
+              {/* ======================================================= */}
+              <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-700 flex items-center gap-1">
+                    <Type size={14} className="text-indigo-600" />
+                    <span>{t('font_style', lang)}:</span>
+                  </span>
+
+                  {/* Font Size Pills (A-, A, A+, A++) */}
+                  <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
+                    {fontSizeOptions.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setFontSize(opt.id)}
+                        className={`px-2 py-0.5 rounded text-[11px] font-bold transition ${
+                          fontSize === opt.id
+                            ? 'bg-blue-600 text-white shadow-2xs'
+                            : 'text-slate-600 hover:bg-slate-100'
+                        }`}
+                        title={opt.title}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Font Choices (Handwriting, Serif, Sans, Mono) */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  {fontOptions.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setFontFamily(f.id)}
+                      className={`p-2 rounded-xl text-left border transition text-xs flex items-center gap-1.5 ${
+                        fontFamily === f.id
+                          ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold ring-2 ring-blue-100'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="text-base">{f.preview}</span>
+                      <span className={`truncate ${f.fontClass}`}>{f.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Markdown Formatting quick buttons */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200/80">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => wrapSelectedText('**')}
+                      className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 font-extrabold text-xs"
+                      title="Bold (**text**)"
+                    >
+                      <Bold size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => wrapSelectedText('*')}
+                      className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 italic text-xs"
+                      title="Italic (*text*)"
+                    >
+                      <Italic size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => insertAtCursor('\n• ')}
+                      className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-xs"
+                      title="Bullet point"
+                    >
+                      <List size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => insertAtCursor('\n> ')}
+                      className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-xs"
+                      title="Quote"
+                    >
+                      <Quote size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => insertAtCursor('\n')}
+                      className="px-2 py-1 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-0.5"
+                      title={t('new_line', lang)}
+                    >
+                      <CornerDownLeft size={11} />
+                      <span>{t('new_line', lang)}</span>
+                    </button>
+                  </div>
+
+                  {/* Clean text button */}
+                  {content.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(lang === 'gu' ? 'શું લખાણ સાફ કરવું છે?' : 'Clear note content?')) {
+                          setContent('');
+                        }
+                      }}
+                      className="text-[11px] font-semibold text-rose-600 hover:underline px-1"
+                    >
+                      {t('clear_text', lang)}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* ======================================================= */}
+              {/* EMOJI & KEYBOARD ASSISTANT TOGGLES                      */}
+              {/* ======================================================= */}
+              <div className="flex items-center justify-between gap-1 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEmojiPicker(!showEmojiPicker);
+                      if (!showEmojiPicker) setShowKeyboardHelper(false);
+                    }}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition border ${
+                      showEmojiPicker
+                        ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Smile size={14} className="text-amber-500" />
+                    <span>{t('quick_emojis', lang)}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowKeyboardHelper(!showKeyboardHelper);
+                      if (!showKeyboardHelper) setShowEmojiPicker(false);
+                    }}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition border ${
+                      showKeyboardHelper
+                        ? 'bg-indigo-100 border-indigo-300 text-indigo-900 shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Keyboard size={14} className="text-indigo-600" />
+                    <span>{t('keyboard_helper', lang)}</span>
+                  </button>
+                </div>
+
+                {/* Voice Typing Button */}
+                <button
+                  type="button"
+                  onClick={toggleVoiceRecording}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 shadow-2xs ${
+                    isListening
+                      ? 'bg-red-500 text-white animate-pulse ring-2 ring-red-300'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {isListening ? <MicOff size={14} /> : <Mic size={14} />}
+                  <span>{isListening ? t('listening', lang) : t('voice_typing', lang)}</span>
+                </button>
+              </div>
+
+              {/* Quick Emojis Horizontal Strip */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none bg-slate-50/80 p-1.5 rounded-xl border border-slate-100">
+                <span className="text-[10px] text-slate-400 font-bold px-1 shrink-0">✨ 1-Tap:</span>
+                {quickEmojiBar.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => insertAtCursor(emoji)}
+                    className="p-1 px-2 bg-white hover:bg-amber-50 border border-slate-200/80 rounded-lg text-sm transition shrink-0 active:scale-90"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
+              {/* Expandable Full Emoji Drawer */}
+              {showEmojiPicker && (
+                <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-200 space-y-2 animate-in fade-in zoom-in-95">
+                  <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
+                    {Object.keys(emojiCategories).map((catKey) => (
+                      <button
+                        key={catKey}
+                        type="button"
+                        onClick={() => setSelectedEmojiCat(catKey)}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                          selectedEmojiCat === catKey
+                            ? 'bg-amber-600 text-white shadow-2xs'
+                            : 'bg-white text-slate-600 border border-amber-200 hover:bg-amber-100'
+                        }`}
+                      >
+                        {emojiCategories[catKey].label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 p-2 bg-white rounded-xl border border-amber-200/70 max-h-36 overflow-y-auto">
+                    {emojiCategories[selectedEmojiCat]?.emojis.map((emoji, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => insertAtCursor(emoji)}
+                        className="h-9 flex items-center justify-center text-lg hover:bg-amber-50 rounded-lg transition active:scale-90"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Expandable Smart Language Keyboard Bar (કાનો-માત્રા & સ્વરો) */}
+              {showKeyboardHelper && (
+                <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-200 space-y-2 animate-in fade-in zoom-in-95">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-indigo-900 flex items-center gap-1">
+                      <Keyboard size={13} className="text-indigo-600" />
+                      <span>{t('matra_helper', lang)} ({lang.toUpperCase()}):</span>
+                    </span>
+                    <span className="text-[10px] text-indigo-600 font-semibold">
+                      {lang === 'gu' ? 'અક્ષર પાછળ માત્રા જોડવા ક્લિક કરો' : 'अक्षर के साथ मात्रा जोड़ें'}
+                    </span>
+                  </div>
+
+                  {/* Matras row */}
+                  {activeHelper.matras && (
+                    <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
+                      {activeHelper.matras.map((m, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => insertAtCursor(m.label)}
+                          className="min-w-[34px] h-8 px-2 flex items-center justify-center text-sm font-extrabold bg-indigo-50/70 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-100 transition active:scale-90"
+                          title={m.name}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Vowels & Conjuncts */}
+                  {activeHelper.vowels && (
+                    <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
+                      <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
+                        {lang === 'gu' ? 'મુખ્ય સ્વરો & જોડાક્ષરો:' : 'स्वर व संयुक्त वर्ण:'}
+                      </span>
+                      {activeHelper.vowels.map((v, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => insertAtCursor(v)}
+                          className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-slate-50 hover:bg-blue-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
+                        >
+                          {v}
+                        </button>
+                      ))}
+                      {activeHelper.conjuncts &&
+                        activeHelper.conjuncts.map((c, idx) => (
+                          <button
+                            key={'c-' + idx}
+                            type="button"
+                            onClick={() => insertAtCursor(c)}
+                            className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-900 rounded-lg border border-amber-200 transition active:scale-90"
+                          >
+                            {c}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+
+                  {/* Consonants (Pills) */}
+                  {activeHelper.consonants && (
+                    <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70 max-h-28 overflow-y-auto">
+                      <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
+                        {lang === 'gu' ? 'વ્યંજનો:' : 'व्यंजन:'}
+                      </span>
+                      {activeHelper.consonants.map((k, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => insertAtCursor(k)}
+                          className="w-7 h-7 flex items-center justify-center text-xs font-bold bg-slate-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
+                        >
+                          {k}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Symbols & Accents for English / Other languages */}
+                  {activeHelper.symbols && (
+                    <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
+                      {activeHelper.symbols.map((s, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => insertAtCursor(s)}
+                          className="min-w-[32px] h-8 px-2 flex items-center justify-center text-sm font-bold bg-slate-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                      {activeHelper.accents &&
+                        activeHelper.accents.map((a, idx) => (
+                          <button
+                            key={'acc-' + idx}
+                            type="button"
+                            onClick={() => insertAtCursor(a)}
+                            className="min-w-[32px] h-8 px-2 flex items-center justify-center text-sm font-bold bg-indigo-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 transition active:scale-90"
+                          >
+                            {a}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Voice Typing Active Indicator */}
+              {isListening && (
+                <div className="p-2.5 bg-red-50 rounded-2xl border border-red-200 flex items-center justify-between gap-2 animate-pulse">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping" />
+                    <span className="text-xs font-bold text-red-700">{t('voice_instruction', lang)}</span>
+                  </div>
                   <button
                     type="button"
                     onClick={toggleVoiceRecording}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition active:scale-95 ${
-                      isListening
-                        ? 'bg-red-500 text-white animate-pulse'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
+                    className="text-xs font-bold text-red-600 hover:underline px-2 py-1 rounded bg-white border border-red-200"
                   >
-                    {isListening ? <MicOff size={13} /> : <Mic size={13} />}
-                    <span>{isListening ? t('listening', lang) : t('voice_typing', lang)}</span>
+                    ⏹️ {lang === 'gu' ? 'રોકો' : 'Stop'}
                   </button>
                 </div>
+              )}
+
+              {/* Note Content Textarea with Dynamic Typography */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">{t('note_content', lang)}</label>
                 <textarea
-                  rows={5}
+                  ref={contentRef}
+                  rows={7}
+                  lang={lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : lang}
+                  inputMode="text"
+                  autoCapitalize="sentences"
+                  autoCorrect="on"
+                  spellCheck="true"
                   placeholder={t('note_content_placeholder', lang)}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-blue-500 leading-relaxed"
+                  className={`w-full p-3.5 rounded-2xl border border-slate-200 focus:outline-blue-500 transition leading-relaxed shadow-inner ${
+                    fontFamily === 'handwriting'
+                      ? 'font-handwriting text-slate-800'
+                      : fontFamily === 'serif'
+                      ? 'font-serif-diary text-slate-900'
+                      : fontFamily === 'mono'
+                      ? 'font-mono-diary text-slate-800'
+                      : 'font-sans-diary text-slate-700'
+                  } ${
+                    fontSize === 'sm'
+                      ? 'text-xs'
+                      : fontSize === 'lg'
+                      ? 'text-base'
+                      : fontSize === 'xl'
+                      ? 'text-lg'
+                      : 'text-sm'
+                  }`}
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              {/* Modal Action Buttons */}
+              <div className="flex gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50 transition"
                 >
                   {t('cancel', lang)}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs"
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition"
                 >
                   {t('save', lang)}
                 </button>
