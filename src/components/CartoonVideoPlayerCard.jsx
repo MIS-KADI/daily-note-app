@@ -291,7 +291,9 @@ export default function CartoonVideoPlayerCard({ isFullscreenModal = false, onCl
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isTalking, setIsTalking] = useState(false);
   const [elapsedInScene, setElapsedInScene] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const cardRef = useRef(null);
   const timerRef = useRef(null);
   const isPlayingRef = useRef(isPlaying);
   isPlayingRef.current = isPlaying;
@@ -303,6 +305,35 @@ export default function CartoonVideoPlayerCard({ isFullscreenModal = false, onCl
     const secs = Math.floor(seconds % 60);
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
+
+  const toggleFullscreen = () => {
+    playCartoonSfx('pop');
+    if (!isFullscreen) {
+      setIsFullscreen(true);
+      try {
+        if (cardRef.current && cardRef.current.requestFullscreen) {
+          cardRef.current.requestFullscreen().catch(() => {});
+        }
+      } catch (e) {}
+    } else {
+      setIsFullscreen(false);
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch (e) {}
+    }
+  };
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
 
   const playCartoonSfx = (type) => {
     try {
@@ -441,7 +472,14 @@ export default function CartoonVideoPlayerCard({ isFullscreenModal = false, onCl
   const progressPercent = Math.min(100, (totalElapsed / totalAppDuration) * 100);
 
   return (
-    <div className="w-full bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 border-2 border-amber-400/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col backdrop-blur-xl">
+    <div
+      ref={cardRef}
+      className={
+        isFullscreen
+          ? 'fixed inset-0 z-50 rounded-none border-none h-screen w-screen p-2 sm:p-5 bg-slate-950 flex flex-col justify-between overflow-y-auto animate-in zoom-in-95 duration-200'
+          : 'w-full bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 border-2 border-amber-400/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col backdrop-blur-xl'
+      }
+    >
       
       {/* Top Bar */}
       <div className="px-4 py-3 bg-slate-950/90 border-b border-indigo-500/30 flex items-center justify-between">
@@ -462,21 +500,35 @@ export default function CartoonVideoPlayerCard({ isFullscreenModal = false, onCl
           </div>
         </div>
 
-        {isFullscreenModal && onCloseModal && (
+        <div className="flex items-center gap-1.5">
+          {/* Fullscreen Toggle Button */}
           <button
-            onClick={() => {
-              if (window.speechSynthesis) window.speechSynthesis.cancel();
-              onCloseModal();
-            }}
-            className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+            onClick={toggleFullscreen}
+            className="px-2.5 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 text-xs font-bold transition flex items-center gap-1.5 active:scale-95 shadow-sm"
+            title={isFullscreen ? 'નાની સ્ક્રીન કરો (Exit Fullscreen)' : 'મોટી સ્ક્રીન કરો (Full Screen)'}
           >
-            ✕
+            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            <span className="text-[10px] sm:text-xs font-bold">
+              {isFullscreen ? 'નાની સ્ક્રીન' : 'સ્ક્રીન મોટી કરો ⛶'}
+            </span>
           </button>
-        )}
+
+          {isFullscreenModal && onCloseModal && (
+            <button
+              onClick={() => {
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+                onCloseModal();
+              }}
+              className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Video Stage Area: Cartoon Character (Left) + Realistic Smartphone Mockup (Right) */}
-      <div className="relative aspect-video sm:min-h-[380px] bg-gradient-to-b from-indigo-950/90 via-slate-900 to-purple-950/95 flex items-center justify-center p-4 sm:p-6 overflow-hidden border-b border-indigo-950">
+      <div className={`relative aspect-video ${isFullscreen ? 'flex-1 min-h-[440px]' : 'sm:min-h-[380px]'} bg-gradient-to-b from-indigo-950/90 via-slate-900 to-purple-950/95 flex items-center justify-center p-4 sm:p-6 overflow-hidden border-b border-indigo-950`}>
         
         {/* Dynamic Glow */}
         <div className={`absolute w-96 h-96 rounded-full bg-gradient-to-r ${currentScene.accentGlow} blur-3xl pointer-events-none transition-all duration-700`} />
@@ -648,6 +700,15 @@ export default function CartoonVideoPlayerCard({ isFullscreenModal = false, onCl
               title="અવાજ ચાલુ / બંધ"
             >
               {voiceEnabled ? <Volume2 size={16} className="text-amber-400" /> : <VolumeX size={16} className="text-slate-500" />}
+            </button>
+
+            {/* Fullscreen Button */}
+            <button
+              onClick={toggleFullscreen}
+              className="p-2 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/30 transition font-bold"
+              title={isFullscreen ? 'નાની સ્ક્રીન (Exit Fullscreen)' : 'પૂર્ણ સ્ક્રીન (Full Screen)'}
+            >
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </button>
           </div>
         </div>
