@@ -10,6 +10,7 @@ import LanguageModal from './components/LanguageModal';
 import SmartAssistantModal from './components/SmartAssistantModal';
 import BankSmsParserModal from './components/BankSmsParserModal';
 import UpiPaymentModal from './components/UpiPaymentModal';
+import AppVideoGuideModal from './components/AppVideoGuideModal';
 
 // Tabs
 import HomeTab from './components/tabs/HomeTab';
@@ -55,6 +56,7 @@ export default function App() {
   const [activeAlarm, setActiveAlarm] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [isVideoGuideOpen, setIsVideoGuideOpen] = useState(false);
   const [isSmsParserOpen, setIsSmsParserOpen] = useState(false);
   const [upiModalData, setUpiModalData] = useState(null);
   const [isStepSensorActive, setIsStepSensorActive] = useState(false);
@@ -608,6 +610,7 @@ export default function App() {
         onOpenShopping={() => setIsShoppingOpen(true)}
         onOpenEmergency={() => setIsEmergencyOpen(true)}
         onOpenAssistant={() => setIsAssistantOpen(true)}
+        onOpenVideoGuide={() => setIsVideoGuideOpen(true)}
         onTestAlarm={handleTestAlarm}
         onLockApp={() => setIsLocked(true)}
         activeAlarmCount={
@@ -845,6 +848,12 @@ export default function App() {
         userUpiId={user?.upiId || ''}
         user={user}
         lang={lang}
+      />
+
+      {/* AI Interactive Explainer Video Guide Modal */}
+      <AppVideoGuideModal
+        isOpen={isVideoGuideOpen}
+        onClose={() => setIsVideoGuideOpen(false)}
       />
     </div>
   );
