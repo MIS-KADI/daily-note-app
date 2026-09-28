@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import CalculatorModal from './components/CalculatorModal';
@@ -24,6 +24,7 @@ import ProfileTab from './components/tabs/ProfileTab';
 import { storageService } from './services/storageService';
 import { notificationService } from './services/notificationService';
 import { streakService } from './services/streakService';
+import { pedometerService } from './services/pedometerService';
 
 export default function App() {
   // State from LocalStorage
@@ -55,6 +56,9 @@ export default function App() {
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isSmsParserOpen, setIsSmsParserOpen] = useState(false);
   const [upiModalData, setUpiModalData] = useState(null);
+  const [isStepSensorActive, setIsStepSensorActive] = useState(false);
+  const [needsSensorPermission, setNeedsSensorPermission] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   // Track fired alarms to prevent duplicate ringing in the same minute
   const firedAlarmsRef = useRef(new Set());
@@ -64,6 +68,15 @@ export default function App() {
     if (user?.isPinRequired) {
       setIsLocked(true);
     }
+  }, []);
+
+  // Detect standalone PWA mode (Add to Home Screen)
+  useEffect(() => {
+    const isStandaloneMode =
+      window.matchMedia?.('(display-mode: standalone)')?.matches ||
+      window.navigator?.standalone ||
+      document.referrer.includes('android-app://');
+    setIsStandalone(Boolean(isStandaloneMode));
   }, []);
 
   // Save changes to storage whenever states change
@@ -111,6 +124,82 @@ export default function App() {
     setFitness(updated);
     storageService.saveFitness(updated);
   };
+
+  // Live Pedometer & Motion Sensor increment handler (functional update prevents stale closures)
+  const handleStepIncrement = useCallback((stepCount = 1) => {
+    setFitness((prevFitness) => {
+      const currentSteps = prevFitness?.steps || 0;
+      const nextSteps = currentSteps + stepCount;
+      const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
+      const workoutCalories = (prevFitness?.workouts || []).reduce(
+        (sum, w) => sum + Number(w.calories || 0),
+        0
+      );
+      const nextCalories = Math.round(nextSteps * 0.045) + workoutCalories;
+
+      const updated = {
+        ...prevFitness,
+        steps: nextSteps,
+        distanceKm: nextKm,
+        calories: nextCalories,
+      };
+
+      storageService.saveFitness(updated);
+      return updated;
+    });
+  }, []);
+
+  const handleToggleStepSensor = async () => {
+    if (isStepSensorActive) {
+      pedometerService.setAutoTrackingEnabled(false);
+      pedometerService.stopTracking();
+    } else {
+      pedometerService.setAutoTrackingEnabled(true);
+      const started = await pedometerService.startTracking();
+      if (!started) {
+        alert(
+          lang === 'gu'
+            ? 'આ બ્રાઉઝરમાં મોશન સેન્સર પરમિશન નથી મળી અથવા ડિવાઇસ સેન્સર સપોર્ટ કરતું નથી. તમે ઝડપી બટન અથવા હેલ્થ એપ સિન્ક વાપરી શકો છો.'
+            : 'Motion sensor permission not granted or device not supported.'
+        );
+      }
+    }
+  };
+
+  const handleGrantSensorPermission = async () => {
+    pedometerService.setAutoTrackingEnabled(true);
+    const started = await pedometerService.startTracking();
+    if (started) {
+      setNeedsSensorPermission(false);
+    }
+  };
+
+  // Live Pedometer & Motion Sensor background listener
+  useEffect(() => {
+    const unsubStep = pedometerService.addListener((stepCount) => {
+      handleStepIncrement(stepCount);
+    });
+
+    const unsubStatus = pedometerService.addStatusListener((isActive) => {
+      setIsStepSensorActive(isActive);
+    });
+
+    // Auto-start sensor if enabled in preferences
+    if (pedometerService.isAutoTrackingEnabled() && pedometerService.isSupported()) {
+      pedometerService.startTracking().then((started) => {
+        if (!started) {
+          setNeedsSensorPermission(true);
+        } else {
+          setNeedsSensorPermission(false);
+        }
+      });
+    }
+
+    return () => {
+      unsubStep();
+      unsubStatus();
+    };
+  }, [handleStepIncrement]);
 
   // Reload all data (e.g. after backup restore)
   const handleReloadAllData = () => {
@@ -466,6 +555,29 @@ export default function App() {
         }
       />
 
+      {/* 1-Tap Sensor Permission Banner for iOS / Browsers */}
+      {needsSensorPermission && (
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-3.5 py-2 flex items-center justify-between text-xs shadow-md border-b border-emerald-500 animate-in slide-in-from-top">
+          <div className="flex items-center gap-2">
+            <span className="text-base">👟</span>
+            <div>
+              <p className="font-bold leading-tight">
+                {lang === 'hi' ? 'ऑटोमैटिक वॉकिंग स्टेप एक्टिव करें' : lang === 'en' ? 'Enable Auto Step Counter' : 'આપોઆપ વોકિંગ સ્ટેપ શરૂ કરો'}
+              </p>
+              <p className="text-[10px] text-emerald-100 leading-tight">
+                {lang === 'hi' ? 'चलने पर अपने-आप कदम गिनने के लिए टैप करें' : lang === 'en' ? 'Tap to count steps automatically as you walk' : 'ચાલતી વખતે જાતે સ્ટેપ્સ ગણવા માટે ૧-ટેપ કરો'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleGrantSensorPermission}
+            className="px-2.5 py-1 bg-white text-emerald-800 rounded-xl font-extrabold text-xs active:scale-95 transition shadow-xs shrink-0"
+          >
+            {lang === 'hi' ? 'एक्टિવ કરો' : lang === 'en' ? 'Enable' : 'શરૂ કરો'}
+          </button>
+        </div>
+      )}
+
       {/* Main Tab View Container */}
       <main className="flex-1 p-3.5 overflow-y-auto">
         {activeTab === 'home' && (
@@ -481,6 +593,9 @@ export default function App() {
             khata={khata}
             water={water}
             fitness={fitness}
+            isStepSensorActive={isStepSensorActive}
+            onToggleStepSensor={handleToggleStepSensor}
+            onStepIncrement={handleStepIncrement}
             onUpdateWater={handleUpdateWater}
             onUpdateFitness={handleUpdateFitness}
             onOpenShopping={() => setIsShoppingOpen(true)}
@@ -520,6 +635,9 @@ export default function App() {
             onToggleMedicine={handleToggleMedicine}
             onTriggerAlarm={handleCustomTriggerAlarm}
             fitness={fitness}
+            isStepSensorActive={isStepSensorActive}
+            onToggleStepSensor={handleToggleStepSensor}
+            onStepIncrement={handleStepIncrement}
             onUpdateFitness={handleUpdateFitness}
             lang={lang}
             initialSubTab={activeTab === 'medicine' ? 'medicines' : 'fitness'}

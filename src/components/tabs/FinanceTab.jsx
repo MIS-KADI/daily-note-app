@@ -23,10 +23,12 @@ import {
   MessageCircle,
   QrCode,
   Smartphone,
+  BarChart3,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t, getExpenseCategories, getIncomeCategories, getPaymentModes } from '../../services/i18n';
 import { whatsappService } from '../../services/whatsappService';
+import FinanceCharts from '../FinanceCharts';
 
 export default function FinanceTab({
   finance = [],
@@ -351,30 +353,42 @@ export default function FinanceTab({
         </div>
       </div>
 
-      {/* Segmented Controller: Transactions vs Khata */}
-      <div className="bg-white p-1 rounded-2xl border border-slate-200 grid grid-cols-2 gap-1 shadow-xs">
+      {/* Segmented Controller: Transactions vs Charts vs Khata */}
+      <div className="bg-white p-1 rounded-2xl border border-slate-200 grid grid-cols-3 gap-1 shadow-xs">
         <button
           onClick={() => setActiveSubView('transactions')}
-          className={`py-2 px-3 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
             activeSubView === 'transactions'
               ? 'bg-blue-600 text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          <CreditCard size={15} />
-          <span>{t('income_expense_tab', lang)} ({finance.length})</span>
+          <CreditCard size={14} />
+          <span className="truncate">{lang === 'hi' ? 'लेन-देन' : lang === 'en' ? 'List' : 'આવક-ખર્ચ'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubView('analytics')}
+          className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
+            activeSubView === 'analytics'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <BarChart3 size={14} />
+          <span className="truncate">{lang === 'hi' ? '📊 चार्ट्स' : lang === 'en' ? '📊 Charts' : '📊 ચાર્ટ્સ'}</span>
         </button>
 
         <button
           onClick={() => setActiveSubView('khata')}
-          className={`py-2 px-3 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
             activeSubView === 'khata'
               ? 'bg-blue-600 text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          <Users size={15} />
-          <span>{t('khata_book', lang)} ({khata.filter((k) => !k.isSettled).length} {t('pending', lang)})</span>
+          <Users size={14} />
+          <span className="truncate">{t('khata_book', lang)}</span>
         </button>
       </div>
 
@@ -383,6 +397,29 @@ export default function FinanceTab({
       {/* ======================================================= */}
       {activeSubView === 'transactions' && (
         <div className="space-y-3">
+          {/* Quick Chart Analytics Teaser Banner */}
+          <div
+            onClick={() => setActiveSubView('analytics')}
+            className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 rounded-2xl border border-blue-200/80 cursor-pointer flex items-center justify-between shadow-2xs transition active:scale-98"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                <BarChart3 size={15} />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-800">
+                  {lang === 'hi' ? 'खर्च और आय का चार्ट विश्लेषण देखें' : lang === 'en' ? 'View Interactive Finance Charts' : 'ખર્ચ અને આવકનું ચાર્ટ વિશ્લેષણ જુઓ'}
+                </h4>
+                <p className="text-[10px] text-slate-500">
+                  {lang === 'hi' ? 'श्रेणीवार डोनट और तुलनात्मक ग्राफ' : lang === 'en' ? 'Category Donut & Weekly Graphs' : 'કેટેગરી મુજબ ડોનટ ચાર્ટ અને ગ્રાફ'}
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-blue-700 bg-white px-2 py-1 rounded-xl shadow-2xs">
+              📊 {lang === 'hi' ? 'चार्ट' : lang === 'en' ? 'Charts' : 'ચાર્ટ'} →
+            </span>
+          </div>
+
           {/* Filter Pills & Calculator Launcher */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs">
@@ -508,7 +545,19 @@ export default function FinanceTab({
       )}
 
       {/* ======================================================= */}
-      {/* 2. KHATA BOOK (PARTY LEDGER) VIEW                       */}
+      {/* 2. CHARTS & ANALYTICS VIEW                              */}
+      {/* ======================================================= */}
+      {activeSubView === 'analytics' && (
+        <FinanceCharts
+          finance={finance}
+          accounts={accounts}
+          khata={khata}
+          lang={lang}
+        />
+      )}
+
+      {/* ======================================================= */}
+      {/* 3. KHATA BOOK (PARTY LEDGER) VIEW                       */}
       {/* ======================================================= */}
       {activeSubView === 'khata' && (
         <div className="space-y-3">

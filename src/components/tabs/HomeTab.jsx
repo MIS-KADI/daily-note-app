@@ -45,6 +45,9 @@ export default function HomeTab({
   finance,
   water,
   fitness,
+  isStepSensorActive = false,
+  onToggleStepSensor,
+  onStepIncrement,
   accounts = { bankBalance: 42500, cashBalance: 6800 },
   khata = [],
   onUpdateWater,
@@ -130,36 +133,13 @@ export default function HomeTab({
   const todayEvents = (events || []).filter((e) => (e.date || '').slice(5, 10) === todayMMDD);
   const tomorrowEvents = (events || []).filter((e) => (e.date || '').slice(5, 10) === tomorrowMMDD);
 
-  // Live Pedometer & Motion Sensor State
-  const [isSensorActive, setIsSensorActive] = React.useState(false);
+  // Modal & Sync Controls
   const [isSyncModalOpen, setIsSyncModalOpen] = React.useState(false);
   const [customStepsInput, setCustomStepsInput] = React.useState('');
 
-  const toggleStepSensor = async () => {
-    if (isSensorActive) {
-      pedometerService.stopTracking();
-      setIsSensorActive(false);
-    } else {
-      const started = await pedometerService.startTracking((stepInc) => {
-        const nextSteps = (fitness?.steps || 0) + stepInc;
-        const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
-        const nextCal = (fitness?.calories || 0) + Math.round(stepInc * 0.045);
-        onUpdateFitness?.({
-          ...fitness,
-          steps: nextSteps,
-          distanceKm: nextKm,
-          calories: nextCal,
-        });
-      });
-      if (started) {
-        setIsSensorActive(true);
-      } else {
-        alert(
-          lang === 'gu'
-            ? 'આ બ્રાઉઝરમાં મોશન સેન્સર પરમિશન નથી મળી અથવા ડિવાઇસ સેન્સર સપોર્ટ કરતું નથી. તમે ઝડપી બટન અથવા હેલ્થ એપ સિન્ક વાપરી શકો છો.'
-            : 'Motion sensor permission not granted or device not supported.'
-        );
-      }
+  const toggleStepSensor = () => {
+    if (typeof onToggleStepSensor === 'function') {
+      onToggleStepSensor();
     }
   };
 
@@ -167,7 +147,11 @@ export default function HomeTab({
     const s = Number(stepsCount);
     if (!isNaN(s) && s >= 0) {
       const nextKm = Number(((s * 0.76) / 1000).toFixed(2));
-      const nextCal = Math.round(s * 0.045);
+      const workoutCalories = (fitness?.workouts || []).reduce(
+        (sum, w) => sum + Number(w.calories || 0),
+        0
+      );
+      const nextCal = Math.round(s * 0.045) + workoutCalories;
       onUpdateFitness?.({
         ...fitness,
         steps: s,
@@ -181,16 +165,24 @@ export default function HomeTab({
   };
 
   const handleAddQuickSteps = () => {
-    const nextSteps = fitnessSteps + 500;
-    const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
-    const nextCal = (fitness?.calories || 0) + Math.round(500 * 0.045);
-    onUpdateFitness?.({
-      ...fitness,
-      steps: nextSteps,
-      distanceKm: nextKm,
-      calories: nextCal,
-    });
-    if (nextSteps >= fitnessTarget && fitnessSteps < fitnessTarget) {
+    if (typeof onStepIncrement === 'function') {
+      onStepIncrement(500);
+    } else {
+      const nextSteps = fitnessSteps + 500;
+      const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
+      const workoutCalories = (fitness?.workouts || []).reduce(
+        (sum, w) => sum + Number(w.calories || 0),
+        0
+      );
+      const nextCal = Math.round(nextSteps * 0.045) + workoutCalories;
+      onUpdateFitness?.({
+        ...fitness,
+        steps: nextSteps,
+        distanceKm: nextKm,
+        calories: nextCal,
+      });
+    }
+    if (fitnessSteps + 500 >= fitnessTarget && fitnessSteps < fitnessTarget) {
       confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
     }
   };
@@ -535,14 +527,26 @@ export default function HomeTab({
           <div className="flex items-center gap-1.5">
             <button
               onClick={toggleStepSensor}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition active:scale-95 text-[11px] ${
-                isSensorActive
-                  ? 'bg-emerald-600 text-white shadow-xs animate-pulse'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition active:scale-95 text-[11px] ${
+                isStepSensorActive
+                  ? 'bg-emerald-600 text-white shadow-xs'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
               }`}
             >
-              {isSensorActive ? <Square size={11} /> : <Play size={11} />}
-              <span>{isSensorActive ? t('live_sensor_active', lang) : t('live_sensor_start', lang)}</span>
+              {isStepSensorActive ? (
+                <>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                  </span>
+                  <span>{t('live_sensor_active', lang)}</span>
+                </>
+              ) : (
+                <>
+                  <Play size={11} className="text-emerald-600 fill-emerald-600" />
+                  <span>{t('live_sensor_start', lang)}</span>
+                </>
+              )}
             </button>
 
             <button
@@ -840,7 +844,7 @@ export default function HomeTab({
                 <span className="text-xl">📱</span>
                 <div>
                   <h3 className="text-sm font-bold text-slate-800">{t('sync_health_modal_title', lang)}</h3>
-                  <p className="text-[10px] text-slate-500">Google Fit, Apple Health, Samsung Health</p>
+                  <p className="text-[10px] text-slate-500">Android Step Counter, Google Fit, Samsung Health</p>
                 </div>
               </div>
               <button
@@ -851,13 +855,33 @@ export default function HomeTab({
               </button>
             </div>
 
+            {/* Quick One-tap sync with current detected/shown phone widget */}
+            <div className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-2xl p-3 border border-teal-200/80">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-teal-800 block">
+                    {lang === 'gu' ? 'તમારા મોબાઈલમાં 612 સ્ટેપ છે?' : '612 steps on your phone?'}
+                  </span>
+                  <span className="text-[10px] text-teal-600">
+                    {lang === 'gu' ? '0.41 કિમી • 1-ક્લિકમાં સેટ કરો' : '0.41 km • 1-click apply'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleApplySyncSteps(612)}
+                  className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition"
+                >
+                  612 {t('steps', lang)}
+                </button>
+              </div>
+            </div>
+
             <p className="text-xs text-slate-600 leading-relaxed">
               {t('sync_health_desc', lang)}
             </p>
 
             {/* Quick preset step counts */}
             <div className="grid grid-cols-4 gap-1.5">
-              {[2000, 5000, 8000, 10000].map((count) => (
+              {[500, 1000, 2000, 5000, 8000, 10000].map((count) => (
                 <button
                   key={count}
                   onClick={() => handleApplySyncSteps(count)}
@@ -869,12 +893,12 @@ export default function HomeTab({
             </div>
 
             {/* Custom input */}
-            <div className="pt-2">
+            <div className="pt-1">
               <label className="text-xs font-bold text-slate-700 block mb-1">{t('custom_steps_label', lang)}</label>
               <div className="flex gap-2">
                 <input
                   type="number"
-                  placeholder="e.g. 6450"
+                  placeholder="e.g. 612, 1500"
                   value={customStepsInput}
                   onChange={(e) => setCustomStepsInput(e.target.value)}
                   className="flex-1 text-sm font-bold p-2.5 rounded-xl border border-slate-200 focus:outline-teal-500"
@@ -887,6 +911,12 @@ export default function HomeTab({
                   {t('save_steps', lang)}
                 </button>
               </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 text-[11px] text-slate-600 leading-relaxed">
+              {lang === 'gu'
+                ? '💡 સ્ટેપ સેટ કર્યા પછી લાઇવ સેન્સર તેમાંથી સતત આગળ ગણતરી ચાલુ રાખશે. વારંવાર ક્લિક કરવાની જરૂર નથી!'
+                : '💡 Once steps are synced, the live sensor will continuously count upwards as you walk. No need to click repeatedly!'}
             </div>
           </div>
         </div>

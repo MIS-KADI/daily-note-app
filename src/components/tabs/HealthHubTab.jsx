@@ -27,9 +27,11 @@ import {
   AlertCircle,
   Sparkles,
   Zap,
+  BarChart3,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t } from '../../services/i18n';
+import { storageService } from '../../services/storageService';
 
 const MEDICINE_SLOTS = {
   gu: [
@@ -149,6 +151,9 @@ export default function HealthHubTab({
   onToggleMedicine,
   onTriggerAlarm,
   fitness,
+  isStepSensorActive = false,
+  onToggleStepSensor,
+  onStepIncrement,
   onUpdateFitness,
   lang = 'gu',
   initialSubTab = 'fitness',
@@ -269,17 +274,26 @@ export default function HealthHubTab({
   const totalCalories = stepCalories + workoutCalories;
   const stepProgress = Math.min(100, Math.round((steps / stepTarget) * 100));
 
+  const [weeklySteps] = useState(() => {
+    const list = storageService.getWeeklyStepHistory();
+    return list.map((item) => (item.isToday ? { ...item, steps: steps || item.steps } : item));
+  });
+
   const handleAddSteps = (count) => {
-    const nextSteps = Math.max(0, steps + count);
-    const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
-    const nextCal = Math.round(nextSteps * 0.045) + workoutCalories;
-    onUpdateFitness({
-      ...fitness,
-      steps: nextSteps,
-      distanceKm: nextKm,
-      calories: nextCal,
-    });
-    if (nextSteps >= stepTarget && steps < stepTarget) {
+    if (typeof onStepIncrement === 'function') {
+      onStepIncrement(count);
+    } else {
+      const nextSteps = Math.max(0, steps + count);
+      const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
+      const nextCal = Math.round(nextSteps * 0.045) + workoutCalories;
+      onUpdateFitness({
+        ...fitness,
+        steps: nextSteps,
+        distanceKm: nextKm,
+        calories: nextCal,
+      });
+    }
+    if (steps + count >= stepTarget && steps < stepTarget) {
       confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
     }
   };
@@ -808,6 +822,105 @@ export default function HealthHubTab({
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Live Motion Sensor Control */}
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-teal-50/70 border border-teal-200/80">
+              <div className="flex items-center gap-2.5">
+                {isStepSensorActive ? (
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  </span>
+                ) : (
+                  <span className="h-3 w-3 rounded-full bg-slate-300"></span>
+                )}
+                <div>
+                  <p className="text-xs font-bold text-slate-800">
+                    {isStepSensorActive ? t('live_sensor_active', lang) : t('live_sensor_start', lang)}
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    {isStepSensorActive
+                      ? (lang === 'gu' ? 'ચાલતી વખતે સ્ટેપ્સ આપોઆપ ગણાય છે' : 'Steps are auto-counted as you walk')
+                      : (lang === 'gu' ? 'સેન્સર શરૂ કરવા ક્લિક કરો' : 'Click to activate motion sensor')}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => onToggleStepSensor?.()}
+                className={`px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 ${
+                  isStepSensorActive
+                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-xs'
+                    : 'bg-teal-600 hover:bg-teal-700 text-white shadow-xs'
+                }`}
+              >
+                {isStepSensorActive ? t('live_sensor_stop', lang) : t('live_sensor_start', lang)}
+              </button>
+            </div>
+          </div>
+
+          {/* 7-Day Walking Step History Bar Chart */}
+          <div className="bg-white rounded-3xl p-4.5 border border-slate-200 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-teal-100 text-teal-700">
+                  <BarChart3 size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">
+                    {lang === 'hi' ? 'साप्ताहिक वॉकिंग स्टेप ग्राफ (7 दिन)' : lang === 'en' ? 'Weekly Step Trend (7 Days)' : '૭-દિવસનો વોકિંગ સ્ટેપ ગ્રાફ'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {lang === 'hi' ? 'दैनिक लक्ष्य' : lang === 'en' ? 'Daily Goal' : 'દૈનિક લક્ષ્ય'}: {stepTarget.toLocaleString()} {t('steps', lang)}
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+                {Math.round(steps).toLocaleString()} {t('steps_today', lang)}
+              </span>
+            </div>
+
+            {/* 7 Vertical Step Columns */}
+            <div className="grid grid-cols-7 gap-1.5 pt-4 pb-2 items-end h-36 border-b border-slate-100">
+              {weeklySteps.map((d, idx) => {
+                const heightPct = Math.min(100, Math.max(12, Math.round((d.steps / Math.max(stepTarget, 10000)) * 100)));
+                const isTargetAchieved = d.steps >= stepTarget;
+                return (
+                  <div key={idx} className="flex flex-col items-center justify-end h-full gap-1">
+                    <span className="text-[8px] font-bold text-slate-500 truncate">
+                      {d.steps > 999 ? `${(d.steps / 1000).toFixed(1)}k` : d.steps}
+                    </span>
+                    <div
+                      className={`w-full max-w-[24px] rounded-t-lg transition-all duration-500 ${
+                        d.isToday
+                          ? 'bg-gradient-to-t from-teal-600 to-emerald-400 shadow-xs ring-2 ring-teal-400/40'
+                          : isTargetAchieved
+                          ? 'bg-emerald-400'
+                          : 'bg-teal-200'
+                      }`}
+                      style={{ height: `${heightPct}%` }}
+                      title={`${d.day}: ${d.steps} steps`}
+                    />
+                    <span
+                      className={`text-[10px] font-bold ${
+                        d.isToday ? 'text-teal-800 font-extrabold' : 'text-slate-500'
+                      }`}
+                    >
+                      {d.day}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-teal-600" />
+                <span>{lang === 'hi' ? 'आज' : lang === 'en' ? 'Today' : 'આજે'}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />
+                <span>{lang === 'hi' ? 'लक्ष्य पूर्ण (8,000+)' : lang === 'en' ? 'Goal Met (8,000+)' : 'લક્ષ્ય પૂર્ણ (૮,૦૦૦+)'}</span>
+              </span>
             </div>
           </div>
 
