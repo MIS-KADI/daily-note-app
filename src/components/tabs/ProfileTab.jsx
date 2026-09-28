@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 import { t } from '../../services/i18n';
+import CartoonVideoPlayerCard from '../CartoonVideoPlayerCard';
 
 export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang = 'gu' }) {
   const [name, setName] = useState(user?.name || '');
@@ -339,6 +340,20 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
             />
           </label>
         </div>
+      </div>
+
+      {/* Cartoon Animation Video Guide Showcase (At bottom of Profile Tab) */}
+      <div className="space-y-2 pt-1">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-xs sm:text-sm font-black text-slate-800 flex items-center gap-1.5">
+            <span className="text-base sm:text-lg">🎬</span>
+            <span>{lang === 'hi' ? 'મિતુ કાર્ટૂન વિડીયો શો (AI Video Guide)' : lang === 'en' ? 'Mitu Cartoon Video Show' : 'મિતુ કાર્ટૂન વિડીયો શો (AI Guide)'}</span>
+          </h3>
+          <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 uppercase tracking-wide shadow-xs">
+            FULL HD SHOW
+          </span>
+        </div>
+        <CartoonVideoPlayerCard />
       </div>
     </div>
   );
