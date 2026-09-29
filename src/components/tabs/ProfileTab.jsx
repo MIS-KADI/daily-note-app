@@ -522,6 +522,54 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
         </form>
       </div>
 
+      {/* Direct Android APK Download Card */}
+      <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 rounded-3xl p-5 border border-emerald-200 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="p-2.5 bg-emerald-600 text-white rounded-2xl shadow-sm text-lg">
+              📱
+            </span>
+            <div>
+              <h3 className="text-sm font-bold text-slate-800">
+                {lang === 'gu' ? 'Android APK સીધું ડાઉનલોડ કરો' : 'Download Android APK'}
+              </h3>
+              <p className="text-[10px] text-emerald-700 font-semibold">
+                v1.0.1 • 7.88 MB • {lang === 'gu' ? 'તમામ નવા ફીચર્સ સાથે' : 'With latest features'}
+              </p>
+            </div>
+          </div>
+          <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white uppercase tracking-wide">
+            OFFLINE READY
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-600 leading-relaxed">
+          {lang === 'gu'
+            ? 'ફોનમાં ઇન્સ્ટોલ કરવા માટે નીચે આપેલ બટન દબાવો. એપ બંધ હશે તો પણ એલાર્મ અને ફિંગરપ્રિન્ટ લૉગિન કામ કરશે.'
+            : 'Download and install directly to get background alarms and hardware biometric fingerprint login.'}
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+          <a
+            href="Daily-Diary-App.apk"
+            download="Daily-Diary-App.apk"
+            className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
+          >
+            <Download size={15} />
+            <span>{lang === 'gu' ? '📥 સીધું ડાઉનલોડ (Fast APK)' : 'Download APK'}</span>
+          </a>
+
+          <a
+            href="https://github.com/MIS-KADI/daily-note-app/releases/download/v1.0.1/Daily-Diary-v1.0.1-Latest.apk"
+            target="_blank"
+            rel="noreferrer"
+            className="w-full py-2.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
+          >
+            <span>🌐 {lang === 'gu' ? 'GitHub સર્વર પરથી' : 'From GitHub'}</span>
+          </a>
+        </div>
+      </div>
+
       {/* Privacy & Anti-Leak Guarantee */}
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-3xl p-4 border border-emerald-200 shadow-xs space-y-2">
         <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
