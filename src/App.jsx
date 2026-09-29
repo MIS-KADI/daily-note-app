@@ -825,6 +825,7 @@ export default function App() {
         <PinLockModal
           correctPin={user?.pin || '1234'}
           isBiometricEnabled={user?.isBiometricEnabled ?? true}
+          user={user}
           onUnlock={() => setIsLocked(false)}
           lang={lang}
         />

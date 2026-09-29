@@ -23,14 +23,16 @@ const STORAGE_KEYS = {
 
 
 
-// Initial realistic default data in Gujarati
 const DEFAULT_USER = {
   name: 'પ્રિય યુઝર',
   mobile: '+91 98765 43210',
   email: 'user@example.com',
   isLinked: true,
+  isMobileVerified: true,
+  isEmailVerified: true,
   pin: '1234',
   isPinRequired: false, // by default off, user can enable anytime
+  isBiometricEnabled: true,
   isEncrypted: true,
   createdAt: new Date().toISOString(),
 };

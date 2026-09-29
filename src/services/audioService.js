@@ -74,6 +74,11 @@ class SoundAlarmService {
     this.intervalId = setInterval(playSequence, 1500);
   }
 
+  playChime() {
+    this.playBeep(587.33, 0.12, 'sine');
+    setTimeout(() => this.playBeep(880, 0.25, 'sine'), 130);
+  }
+
   stopAlarm() {
     this.isPlaying = false;
     if (this.intervalId) {
@@ -84,3 +89,4 @@ class SoundAlarmService {
 }
 
 export const soundAlarm = new SoundAlarmService();
+export const audioService = soundAlarm;

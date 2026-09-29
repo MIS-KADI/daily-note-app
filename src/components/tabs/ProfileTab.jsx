@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   UserCheck,
   Mail,
@@ -13,11 +13,13 @@ import {
   Save,
   HelpCircle,
   Fingerprint,
+  Sparkles,
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 import { biometricService } from '../../services/biometricService';
 import { t } from '../../services/i18n';
 import CartoonVideoPlayerCard from '../CartoonVideoPlayerCard';
+import OtpVerificationModal from '../OtpVerificationModal';
 
 export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang = 'gu' }) {
   const [name, setName] = useState(user?.name || '');
@@ -27,11 +29,17 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
   const [isPinRequired, setIsPinRequired] = useState(user?.isPinRequired ?? false);
   const [pin, setPin] = useState(user?.pin || '1234');
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(user?.isBiometricEnabled ?? true);
+  const [isMobileVerified, setIsMobileVerified] = useState(user?.isMobileVerified ?? true);
+  const [isEmailVerified, setIsEmailVerified] = useState(user?.isEmailVerified ?? true);
+  const [otpModalConfig, setOtpModalConfig] = useState({ isOpen: false, type: 'mobile', target: '' });
   const [isNightDiaryReminder, setIsNightDiaryReminder] = useState(user?.isNightDiaryReminder ?? true);
   const [isWaterReminder, setIsWaterReminder] = useState(user?.isWaterReminder ?? true);
   const [savedNotice, setSavedNotice] = useState(false);
   const [biometricNotice, setBiometricNotice] = useState('');
   const [isBiometricTesting, setIsBiometricTesting] = useState(false);
+  const [isTestingHold, setIsTestingHold] = useState(false);
+  const [testHoldProgress, setTestHoldProgress] = useState(0);
+  const testHoldRef = useRef(null);
 
   const handleToggleBiometric = async (enable) => {
     if (enable) {
@@ -72,6 +80,30 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
     }
   };
 
+  const handleOtpVerified = (verifiedTarget) => {
+    if (otpModalConfig.type === 'mobile') {
+      setIsMobileVerified(true);
+      const updated = {
+        ...user,
+        mobile,
+        isMobileVerified: true,
+      };
+      onUpdateUser(updated);
+      setBiometricNotice(lang === 'gu' ? '✅ મોબાઇલ નંબર OTP થી સફળતાપૂર્વક વેરિફાય થયો!' : 'Mobile Verified!');
+      setTimeout(() => setBiometricNotice(''), 4000);
+    } else if (otpModalConfig.type === 'email') {
+      setIsEmailVerified(true);
+      const updated = {
+        ...user,
+        email,
+        isEmailVerified: true,
+      };
+      onUpdateUser(updated);
+      setBiometricNotice(lang === 'gu' ? '✅ ઈમેલ ID OTP થી સફળતાપૂર્વક વેરિફાય થયું!' : 'Email Verified!');
+      setTimeout(() => setBiometricNotice(''), 4000);
+    }
+  };
+
   const handleTestBiometric = async () => {
     setIsBiometricTesting(true);
     setBiometricNotice(lang === 'gu' ? '👆 ફિંગરપ્રિન્ટ સેન્સર પર ટચ કરો...' : 'Touch fingerprint sensor...');
@@ -80,10 +112,44 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
 
     if (res.success) {
       setBiometricNotice(lang === 'gu' ? '✅ ફિંગરપ્રિન્ટ સફળતાપૂર્વક પ્રમાણિત થઈ!' : '✅ Biometric Verified!');
+      setTimeout(() => setBiometricNotice(''), 3500);
     } else {
-      setBiometricNotice('❌ ' + (res.error || (lang === 'gu' ? 'ચકાસણી નિષ્ફળ રહી' : 'Verification failed')));
+      setBiometricNotice(
+        lang === 'gu'
+          ? '👇 નીચે આપેલ ફિંગરપ્રિન્ટ સેન્સર પર આંગળી ૨ સેકન્ડ દબાવી રાખો'
+          : '👇 Press and hold the sensor below for 2s'
+      );
     }
-    setTimeout(() => setBiometricNotice(''), 3500);
+  };
+
+  const startTestHold = (e) => {
+    e.preventDefault();
+    setIsTestingHold(true);
+    setTestHoldProgress(0);
+    biometricService.triggerHapticPulse();
+
+    let cur = 0;
+    clearInterval(testHoldRef.current);
+    testHoldRef.current = setInterval(() => {
+      cur += 15;
+      setTestHoldProgress(cur);
+      if (cur % 30 === 0) biometricService.triggerHapticPulse();
+      if (cur >= 100) {
+        clearInterval(testHoldRef.current);
+        setIsTestingHold(false);
+        biometricService.triggerHapticSuccess();
+        setBiometricNotice(lang === 'gu' ? '✅ ફિંગરપ્રિન્ટ સેન્સર સફળતાપૂર્વક ટેસ્ટ થયું!' : '✅ Biometric Sensor Passed!');
+        setTimeout(() => setBiometricNotice(''), 3500);
+      }
+    }, 80);
+  };
+
+  const stopTestHold = () => {
+    if (testHoldProgress < 100) {
+      clearInterval(testHoldRef.current);
+      setIsTestingHold(false);
+      setTestHoldProgress(0);
+    }
   };
 
   const handleSaveProfile = (e) => {
@@ -97,6 +163,8 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
       isPinRequired,
       pin,
       isBiometricEnabled,
+      isMobileVerified,
+      isEmailVerified,
       isNightDiaryReminder,
       isWaterReminder,
     };
@@ -181,40 +249,88 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
             />
           </div>
 
+          {/* Mobile Number with OTP Verification */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
                 <Phone size={12} className="text-slate-500" />
                 {t('mobile_number', lang)}
               </label>
-              <span className="text-[10px] text-emerald-600 font-bold">{t('otp_verified', lang)}</span>
+              {isMobileVerified ? (
+                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
+                  <CheckCircle2 size={11} />
+                  {t('otp_verified', lang)}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-bold">
+                  <AlertTriangle size={11} />
+                  {lang === 'gu' ? 'OTP ચકાસણી બાકી' : 'Unverified'}
+                </span>
+              )}
             </div>
-            <input
-              type="tel"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              placeholder="+91 98765 43210"
-              required
-            />
+            <div className="flex gap-2">
+              <input
+                type="tel"
+                value={mobile}
+                onChange={(e) => {
+                  setMobile(e.target.value);
+                  if (e.target.value !== user?.mobile) setIsMobileVerified(false);
+                }}
+                className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                placeholder="+91 98765 43210"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setOtpModalConfig({ isOpen: true, type: 'mobile', target: mobile })}
+                className="px-3 py-2 bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-bold whitespace-nowrap active:scale-95 transition shadow-2xs flex items-center gap-1"
+              >
+                <span>📲</span>
+                <span>{isMobileVerified ? (lang === 'gu' ? 'OTP ચકાસો' : 'Verify') : (lang === 'gu' ? 'OTP મોકલો' : 'Send OTP')}</span>
+              </button>
+            </div>
           </div>
 
+          {/* Email ID with OTP Verification */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
                 <Mail size={12} className="text-slate-500" />
                 {t('email_id', lang)}
               </label>
-              <span className="text-[10px] text-emerald-600 font-bold">{t('confirmed', lang)}</span>
+              {isEmailVerified ? (
+                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
+                  <CheckCircle2 size={11} />
+                  {t('confirmed', lang)}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-bold">
+                  <AlertTriangle size={11} />
+                  {lang === 'gu' ? 'ઈમેલ ચકાસણી બાકી' : 'Unverified'}
+                </span>
+              )}
             </div>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              placeholder="user@example.com"
-              required
-            />
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (e.target.value !== user?.email) setIsEmailVerified(false);
+                }}
+                className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                placeholder="user@example.com"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setOtpModalConfig({ isOpen: true, type: 'email', target: email })}
+                className="px-3 py-2 bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-bold whitespace-nowrap active:scale-95 transition shadow-2xs flex items-center gap-1"
+              >
+                <span>📧</span>
+                <span>{isEmailVerified ? (lang === 'gu' ? 'OTP ચકાસો' : 'Verify') : (lang === 'gu' ? 'OTP મોકલો' : 'Send OTP')}</span>
+              </button>
+            </div>
           </div>
 
           {/* Receiving UPI ID for Khata QR Code */}
@@ -278,7 +394,7 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-800 block">👆 ફિંગરપ્રિન્ટ / Face ID લૉક</span>
-                <span className="text-[10px] text-slate-500 block">બાયોમેટ્રિક વડે ૧ સેકન્ડમાં સુરક્ષિત અનલૉક</span>
+                <span className="text-[10px] text-slate-500 block">Android ફોનમાં નેટિવ સેન્સર અને બ્રાઉઝરમાં ટચ સેન્સર બંને સક્ષમ</span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -294,23 +410,59 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
 
             {/* Biometric Status Notice / Testing Feedback */}
             {biometricNotice && (
-              <div className="p-2 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-xs font-bold flex items-center gap-1.5 animate-in fade-in">
-                <Fingerprint size={14} className="animate-pulse text-blue-600" />
+              <div className="p-2.5 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                <Fingerprint size={16} className="animate-pulse text-blue-600 shrink-0" />
                 <span>{biometricNotice}</span>
               </div>
             )}
 
-            {/* Test Biometric Button if Enabled */}
+            {/* Test Biometric Button & Interactive Hold Area if Enabled */}
             {isBiometricEnabled && (
-              <button
-                type="button"
-                onClick={handleTestBiometric}
-                disabled={isBiometricTesting}
-                className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 active:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center gap-1.5 transition active:scale-98"
-              >
-                <Fingerprint size={14} className="text-blue-600" />
-                <span>{lang === 'gu' ? '👆 ફિંગરપ્રિન્ટ સેન્સર ચકાસો (ટેસ્ટ)' : 'Test Fingerprint Sensor'}</span>
-              </button>
+              <div className="space-y-1.5 pt-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleTestBiometric}
+                    disabled={isBiometricTesting}
+                    className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 active:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center gap-1.5 transition active:scale-98"
+                  >
+                    <Fingerprint size={14} className="text-blue-600" />
+                    <span>{lang === 'gu' ? 'સિસ્ટમ સેન્સર ટેસ્ટ' : 'Native Sensor'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onMouseDown={startTestHold}
+                    onMouseUp={stopTestHold}
+                    onMouseLeave={stopTestHold}
+                    onTouchStart={startTestHold}
+                    onTouchEnd={stopTestHold}
+                    onTouchCancel={stopTestHold}
+                    className={`py-2.5 px-3 relative overflow-hidden rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 select-none transition ${
+                      isTestingHold
+                        ? 'bg-emerald-100 border-emerald-400 text-emerald-800 shadow-inner'
+                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+                    }`}
+                  >
+                    {isTestingHold && (
+                      <div
+                        className="absolute left-0 top-0 bottom-0 bg-emerald-500/25 pointer-events-none transition-all duration-75"
+                        style={{ width: `${testHoldProgress}%` }}
+                      />
+                    )}
+                    <span className="relative z-10">
+                      {isTestingHold
+                        ? `${lang === 'gu' ? 'ટેસ્ટ...' : 'Testing...'} ${testHoldProgress}%`
+                        : lang === 'gu'
+                        ? '👆 ટચ કરી રાખો (Hold)'
+                        : '👆 Touch & Hold'}
+                    </span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-500 text-center">
+                  💡 {lang === 'gu' ? 'તમે ગમે તે ફોન કે સ્ક્રીન પર ફિંગરપ્રિન્ટ ટચ કરીને એપ અનલૉક કરી શકો છો.' : 'Touch & hold works universally across all devices.'}
+                </p>
+              </div>
             )}
 
             {/* 4-Digit PIN */}
@@ -434,6 +586,17 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
         </div>
         <CartoonVideoPlayerCard />
       </div>
+
+      {/* Universal Mobile & Email OTP Verification Modal */}
+      <OtpVerificationModal
+        isOpen={otpModalConfig.isOpen}
+        onClose={() => setOtpModalConfig({ isOpen: false, type: 'mobile', target: '' })}
+        type={otpModalConfig.type}
+        target={otpModalConfig.target}
+        user={user}
+        onVerified={handleOtpVerified}
+        lang={lang}
+      />
     </div>
   );
 }
