@@ -365,9 +365,12 @@ export default function HomeTab({
 
       {/* AI Smart Voice Assistant Quick Launch Banner */}
       {onOpenAssistant && (
-        <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 rounded-3xl p-3.5 text-white shadow-md shadow-indigo-600/20 flex items-center justify-between gap-3 border border-white/20">
+        <div
+          onClick={() => onOpenAssistant(true)}
+          className="bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 rounded-3xl p-3.5 text-white shadow-md shadow-indigo-600/20 flex items-center justify-between gap-3 border border-white/20 cursor-pointer active:scale-98 transition group"
+        >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shrink-0 shadow-xs border border-white/30 animate-pulse">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shrink-0 shadow-xs border border-white/30 group-hover:scale-105 transition">
               🎙️
             </div>
             <div className="min-w-0">
@@ -389,10 +392,14 @@ export default function HomeTab({
             </div>
           </div>
           <button
-            onClick={onOpenAssistant}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenAssistant(true);
+            }}
             className="px-3 py-1.5 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs shadow-md shadow-black/10 transition active:scale-95 shrink-0 flex items-center gap-1.5"
           >
-            <Sparkles size={13} className="text-amber-500" />
+            <Sparkles size={13} className="text-amber-500 animate-spin-slow" />
             <span>{lang === 'hi' ? 'बोलें' : lang === 'en' ? 'Speak' : 'બોલો'}</span>
           </button>
         </div>

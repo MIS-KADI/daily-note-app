@@ -56,6 +56,7 @@ export default function App() {
   const [activeAlarm, setActiveAlarm] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [assistantAutoStart, setAssistantAutoStart] = useState(false);
   const [isVideoGuideOpen, setIsVideoGuideOpen] = useState(false);
   const [isSmsParserOpen, setIsSmsParserOpen] = useState(false);
   const [upiModalData, setUpiModalData] = useState(null);
@@ -79,9 +80,9 @@ export default function App() {
   // Track fired alarms to prevent duplicate ringing in the same minute
   const firedAlarmsRef = useRef(new Set());
 
-  // Check PIN lock on launch
+  // Check PIN or Biometric lock on launch
   useEffect(() => {
-    if (user?.isPinRequired) {
+    if (user?.isPinRequired || user?.isBiometricEnabled) {
       setIsLocked(true);
     }
   }, []);
@@ -609,7 +610,10 @@ export default function App() {
         onOpenCalculator={() => setIsCalculatorOpen(true)}
         onOpenShopping={() => setIsShoppingOpen(true)}
         onOpenEmergency={() => setIsEmergencyOpen(true)}
-        onOpenAssistant={() => setIsAssistantOpen(true)}
+        onOpenAssistant={(autoStart = false) => {
+          setAssistantAutoStart(Boolean(autoStart));
+          setIsAssistantOpen(true);
+        }}
         onTestAlarm={handleTestAlarm}
         onLockApp={() => setIsLocked(true)}
         activeAlarmCount={
@@ -686,7 +690,10 @@ export default function App() {
             onToggleMedicine={handleToggleMedicine}
             onToggleReminder={handleToggleReminder}
             onOpenCalculator={() => setIsCalculatorOpen(true)}
-            onOpenAssistant={() => setIsAssistantOpen(true)}
+            onOpenAssistant={(autoStart = false) => {
+              setAssistantAutoStart(Boolean(autoStart));
+              setIsAssistantOpen(true);
+            }}
           />
         )}
 
@@ -814,6 +821,7 @@ export default function App() {
       {isLocked && (
         <PinLockModal
           correctPin={user?.pin || '1234'}
+          isBiometricEnabled={user?.isBiometricEnabled ?? true}
           onUnlock={() => setIsLocked(false)}
           lang={lang}
         />
@@ -822,7 +830,11 @@ export default function App() {
       {/* Smart Voice & NLP Assistant Modal */}
       <SmartAssistantModal
         isOpen={isAssistantOpen}
-        onClose={() => setIsAssistantOpen(false)}
+        onClose={() => {
+          setIsAssistantOpen(false);
+          setAssistantAutoStart(false);
+        }}
+        autoStart={assistantAutoStart}
         lang={lang}
         onAddFinance={handleAddParsedFinance}
         onAddReminder={handleAddParsedReminder}

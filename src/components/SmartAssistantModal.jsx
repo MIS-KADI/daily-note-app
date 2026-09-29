@@ -14,6 +14,9 @@ import {
   Users,
   Volume2,
   HelpCircle,
+  AlertCircle,
+  RefreshCw,
+  Globe,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { aiAssistantService } from '../services/aiAssistantService';
@@ -23,6 +26,7 @@ export default function SmartAssistantModal({
   isOpen,
   onClose,
   lang = 'gu',
+  autoStart = false,
   onAddFinance,
   onAddReminder,
   onAddNote,
@@ -34,7 +38,15 @@ export default function SmartAssistantModal({
   const [parsedResult, setParsedResult] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [voiceError, setVoiceError] = useState('');
+  const [interimText, setInterimText] = useState('');
+  
+  // Voice language selection
+  const defaultVoiceLang = lang === 'hi' ? 'hi-IN' : lang === 'en' ? 'en-IN' : 'gu-IN';
+  const [voiceLang, setVoiceLang] = useState(defaultVoiceLang);
+
   const recognitionRef = useRef(null);
+  const autoStartedRef = useRef(false);
 
   // Suggested quick prompts in current language
   const PROMPTS = {
@@ -64,7 +76,7 @@ export default function SmartAssistantModal({
     ],
   };
 
-  const currentPrompts = PROMPTS[lang] || PROMPTS.en || PROMPTS.gu;
+  const currentPrompts = PROMPTS[lang] || PROMPTS.gu;
 
   // Initialize SpeechRecognition
   useEffect(() => {
@@ -73,62 +85,179 @@ export default function SmartAssistantModal({
       setSpeechSupported(true);
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
-      recognition.interimResults = false;
+      recognition.interimResults = true; // Enables live real-time voice feedback!
+      recognition.lang = voiceLang;
 
-      const voiceLangMap = {
-        gu: 'gu-IN',
-        hi: 'hi-IN',
-        en: 'en-IN',
-        es: 'es-ES',
-        fr: 'fr-FR',
-        de: 'de-DE',
-        ar: 'ar-SA',
+      recognition.onstart = () => {
+        setIsListening(true);
+        setVoiceError('');
+        setInterimText('');
       };
-      recognition.lang = voiceLangMap[lang] || 'gu-IN';
 
       recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInputText(transcript);
-        handleAnalyze(transcript);
-        setIsListening(false);
+        let interim = '';
+        let final = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const trans = event.results[i][0]?.transcript || '';
+          if (event.results[i].isFinal) {
+            final += trans;
+          } else {
+            interim += trans;
+          }
+        }
+
+        if (interim) {
+          setInterimText(interim);
+          setInputText(interim);
+        }
+
+        if (final) {
+          setInterimText('');
+          setInputText(final);
+          handleAnalyze(final);
+          setIsListening(false);
+        }
       };
 
-      recognition.onerror = () => {
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error event:', event);
         setIsListening(false);
+        setInterimText('');
+
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          setVoiceError(
+            lang === 'gu'
+              ? 'માઇક્રોફોનની પરમિશન બ્લોક કરેલ છે. કૃપા કરીને બ્રાઉઝર/એપ સેટિંગ્સમાં માઇક્રોફોન Allow કરો.'
+              : lang === 'hi'
+              ? 'माइक्रोफ़ोन अनुमति बंद है। कृपया सेटिंग्स में माइक्रोफ़ोन चालू करें।'
+              : 'Microphone permission blocked. Please allow microphone in settings.'
+          );
+        } else if (event.error === 'no-speech') {
+          setVoiceError(
+            lang === 'gu'
+              ? 'કોઈ અવાજ સંભળાયો નથી. ફરી માઇક બટન દબાવીને બોલો.'
+              : lang === 'hi'
+              ? 'कोई आवाज़ सुनाई नहीं दी। कृपया फिर से बोलें।'
+              : 'No speech detected. Please tap mic and speak again.'
+          );
+        } else if (event.error === 'network') {
+          setVoiceError(
+            lang === 'gu'
+              ? 'ઇન્ટરનેટ નબળું છે જેથી વોઇસ પ્રોસેસ થઈ શક્યો નહીં. તમે નીચે લખીને પણ વિશ્લેષણ કરી શકો છો.'
+              : lang === 'hi'
+              ? 'नेटवर्क समस्या के कारण आवाज़ नहीं पहचानी गई। आप नीचे लिख सकते हैं।'
+              : 'Network issue. You can type below to analyze.'
+          );
+        } else {
+          setVoiceError(
+            lang === 'gu'
+              ? `વોઇસ એરર (${event.error}). કૃપા કરીને ફરી પ્રયત્ન કરો.`
+              : `Voice error (${event.error}). Please try again.`
+          );
+        }
       };
 
       recognition.onend = () => {
         setIsListening(false);
+        setInterimText('');
       };
 
       recognitionRef.current = recognition;
+    } else {
+      setSpeechSupported(false);
     }
-  }, [lang]);
+  }, [voiceLang, lang]);
+
+  // Handle auto-start when opened via "✨ બોલો"
+  useEffect(() => {
+    if (isOpen && autoStart && !autoStartedRef.current) {
+      autoStartedRef.current = true;
+      const timer = setTimeout(() => {
+        startListening();
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+    if (!isOpen) {
+      autoStartedRef.current = false;
+      stopListening();
+    }
+  }, [isOpen, autoStart]);
 
   if (!isOpen) return null;
 
-  const toggleListening = () => {
+  const startListening = async () => {
     if (!speechSupported) {
-      alert(
+      setVoiceError(
         lang === 'gu'
-          ? 'તમારા બ્રાઉઝરમાં વોઇસ ટાઇપિંગ સપોર્ટ નથી. તમે નીચે બોક્સમાં ટાઇપ કરી શકો છો.'
-          : 'Speech recognition is not supported in this browser. Please type below.'
+          ? 'તમારા બ્રાઉઝરમાં વોઇસ સપોર્ટ ઉપલબ્ધ નથી. તમે નીચે બોક્સમાં લખીને વિશ્લેષણ કરી શકો છો.'
+          : 'Voice typing not supported. Please type below.'
       );
       return;
     }
 
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
+    setVoiceError('');
+    setInterimText('');
+
+    // Pre-flight check audio permission via mediaDevices to trigger Android system permission popup
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       try {
-        recognitionRef.current?.start();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (micErr) {
+        console.warn('Microphone permission check warning:', micErr);
+        if (micErr.name === 'NotAllowedError' || micErr.name === 'PermissionDeniedError') {
+          setVoiceError(
+            lang === 'gu'
+              ? 'માઇક્રોફોનની પરવાનગી નથી મળી. કૃપા કરીને સેટિંગ્સમાં માઇક્રોફોન Allow કરો.'
+              : 'Microphone permission denied. Please allow microphone access.'
+          );
+          setIsListening(false);
+          return;
+        }
+      }
+    }
+
+    try {
+      if (recognitionRef.current) {
+        recognitionRef.current.lang = voiceLang;
+        recognitionRef.current.start();
         setIsListening(true);
         setParsedResult(null);
         setIsSaved(false);
-      } catch (err) {
-        console.warn('Speech recognition error:', err);
       }
+    } catch (err) {
+      console.warn('Speech start error:', err);
+      // Already running or busy
+      if (err.name === 'InvalidStateError') {
+        recognitionRef.current?.stop();
+        setTimeout(() => {
+          try {
+            recognitionRef.current?.start();
+            setIsListening(true);
+          } catch (e) {
+            console.error(e);
+          }
+        }, 150);
+      }
+    }
+  };
+
+  const stopListening = () => {
+    try {
+      recognitionRef.current?.stop();
+    } catch (e) {
+      // Ignore
+    }
+    setIsListening(false);
+    setInterimText('');
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
     }
   };
 
@@ -252,13 +381,62 @@ export default function SmartAssistantModal({
 
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-4 flex-1">
+          {/* Voice Language Selection Bar */}
+          <div className="flex items-center justify-between bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60">
+            <span className="text-[10px] text-slate-400 font-bold px-2 flex items-center gap-1">
+              <Globe size={11} className="text-blue-400" />
+              ભાષા:
+            </span>
+            <div className="flex items-center gap-1">
+              {[
+                { code: 'gu-IN', label: 'ગુજરાતી' },
+                { code: 'hi-IN', label: 'हिन्दी' },
+                { code: 'en-IN', label: 'English' },
+              ].map((item) => (
+                <button
+                  key={item.code}
+                  onClick={() => {
+                    setVoiceLang(item.code);
+                    if (isListening) {
+                      stopListening();
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition active:scale-95 ${
+                    voiceLang === item.code
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Voice Error Notification Banner */}
+          {voiceError && (
+            <div className="p-3 bg-red-950/70 border border-red-500/50 rounded-2xl text-xs text-red-200 flex items-start gap-2.5 animate-in fade-in">
+              <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold leading-relaxed">{voiceError}</p>
+                <button
+                  onClick={startListening}
+                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-white bg-red-600/80 hover:bg-red-600 px-2.5 py-1 rounded-lg transition"
+                >
+                  <RefreshCw size={11} />
+                  ફરી પ્રયત્ન કરો
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Pulsing Mic Visualizer */}
-          <div className="flex flex-col items-center justify-center py-4">
+          <div className="flex flex-col items-center justify-center py-3">
             <button
               onClick={toggleListening}
               className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 relative ${
                 isListening
-                  ? 'bg-gradient-to-tr from-red-500 to-pink-600 shadow-xl shadow-red-500/40 scale-110 animate-pulse'
+                  ? 'bg-gradient-to-tr from-red-500 to-pink-600 shadow-xl shadow-red-500/40 scale-110'
                   : 'bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 hover:shadow-xl hover:shadow-blue-500/30 active:scale-95'
               }`}
             >
@@ -271,13 +449,30 @@ export default function SmartAssistantModal({
                 <Mic size={36} className="text-white" />
               )}
             </button>
-            <p className="text-xs font-semibold mt-3 text-slate-300">
+
+            {/* Sound Wave Animation when Listening */}
+            {isListening && (
+              <div className="flex items-center gap-1.5 mt-3 h-5">
+                <span className="w-1 bg-red-400 rounded-full animate-bounce h-3" style={{ animationDelay: '0ms' }} />
+                <span className="w-1 bg-pink-400 rounded-full animate-bounce h-5" style={{ animationDelay: '150ms' }} />
+                <span className="w-1 bg-red-300 rounded-full animate-bounce h-4" style={{ animationDelay: '300ms' }} />
+                <span className="w-1 bg-pink-400 rounded-full animate-bounce h-6" style={{ animationDelay: '450ms' }} />
+                <span className="w-1 bg-red-400 rounded-full animate-bounce h-3" style={{ animationDelay: '200ms' }} />
+              </div>
+            )}
+
+            <p className="text-xs font-bold mt-2 text-slate-200">
               {isListening
                 ? '🎙️ હું સાંભળી રહ્યો છું, બોલો...'
                 : 'માઇક દબાવીને બોલો (Tap to Speak)'}
             </p>
-            <span className="text-[10px] text-slate-500 mt-0.5">
-              ગુજરાતી / हिन्दी / English સપોર્ટ
+            {interimText && (
+              <p className="text-xs text-amber-300 font-semibold mt-1 px-4 text-center italic truncate max-w-xs">
+                "{interimText}..."
+              </p>
+            )}
+            <span className="text-[10px] text-slate-400 mt-0.5">
+              સક્રિય ભાષા: {voiceLang === 'gu-IN' ? 'ગુજરાતી' : voiceLang === 'hi-IN' ? 'हिन्दी' : 'English'}
             </span>
           </div>
 
@@ -285,7 +480,7 @@ export default function SmartAssistantModal({
           <div className="space-y-1.5">
             <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
               <HelpCircle size={12} className="text-blue-400" />
-              આવી રીતે બોલી શકો છો (ઉદાહરણો):
+              આવી રીતે બોલી શકો છો (ઉદાહરણો પર ક્લિક કરો):
             </span>
             <div className="flex flex-wrap gap-1.5">
               {currentPrompts.slice(0, 4).map((p, idx) => (

@@ -12,8 +12,10 @@ import {
   AlertTriangle,
   Save,
   HelpCircle,
+  Fingerprint,
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
+import { biometricService } from '../../services/biometricService';
 import { t } from '../../services/i18n';
 import CartoonVideoPlayerCard from '../CartoonVideoPlayerCard';
 
@@ -28,6 +30,61 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
   const [isNightDiaryReminder, setIsNightDiaryReminder] = useState(user?.isNightDiaryReminder ?? true);
   const [isWaterReminder, setIsWaterReminder] = useState(user?.isWaterReminder ?? true);
   const [savedNotice, setSavedNotice] = useState(false);
+  const [biometricNotice, setBiometricNotice] = useState('');
+  const [isBiometricTesting, setIsBiometricTesting] = useState(false);
+
+  const handleToggleBiometric = async (enable) => {
+    if (enable) {
+      setIsBiometricTesting(true);
+      setBiometricNotice(lang === 'gu' ? '👆 ફિંગરપ્રિન્ટ સેન્સર ચકાસી રહ્યા છીએ...' : 'Checking biometric sensor...');
+      
+      const res = await biometricService.register(name || user?.name || 'Daily User');
+      setIsBiometricTesting(false);
+
+      if (res.success) {
+        setIsBiometricEnabled(true);
+        const updated = {
+          ...user,
+          isBiometricEnabled: true,
+        };
+        onUpdateUser(updated);
+        setBiometricNotice(lang === 'gu' ? '✅ ફિંગરપ્રિન્ટ લૉક સફળતાપૂર્વક સક્ષમ થયું!' : '✅ Biometrics Enabled!');
+        setTimeout(() => setBiometricNotice(''), 3500);
+      } else if (res.cancelled) {
+        setIsBiometricEnabled(false);
+        setBiometricNotice(lang === 'gu' ? '❌ બાયોમેટ્રિક ચકાસણી કેન્સલ થઈ.' : 'Biometric cancelled.');
+        setTimeout(() => setBiometricNotice(''), 3000);
+      } else {
+        setIsBiometricEnabled(false);
+        setBiometricNotice(res.error || (lang === 'gu' ? 'સેન્સર ઉપલબ્ધ નથી.' : 'Sensor not available.'));
+        setTimeout(() => setBiometricNotice(''), 3500);
+      }
+    } else {
+      biometricService.disable();
+      setIsBiometricEnabled(false);
+      const updated = {
+        ...user,
+        isBiometricEnabled: false,
+      };
+      onUpdateUser(updated);
+      setBiometricNotice(lang === 'gu' ? 'બાયોમેટ્રિક લૉક બંધ કરવામાં આવ્યું.' : 'Biometrics disabled.');
+      setTimeout(() => setBiometricNotice(''), 2500);
+    }
+  };
+
+  const handleTestBiometric = async () => {
+    setIsBiometricTesting(true);
+    setBiometricNotice(lang === 'gu' ? '👆 ફિંગરપ્રિન્ટ સેન્સર પર ટચ કરો...' : 'Touch fingerprint sensor...');
+    const res = await biometricService.authenticate();
+    setIsBiometricTesting(false);
+
+    if (res.success) {
+      setBiometricNotice(lang === 'gu' ? '✅ ફિંગરપ્રિન્ટ સફળતાપૂર્વક પ્રમાણિત થઈ!' : '✅ Biometric Verified!');
+    } else {
+      setBiometricNotice('❌ ' + (res.error || (lang === 'gu' ? 'ચકાસણી નિષ્ફળ રહી' : 'Verification failed')));
+    }
+    setTimeout(() => setBiometricNotice(''), 3500);
+  };
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -227,12 +284,34 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
                 <input
                   type="checkbox"
                   checked={isBiometricEnabled}
-                  onChange={(e) => setIsBiometricEnabled(e.target.checked)}
+                  onChange={(e) => handleToggleBiometric(e.target.checked)}
+                  disabled={isBiometricTesting}
                   className="sr-only peer"
                 />
                 <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
+
+            {/* Biometric Status Notice / Testing Feedback */}
+            {biometricNotice && (
+              <div className="p-2 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-xs font-bold flex items-center gap-1.5 animate-in fade-in">
+                <Fingerprint size={14} className="animate-pulse text-blue-600" />
+                <span>{biometricNotice}</span>
+              </div>
+            )}
+
+            {/* Test Biometric Button if Enabled */}
+            {isBiometricEnabled && (
+              <button
+                type="button"
+                onClick={handleTestBiometric}
+                disabled={isBiometricTesting}
+                className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 active:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center gap-1.5 transition active:scale-98"
+              >
+                <Fingerprint size={14} className="text-blue-600" />
+                <span>{lang === 'gu' ? '👆 ફિંગરપ્રિન્ટ સેન્સર ચકાસો (ટેસ્ટ)' : 'Test Fingerprint Sensor'}</span>
+              </button>
+            )}
 
             {/* 4-Digit PIN */}
             <div className="flex items-center justify-between">
