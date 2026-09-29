@@ -15,27 +15,6 @@ export default function PinLockModal({
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Auto-prompt biometric authentication if enabled
-  useEffect(() => {
-    let isMounted = true;
-
-    const autoPrompt = async () => {
-      if (isBiometricEnabled) {
-        // Small delay to ensure smooth transition
-        await new Promise((r) => setTimeout(r, 200));
-        if (isMounted) {
-          triggerBiometric();
-        }
-      }
-    };
-
-    autoPrompt();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isBiometricEnabled]);
-
   const triggerBiometric = async () => {
     if (isAuthenticating || isSuccess) return;
     setIsAuthenticating(true);
@@ -80,6 +59,27 @@ export default function PinLockModal({
       );
     }
   };
+
+  // Auto-prompt biometric authentication if enabled
+  useEffect(() => {
+    let isMounted = true;
+
+    const autoPrompt = async () => {
+      if (isBiometricEnabled) {
+        // Small delay to ensure smooth transition
+        await new Promise((r) => setTimeout(r, 200));
+        if (isMounted) {
+          triggerBiometric();
+        }
+      }
+    };
+
+    autoPrompt();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isBiometricEnabled]);
 
   const handleDigit = (digit) => {
     if (pin.length < 4) {

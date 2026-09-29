@@ -78,6 +78,93 @@ export default function SmartAssistantModal({
 
   const currentPrompts = PROMPTS[lang] || PROMPTS.gu;
 
+  const stopListening = () => {
+    try {
+      recognitionRef.current?.stop();
+    } catch (e) {
+      // Ignore
+    }
+    setIsListening(false);
+    setInterimText('');
+  };
+
+  const handleAnalyze = (text) => {
+    if (!text || !text.trim()) return;
+    const result = aiAssistantService.parseInput(text, lang);
+    setParsedResult(result);
+    setIsSaved(false);
+
+    // Speak brief feedback
+    if (result) {
+      aiAssistantService.speak(result.confirmationMessage, lang);
+    }
+  };
+
+  const startListening = async () => {
+    if (!speechSupported) {
+      setVoiceError(
+        lang === 'gu'
+          ? 'તમારા બ્રાઉઝરમાં વોઇસ સપોર્ટ ઉપલબ્ધ નથી. તમે નીચે બોક્સમાં લખીને વિશ્લેષણ કરી શકો છો.'
+          : 'Voice typing not supported. Please type below.'
+      );
+      return;
+    }
+
+    setVoiceError('');
+    setInterimText('');
+
+    // Pre-flight check audio permission via mediaDevices to trigger Android system permission popup
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (micErr) {
+        console.warn('Microphone permission check warning:', micErr);
+        if (micErr.name === 'NotAllowedError' || micErr.name === 'PermissionDeniedError') {
+          setVoiceError(
+            lang === 'gu'
+              ? 'માઇક્રોફોનની પરવાનગી નથી મળી. કૃપા કરીને સેટિંગ્સમાં માઇક્રોફોન Allow કરો.'
+              : 'Microphone permission denied. Please allow microphone access.'
+          );
+          setIsListening(false);
+          return;
+        }
+      }
+    }
+
+    try {
+      if (recognitionRef.current) {
+        recognitionRef.current.lang = voiceLang;
+        recognitionRef.current.start();
+        setIsListening(true);
+        setParsedResult(null);
+        setIsSaved(false);
+      }
+    } catch (err) {
+      console.warn('Speech start error:', err);
+      // Already running or busy
+      if (err.name === 'InvalidStateError') {
+        recognitionRef.current?.stop();
+        setTimeout(() => {
+          try {
+            recognitionRef.current?.start();
+            setIsListening(true);
+          } catch (e) {
+            console.error(e);
+          }
+        }, 150);
+      }
+    }
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
   // Initialize SpeechRecognition
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -184,95 +271,6 @@ export default function SmartAssistantModal({
     }
   }, [isOpen, autoStart]);
 
-  if (!isOpen) return null;
-
-  const startListening = async () => {
-    if (!speechSupported) {
-      setVoiceError(
-        lang === 'gu'
-          ? 'તમારા બ્રાઉઝરમાં વોઇસ સપોર્ટ ઉપલબ્ધ નથી. તમે નીચે બોક્સમાં લખીને વિશ્લેષણ કરી શકો છો.'
-          : 'Voice typing not supported. Please type below.'
-      );
-      return;
-    }
-
-    setVoiceError('');
-    setInterimText('');
-
-    // Pre-flight check audio permission via mediaDevices to trigger Android system permission popup
-    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach((track) => track.stop());
-      } catch (micErr) {
-        console.warn('Microphone permission check warning:', micErr);
-        if (micErr.name === 'NotAllowedError' || micErr.name === 'PermissionDeniedError') {
-          setVoiceError(
-            lang === 'gu'
-              ? 'માઇક્રોફોનની પરવાનગી નથી મળી. કૃપા કરીને સેટિંગ્સમાં માઇક્રોફોન Allow કરો.'
-              : 'Microphone permission denied. Please allow microphone access.'
-          );
-          setIsListening(false);
-          return;
-        }
-      }
-    }
-
-    try {
-      if (recognitionRef.current) {
-        recognitionRef.current.lang = voiceLang;
-        recognitionRef.current.start();
-        setIsListening(true);
-        setParsedResult(null);
-        setIsSaved(false);
-      }
-    } catch (err) {
-      console.warn('Speech start error:', err);
-      // Already running or busy
-      if (err.name === 'InvalidStateError') {
-        recognitionRef.current?.stop();
-        setTimeout(() => {
-          try {
-            recognitionRef.current?.start();
-            setIsListening(true);
-          } catch (e) {
-            console.error(e);
-          }
-        }, 150);
-      }
-    }
-  };
-
-  const stopListening = () => {
-    try {
-      recognitionRef.current?.stop();
-    } catch (e) {
-      // Ignore
-    }
-    setIsListening(false);
-    setInterimText('');
-  };
-
-  const toggleListening = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  };
-
-  const handleAnalyze = (text) => {
-    if (!text || !text.trim()) return;
-    const result = aiAssistantService.parseInput(text, lang);
-    setParsedResult(result);
-    setIsSaved(false);
-
-    // Speak brief feedback
-    if (result) {
-      aiAssistantService.speak(result.confirmationMessage, lang);
-    }
-  };
-
   const handleConfirmSave = () => {
     if (!parsedResult) return;
 
@@ -349,6 +347,8 @@ export default function SmartAssistantModal({
         return { label: '📝 ડાયરી નોંધ (Diary Note)', color: 'bg-purple-500/20 text-purple-300 border-purple-500/30', icon: BookOpen };
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-200">
