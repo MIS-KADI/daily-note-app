@@ -708,6 +708,9 @@ export default function App() {
             events={events}
             onSaveEvents={handleSaveEvents}
             onTriggerAlarm={handleCustomTriggerAlarm}
+            onOpenShopping={() => setIsShoppingOpen(true)}
+            shoppingList={shoppingList}
+            onSaveShopping={handleSaveShopping}
             user={user}
             lang={lang}
           />

@@ -20,6 +20,9 @@ import {
   Share2,
   Edit2,
   Gift,
+  ShoppingCart,
+  Briefcase,
+  CheckSquare,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t } from '../../services/i18n';
@@ -27,9 +30,32 @@ import { whatsappService } from '../../services/whatsappService';
 
 const getTaskTypes = (lang) => [
   { id: 'all', label: t('filter_all', lang), icon: null },
-  { id: 'meeting', label: `💼 ${t('meeting', lang)}`, icon: Users },
-  { id: 'bank', label: `🏦 ${t('bank_work', lang)}`, icon: Building2 },
-  { id: 'task', label: `📋 ${t('task', lang)}`, icon: Clock },
+  { id: 'meeting', label: t('meeting', lang), icon: Users },
+  { id: 'bank', label: t('bank_work', lang), icon: Building2 },
+  { id: 'task', label: t('task', lang), icon: Clock },
+  { id: 'shopping', label: t('shopping_task', lang) || '🛒 ખરીદી', icon: ShoppingCart },
+  { id: 'work', label: t('work_task', lang) || '💼 ઓફિસ / કામ', icon: Briefcase },
+];
+
+const quickShoppingItems = [
+  '🛒 કરિયાણું',
+  '🥬 શાકભાજી',
+  '🥛 દૂધ / ડેરી',
+  '💊 દવાઓ',
+  '🍞 નાસ્તો / બેકરી',
+  '🧽 ઘરવપરાશ',
+  '🍎 ફળો',
+  '🧴 તેલ / મસાલા',
+];
+
+const quickWorkItems = [
+  '⭐ અગત્યનું કામ',
+  '📞 કોલ કરવો',
+  '📁 ફાઇલ સબમિશન',
+  '🤝 મીટિંગ',
+  '⏳ ફોલોઅપ',
+  '✉️ ઈમેલ / મેસેજ',
+  '💰 પેમેન્ટ હિસાબ',
 ];
 
 // Calculate days remaining until next birthday or anniversary occurrence
@@ -61,6 +87,9 @@ export default function RemindersTab({
   events = [],
   onSaveEvents,
   onTriggerAlarm,
+  onOpenShopping,
+  shoppingList = [],
+  onSaveShopping,
   user,
   lang = 'gu',
 }) {
@@ -101,11 +130,13 @@ export default function RemindersTab({
   // -------------------------------------------------------------
   // Task Handlers
   // -------------------------------------------------------------
-  const handleOpenAddTask = (defaultDate = todayStr) => {
+  const handleOpenAddTask = (defaultDate = todayStr, defaultType = null) => {
     setEditingReminder(null);
     setTitle('');
     setDescription('');
-    setType('meeting');
+    const chosenType =
+      defaultType || (selectedTaskType !== 'all' ? selectedTaskType : 'task');
+    setType(chosenType);
     setTime('11:00');
     setDate(defaultDate);
     setHasAlarm(true);
@@ -117,7 +148,7 @@ export default function RemindersTab({
     setEditingReminder(rem);
     setTitle(rem.title);
     setDescription(rem.description || '');
-    setType(rem.type);
+    setType(rem.type || 'task');
     setTime(rem.time);
     setDate(rem.date);
     setHasAlarm(rem.hasAlarm ?? true);
@@ -169,6 +200,28 @@ export default function RemindersTab({
         r.id === id ? { ...r, isCompleted: !r.isCompleted } : r
       )
     );
+  };
+
+  // Toggle individual checklist items inside task description
+  const handleToggleTaskSubItem = (taskId, lineIndex) => {
+    const task = reminders.find((r) => r.id === taskId);
+    if (!task || !task.description) return;
+    const lines = task.description.split('\n');
+    if (lineIndex < 0 || lineIndex >= lines.length) return;
+    let line = lines[lineIndex];
+    if (line.includes('☐')) {
+      lines[lineIndex] = line.replace('☐', '☑️');
+    } else if (line.includes('☑️')) {
+      lines[lineIndex] = line.replace('☑️', '☐');
+    } else if (line.includes('[ ]')) {
+      lines[lineIndex] = line.replace('[ ]', '[x]');
+    } else if (line.includes('[x]')) {
+      lines[lineIndex] = line.replace('[x]', '[ ]');
+    }
+    const updated = reminders.map((r) =>
+      r.id === taskId ? { ...r, description: lines.join('\n') } : r
+    );
+    onSaveReminders(updated);
   };
 
   const handleDeleteTask = (id) => {
@@ -394,6 +447,32 @@ export default function RemindersTab({
             ))}
           </div>
 
+          {/* Shopping Shortcut Banner */}
+          {selectedTaskType === 'shopping' && onOpenShopping && (
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-3 flex items-center justify-between shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <span className="p-2 bg-emerald-600 text-white rounded-xl shadow-xs">
+                  <ShoppingCart size={18} />
+                </span>
+                <div>
+                  <h4 className="text-xs font-bold text-emerald-950">
+                    {lang === 'gu' ? '🛒 ઝડપી ખરીદી લિસ્ટ & બજેટ' : '🛒 Shopping Checklist & Budget'}
+                  </h4>
+                  <p className="text-[10px] text-emerald-700">
+                    {shoppingList?.length || 0} {lang === 'gu' ? 'આઇટમ્સ ઉપલબ્ધ છે' : 'items saved'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenShopping}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition"
+              >
+                {lang === 'gu' ? 'લિસ્ટ ખોલો' : 'Open List'}
+              </button>
+            </div>
+          )}
+
           {/* Completed toggle checkbox */}
           <div className="flex items-center justify-between px-1 text-xs text-slate-500">
             <span>કુલ: {filteredTasks.length} કામો</span>
@@ -422,6 +501,8 @@ export default function RemindersTab({
               {filteredTasks.map((r) => {
                 const isBank = r.type === 'bank';
                 const isMeeting = r.type === 'meeting';
+                const isShopping = r.type === 'shopping';
+                const isWork = r.type === 'work';
                 const isFuture = r.date > todayStr;
 
                 return (
@@ -430,6 +511,10 @@ export default function RemindersTab({
                     className={`p-4 rounded-3xl border transition shadow-xs bg-white ${
                       r.isCompleted
                         ? 'opacity-60 border-slate-200 bg-slate-50'
+                        : isShopping
+                        ? 'border-emerald-200/90 hover:border-emerald-300'
+                        : isWork
+                        ? 'border-blue-200/90 hover:border-blue-300'
                         : isBank
                         ? 'border-amber-200/90 hover:border-amber-300'
                         : isMeeting
@@ -438,10 +523,10 @@ export default function RemindersTab({
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
                         <button
                           onClick={() => handleToggleComplete(r.id)}
-                          className={`w-7 h-7 rounded-xl flex items-center justify-center transition active:scale-95 ${
+                          className={`w-7 h-7 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0 mt-0.5 ${
                             r.isCompleted
                               ? 'bg-emerald-600 text-white'
                               : 'border-2 border-slate-300 hover:border-indigo-500 text-transparent'
@@ -450,18 +535,30 @@ export default function RemindersTab({
                           <CheckCircle2 size={18} />
                         </button>
 
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                                isBank
+                                isShopping
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : isWork
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : isBank
                                   ? 'bg-amber-100 text-amber-800'
                                   : isMeeting
                                   ? 'bg-indigo-100 text-indigo-800'
                                   : 'bg-slate-100 text-slate-800'
                               }`}
                             >
-                              {isBank ? t('bank_work', lang) : isMeeting ? t('meeting', lang) : t('task', lang)}
+                              {isShopping
+                                ? (t('shopping_task', lang) || '🛒 ખરીદી')
+                                : isWork
+                                ? (t('work_task', lang) || '💼 ઓફિસ / કામ')
+                                : isBank
+                                ? t('bank_work', lang)
+                                : isMeeting
+                                ? t('meeting', lang)
+                                : t('task', lang)}
                             </span>
 
                             {isFuture && (
@@ -486,9 +583,47 @@ export default function RemindersTab({
                           </h4>
 
                           {r.description && (
-                            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                              {r.description}
-                            </p>
+                            <div className="mt-1.5 space-y-1">
+                              {r.description.split('\n').map((line, lIdx) => {
+                                const trimmed = line.trim();
+                                const isCheckItem =
+                                  trimmed.startsWith('☐') ||
+                                  trimmed.startsWith('☑️') ||
+                                  trimmed.startsWith('[ ]') ||
+                                  trimmed.startsWith('[x]');
+                                const isChecked =
+                                  trimmed.startsWith('☑️') || trimmed.startsWith('[x]');
+
+                                if (isCheckItem) {
+                                  const text = trimmed.replace(/^(☐|☑️|\[\s*\]|\[x\])\s*/, '');
+                                  return (
+                                    <button
+                                      key={lIdx}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToggleTaskSubItem(r.id, lIdx);
+                                      }}
+                                      className={`text-xs flex items-center gap-2 text-left py-0.5 px-1 rounded-md transition ${
+                                        isChecked
+                                          ? 'line-through text-slate-400 hover:text-slate-500'
+                                          : 'text-slate-700 hover:bg-slate-100 font-medium'
+                                      }`}
+                                    >
+                                      <span className="text-sm leading-none select-none">
+                                        {isChecked ? '☑️' : '☐'}
+                                      </span>
+                                      <span>{text}</span>
+                                    </button>
+                                  );
+                                }
+                                return (
+                                  <p key={lIdx} className="text-xs text-slate-500 leading-relaxed">
+                                    {line}
+                                  </p>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -793,7 +928,13 @@ export default function RemindersTab({
           <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <h3 className="text-base font-bold text-slate-800">
-                {editingReminder ? 'કામ સુધારો' : 'નવું કામ / મીટિંગ ઉમેરો'}
+                {editingReminder
+                  ? (lang === 'gu' ? 'કામ સુધારો' : t('edit', lang))
+                  : type === 'shopping'
+                  ? (lang === 'gu' ? '🛒 નવી ખરીદી યાદી / ટાસ્ક' : '🛒 New Shopping Checklist')
+                  : type === 'work'
+                  ? (lang === 'gu' ? '💼 નવું કામ / ઓફિસ ટાસ્ક' : '💼 New Work / Office Task')
+                  : (lang === 'gu' ? 'નવું કામ / મીટિંગ ઉમેરો' : t('new_task', lang))}
               </h3>
               <button
                 onClick={() => setIsTaskModalOpen(false)}
@@ -805,11 +946,23 @@ export default function RemindersTab({
 
             <form onSubmit={handleSaveTask} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">{t('task_name_req', lang)}</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {type === 'shopping'
+                    ? (lang === 'gu' ? 'ખરીદીનું નામ / વિષય *' : 'Shopping Title *')
+                    : type === 'work'
+                    ? (lang === 'gu' ? 'ઓફિસ / કામનું નામ *' : 'Work Task Name *')
+                    : t('task_name_req', lang)}
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Bank visit, Client meeting..."
+                  placeholder={
+                    type === 'shopping'
+                      ? (lang === 'gu' ? 'દા.ત. કરિયાણું, સુપરમાર્કેટ, શાકભાજી...' : 'e.g. Weekly Groceries, Market...')
+                      : type === 'work'
+                      ? (lang === 'gu' ? 'દા.ત. પ્રોજેક્ટ રિપોર્ટ, ફાઇલ સબમિશન...' : 'e.g. Project Report, Client Followup...')
+                      : (lang === 'gu' ? 'દા.ત. બેંક વિઝિટ, ક્લાયન્ટ મીટિંગ...' : 'e.g. Bank visit, Client meeting...')
+                  }
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-indigo-500 font-bold"
@@ -819,21 +972,24 @@ export default function RemindersTab({
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">{t('type', lang)}</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
                   {[
-                    { id: 'meeting', label: `💼 ${t('meeting', lang)}` },
-                    { id: 'bank', label: `🏦 ${t('bank_work', lang)}` },
-                    { id: 'task', label: `📋 ${t('task', lang)}` },
+                    { id: 'task', label: t('task', lang) },
+                    { id: 'work', label: t('work_task', lang) || '💼 ઓફિસ / કામ' },
+                    { id: 'shopping', label: t('shopping_task', lang) || '🛒 ખરીદી' },
+                    { id: 'meeting', label: t('meeting', lang) },
+                    { id: 'bank', label: t('bank_work', lang) },
                   ].map((tItem) => (
                     <button
                       type="button"
                       key={tItem.id}
                       onClick={() => setType(tItem.id)}
-                      className={`py-2 rounded-xl text-xs font-bold border transition ${
+                      className={`py-2 px-1 rounded-xl text-[11px] font-bold border transition text-center truncate ${
                         type === tItem.id
                           ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
                           : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                       }`}
+                      title={tItem.label}
                     >
                       {tItem.label}
                     </button>
@@ -916,13 +1072,71 @@ export default function RemindersTab({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">{t('task_desc_label', lang)}</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700">
+                    {type === 'shopping'
+                      ? (lang === 'gu' ? 'ખરીદી યાદી / વિગત (ચેકલિસ્ટ)' : 'Shopping Items / Checklist')
+                      : t('task_desc_label', lang)}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDescription((prev) => (prev ? `${prev}\n☐ ` : '☐ '));
+                    }}
+                    className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-md flex items-center gap-1 transition"
+                  >
+                    <CheckSquare size={11} />
+                    {lang === 'gu' ? '+ નવી આઇટમ (☐)' : '+ New Item (☐)'}
+                  </button>
+                </div>
+
+                {/* Quick Suggestion Chips */}
+                {type === 'shopping' && (
+                  <div className="flex gap-1 overflow-x-auto pb-1.5 mb-1.5 no-scrollbar">
+                    {quickShoppingItems.map((item, idx) => (
+                      <button
+                        type="button"
+                        key={idx}
+                        onClick={() => {
+                          setDescription((prev) => (prev ? `${prev}\n☐ ${item}` : `☐ ${item}`));
+                        }}
+                        className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[10px] font-semibold whitespace-nowrap transition active:scale-95"
+                      >
+                        + {item}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {type === 'work' && (
+                  <div className="flex gap-1 overflow-x-auto pb-1.5 mb-1.5 no-scrollbar">
+                    {quickWorkItems.map((item, idx) => (
+                      <button
+                        type="button"
+                        key={idx}
+                        onClick={() => {
+                          setDescription((prev) => (prev ? `${prev}\n☐ ${item}` : `☐ ${item}`));
+                        }}
+                        className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-[10px] font-semibold whitespace-nowrap transition active:scale-95"
+                      >
+                        + {item}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <textarea
-                  rows={2}
-                  placeholder=""
+                  rows={type === 'shopping' ? 4 : 3}
+                  placeholder={
+                    type === 'shopping'
+                      ? '☐ દૂધ 1 લીટર\n☐ શાકભાજી (બટાટા, ડુંગળી)\n☐ કરિયાણું'
+                      : type === 'work'
+                      ? '☐ ક્લાયન્ટને કોલ કરવો\n☐ પ્રોજેક્ટ ફાઇલ સબમિટ કરવી'
+                      : ''
+                  }
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full text-xs p-2 rounded-xl border border-slate-200 focus:outline-indigo-500"
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-indigo-500 font-mono leading-relaxed"
                 />
               </div>
 

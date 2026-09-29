@@ -640,6 +640,24 @@ export const translations = {
     de: '📋 Allgemeine Aufgabe',
     ar: '📋 مهمة عامة',
   },
+  shopping_task: {
+    gu: '🛒 ખરીદી',
+    hi: '🛒 खरीदारी',
+    en: '🛒 Shopping',
+    es: '🛒 Compras',
+    fr: '🛒 Achats',
+    de: '🛒 Einkaufen',
+    ar: '🛒 تسوق',
+  },
+  work_task: {
+    gu: '💼 ઓફિસ / કામ',
+    hi: '💼 ऑफिस / कार्य',
+    en: '💼 Work / Office',
+    es: '💼 Trabajo',
+    fr: '💼 Travail',
+    de: '💼 Arbeit',
+    ar: '💼 العمل',
+  },
   subtab_tasks: {
     gu: 'કામો & મીટિંગ્સ',
     hi: 'कार्य और मीटिंग्स',
@@ -3820,13 +3838,13 @@ export const getPaymentModes = (lang = 'gu') => {
 
 export const getNoteCategories = (lang = 'gu') => {
   const dict = {
-    gu: ['બધા', 'અંગત', 'કામ', 'વિચાર', 'ખરીદી', 'અગત્યનું'],
-    hi: ['सभी', 'व्यक्तिगत', 'काम', 'विचार', 'खरीदारी', 'महत्वपूर्ण'],
-    en: ['All', 'Personal', 'Work', 'Thoughts', 'Shopping', 'Important'],
-    es: ['Todos', 'Personal', 'Trabajo', 'Ideas', 'Compras', 'Importante'],
-    fr: ['Tous', 'Personnel', 'Travail', 'Pensées', 'Achats', 'Important'],
-    de: ['Alle', 'Persönlich', 'Arbeit', 'Gedanken', 'Einkaufen', 'Wichtig'],
-    ar: ['الكل', 'شخصي', 'العمل', 'خواطر', 'تسوق', 'هام جداً'],
+    gu: ['બધા', 'અંગત', 'વિચાર', 'યાદો', 'અગત્યનું', 'સ્વપ્ન/લક્ષ્ય'],
+    hi: ['सभी', 'व्यक्तिगत', 'विचार', 'यादें', 'महत्वपूर्ण', 'सपने/लक्ष्य'],
+    en: ['All', 'Personal', 'Thoughts', 'Memories', 'Important', 'Goals'],
+    es: ['Todos', 'Personal', 'Ideas', 'Recuerdos', 'Importante', 'Metas'],
+    fr: ['Tous', 'Personnel', 'Pensées', 'Souvenirs', 'Important', 'Objectifs'],
+    de: ['Alle', 'Persönlich', 'Gedanken', 'Erinnerungen', 'Wichtig', 'Ziele'],
+    ar: ['الكل', 'شخصي', 'خواطر', 'ذكريات', 'هام جداً', 'أهداف'],
   };
   return dict[lang] || dict.en || dict.gu;
 };
