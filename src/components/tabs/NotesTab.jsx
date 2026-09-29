@@ -34,6 +34,9 @@ import {
   ChevronRight,
   Eye,
   Lock,
+  ShoppingCart,
+  Briefcase,
+  CheckSquare,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t, getNoteCategories } from '../../services/i18n';
@@ -83,6 +86,11 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
   const [selectedEmojiCat, setSelectedEmojiCat] = useState('smilies');
   const [copiedNoteId, setCopiedNoteId] = useState(null);
   const [isListening, setIsListening] = useState(false);
+
+  // Dedicated Category Helpers for Shopping and Work/Tasks
+  const isShopping = ['ખરીદી', 'Shopping', 'खरीदारी', 'Compras', 'Achats', 'Einkaufen', 'تسوق'].includes(category);
+  const isWork = ['કામ', 'Work', 'काम', 'Trabajo', 'Travail', 'Arbeit', 'العمل'].includes(category);
+  const isShoppingOrWork = isShopping || isWork;
 
   // Audio Recording State
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
@@ -182,6 +190,34 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
   };
 
   const quickEmojiBar = ['😊', '❤️', '🙏', '🌸', '✨', '☕', '💡', '📝', '🎯', '🎉', '✈️', '🌟'];
+
+  // Quick Chips & Emojis for Shopping and Work Notes
+  const quickShoppingChips = [
+    { label: '+ નવી આઇટમ (☐)', insert: '\n☐ ', isAction: true },
+    { label: '🛒 કરિયાણું', insert: '\n• કરિયાણું: ' },
+    { label: '🥬 શાકભાજી', insert: '\n• શાકભાજી: ' },
+    { label: '🥛 દૂધ / ડેરી', insert: '\n• દૂધ: ' },
+    { label: '💊 દવાઓ', insert: '\n• દવાઓ: ' },
+    { label: '🍞 નાસ્તો', insert: '\n• નાસ્તો: ' },
+    { label: '🧽 ઘરવપરાશ', insert: '\n• ઘરવપરાશ: ' },
+    { label: '🍎 ફળો', insert: '\n• ફળો: ' },
+    { label: '🧴 તેલ / મસાલા', insert: '\n• મસાલા/તેલ: ' },
+  ];
+
+  const quickWorkChips = [
+    { label: '+ નવું કામ (☐)', insert: '\n☐ ', isAction: true },
+    { label: '⭐ અગત્યનું કામ', insert: '\n⭐ અગત્યનું: ' },
+    { label: '📞 કોલ કરવો', insert: '\n📞 કોલ: ' },
+    { label: '🏦 બેંકનું કામ', insert: '\n🏦 બેંક: ' },
+    { label: '📁 ફાઇલ સબમિશન', insert: '\n📁 સબમિશન: ' },
+    { label: '🤝 મીટિંગ', insert: '\n🤝 મીટિંગ: ' },
+    { label: '⏳ ફોલોઅપ', insert: '\n⏳ ફોલોઅપ: ' },
+    { label: '✉️ ઈમેલ / મેસેજ', insert: '\n✉️ ઈમેલ: ' },
+    { label: '💰 પેમેન્ટ હિસાબ', insert: '\n💰 પેમેન્ટ: ' },
+  ];
+
+  const quickShoppingEmojis = ['🛒', '🛍️', '🥬', '🍎', '🥛', '🧀', '🍞', '💊', '🧼', '🧹', '💰', '🧾', '📦', '✅', '❌'];
+  const quickWorkEmojis = ['✅', '❌', '⏳', '⏰', '📞', '✉️', '💻', '📁', '📊', '🏦', '🤝', '📌', '🎯', '⚠️', '💼'];
 
   // Language-Adaptive Keyboard Helper Dataset
   const keyboardHelpers = {
@@ -328,6 +364,28 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
       setCopiedNoteId(note.id);
       setTimeout(() => setCopiedNoteId(null), 2000);
     });
+  };
+
+  // Interactive Checkbox Toggle on Note Cards
+  const handleToggleTodoItem = (note, lineIndex) => {
+    const lines = note.content.split('\n');
+    if (lineIndex < 0 || lineIndex >= lines.length) return;
+    let line = lines[lineIndex];
+    if (line.includes('☐')) {
+      lines[lineIndex] = line.replace('☐', '☑️');
+    } else if (line.includes('☑️')) {
+      lines[lineIndex] = line.replace('☑️', '☐');
+    } else if (line.includes('[ ]')) {
+      lines[lineIndex] = line.replace('[ ]', '[x]');
+    } else if (line.includes('[x]')) {
+      lines[lineIndex] = line.replace('[x]', '[ ]');
+    } else if (line.includes('✅')) {
+      lines[lineIndex] = line.replace('✅', '☐');
+    }
+    const updatedNotes = notes.map((n) =>
+      n.id === note.id ? { ...n, content: lines.join('\n'), updatedAt: new Date().toISOString() } : n
+    );
+    onSaveNotes(updatedNotes);
   };
 
   // Compress & upload image
@@ -479,14 +537,21 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
   };
 
   // Open Add Note Modal
-  const handleOpenAdd = (targetDate = todayStr) => {
+  const handleOpenAdd = (targetDate = todayStr, defaultCat = null) => {
     setEditingNote(null);
     setTitle('');
     setContent('');
-    setCategory(noteCategories[1] || 'Personal');
+    const chosenCat =
+      defaultCat ||
+      (selectedCat && selectedCat !== noteCategories[0] && selectedCat !== 'All' && selectedCat !== 'બધા'
+        ? selectedCat
+        : noteCategories[1] || 'Personal');
+    setCategory(chosenCat);
     setNoteDate(targetDate);
     setIsPinned(false);
-    setFontFamily('handwriting');
+
+    const isSpecial = ['ખરીદી', 'Shopping', 'खरीदारी', 'કામ', 'Work', 'काम'].includes(chosenCat);
+    setFontFamily(isSpecial ? 'sans' : 'handwriting');
     setFontSize('md');
     setMood('good');
     setPhoto('');
@@ -525,8 +590,10 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
 
     const defaultTitle = t('untitled_note', lang) || 'Note';
 
-    // Auto-detect mood if none set or neutral
-    const finalMood = mood || streakService.detectSentimentMood(content) || 'good';
+    // Auto-detect mood if none set or neutral (do not force mood for shopping/work)
+    const isSpecialCat = ['ખરીદી', 'Shopping', 'खरीदारी', 'કામ', 'Work', 'काम'].includes(category);
+    const finalMood = isSpecialCat ? null : (mood || streakService.detectSentimentMood(content) || 'good');
+    const finalFont = isSpecialCat ? 'sans' : fontFamily;
 
     if (editingNote) {
       const updated = notes.map((n) =>
@@ -538,12 +605,12 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
               category,
               date: noteDate,
               isPinned,
-              fontFamily,
+              fontFamily: finalFont,
               fontSize,
               mood: finalMood,
               photo,
-              location,
-              audio,
+              location: isSpecialCat ? '' : location,
+              audio: isSpecialCat ? '' : audio,
               updatedAt: new Date().toISOString(),
             }
           : n
@@ -557,12 +624,12 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
         category,
         date: noteDate,
         isPinned,
-        fontFamily,
+        fontFamily: finalFont,
         fontSize,
         mood: finalMood,
         photo,
-        location,
-        audio,
+        location: isSpecialCat ? '' : location,
+        audio: isSpecialCat ? '' : audio,
         color: '#eff6ff',
         createdAt: new Date().toISOString(),
       };
@@ -1095,7 +1162,19 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
             sortedNotes.map((note) => (
               <div key={note.id} className="relative group">
                 <span className="absolute -left-6 top-1.5 w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] ring-4 ring-white shadow-xs">
-                  {note.mood === 'awesome' ? '🤩' : note.mood === 'neutral' ? '😌' : note.mood === 'tired' ? '😔' : note.mood === 'stressed' ? '😤' : '😊'}
+                  {['ખરીદી', 'Shopping', 'खरीदारी'].includes(note.category)
+                    ? '🛒'
+                    : ['કામ', 'Work', 'काम'].includes(note.category)
+                    ? '💼'
+                    : note.mood === 'awesome'
+                    ? '🤩'
+                    : note.mood === 'neutral'
+                    ? '😌'
+                    : note.mood === 'tired'
+                    ? '😔'
+                    : note.mood === 'stressed'
+                    ? '😤'
+                    : '😊'}
                 </span>
 
                 <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2 hover:border-blue-300 transition">
@@ -1177,8 +1256,8 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-                        {/* Mood Badge */}
-                        {note.mood && (
+                        {/* Mood Badge - only show for personal/diary notes */}
+                        {note.mood && !['ખરીદી', 'Shopping', 'खरीदारी', 'કામ', 'Work', 'काम'].includes(note.category) && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200/80 font-bold">
                             {note.mood === 'awesome' ? '🤩 ઉત્સાહી' : note.mood === 'neutral' ? '😌 શાંત' : note.mood === 'tired' ? '😔 થાકેલા' : note.mood === 'stressed' ? '😤 તણાવ' : '😊 ખુશ'}
                           </span>
@@ -1282,10 +1361,40 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
                     </div>
                   )}
 
-                  {/* Note Content */}
-                  <p className={`leading-relaxed whitespace-pre-wrap ${fontClass} ${sizeClass}`}>
-                    {note.content}
-                  </p>
+                  {/* Note Content (with interactive checklist toggle support) */}
+                  <div className={`leading-relaxed ${fontClass} ${sizeClass} space-y-1`}>
+                    {note.content.split('\n').map((line, lIdx) => {
+                      const trimmed = line.trim();
+                      const isTodoUnchecked = trimmed.startsWith('☐') || trimmed.startsWith('[ ]');
+                      const isTodoChecked = trimmed.startsWith('☑️') || trimmed.startsWith('[x]') || trimmed.startsWith('✅');
+                      if (isTodoUnchecked || isTodoChecked) {
+                        return (
+                          <div
+                            key={lIdx}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleTodoItem(note, lIdx);
+                            }}
+                            className={`flex items-start gap-2 p-1 -mx-1 rounded-lg cursor-pointer transition hover:bg-slate-50 select-none ${
+                              isTodoChecked ? 'line-through text-slate-400' : 'text-slate-800'
+                            }`}
+                          >
+                            <span className="text-base leading-none shrink-0 mt-0.5">
+                              {isTodoChecked ? '☑️' : '☐'}
+                            </span>
+                            <span className="flex-1 break-words">
+                              {line.replace(/^([☐☑️✅]|\[ \]|\[x\])\s*/, '')}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={lIdx} className="whitespace-pre-wrap break-words">
+                          {line || '\u00A0'}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })
@@ -1302,11 +1411,17 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
             {/* Header */}
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-xl bg-blue-100 text-blue-700">
-                  <BookOpen size={18} />
+                <div className={`p-1.5 rounded-xl ${isShopping ? 'bg-emerald-100 text-emerald-700' : isWork ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'}`}>
+                  {isShopping ? <ShoppingCart size={18} /> : isWork ? <Briefcase size={18} /> : <BookOpen size={18} />}
                 </div>
                 <h3 className="text-base font-bold text-slate-800">
-                  {editingNote ? t('edit_note', lang) : t('new_note_advance', lang)}
+                  {editingNote
+                    ? t('edit_note', lang)
+                    : isShopping
+                    ? (lang === 'gu' ? '🛒 નવી ખરીદી યાદી' : lang === 'hi' ? '🛒 नई खरीदारी सूची' : '🛒 New Shopping List')
+                    : isWork
+                    ? (lang === 'gu' ? '💼 નવું કામ / ટાસ્ક નોંધ' : lang === 'hi' ? '💼 नया कार्य / टास्क' : '💼 New Work Task')
+                    : t('new_note_advance', lang)}
                 </h3>
               </div>
               <button
@@ -1359,69 +1474,85 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
                 </div>
               </div>
 
-              {/* Mood Selector Row */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span>આજનો મૂડ (Today's Mood):</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const detected = streakService.detectSentimentMood(content);
-                      if (detected) setMood(detected);
-                    }}
-                    className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1"
-                  >
-                    <Sparkles size={11} />
-                    <span>AI મૂડ ઓળખો</span>
-                  </button>
-                </label>
-                <div className="grid grid-cols-5 gap-1 text-center">
-                  {MOODS.map((m) => (
+              {/* Mood Selector Row - ONLY for Diary / Personal / Thoughts, HIDDEN for Shopping & Work */}
+              {!isShoppingOrWork && (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                    <span>આજનો મૂડ (Today's Mood):</span>
                     <button
-                      key={m.id}
                       type="button"
-                      onClick={() => setMood(m.id)}
-                      className={`p-1.5 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-0.5 ${
-                        mood === m.id
-                          ? 'bg-blue-50 border-blue-400 text-blue-900 ring-2 ring-blue-100'
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
+                      onClick={() => {
+                        const detected = streakService.detectSentimentMood(content);
+                        if (detected) setMood(detected);
+                      }}
+                      className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1"
                     >
-                      <span className="text-base">{m.emoji}</span>
-                      <span className="text-[10px] truncate max-w-full">
-                        {m.id === 'good' ? 'ખુશ' : m.id === 'awesome' ? 'ઉત્સાહી' : m.id === 'neutral' ? 'શાંત' : m.id === 'tired' ? 'થાકેલા' : 'તણાવ'}
-                      </span>
+                      <Sparkles size={11} />
+                      <span>AI મૂડ ઓળખો</span>
                     </button>
-                  ))}
+                  </label>
+                  <div className="grid grid-cols-5 gap-1 text-center">
+                    {MOODS.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setMood(m.id)}
+                        className={`p-1.5 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-0.5 ${
+                          mood === m.id
+                            ? 'bg-blue-50 border-blue-400 text-blue-900 ring-2 ring-blue-100'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className="text-base">{m.emoji}</span>
+                        <span className="text-[10px] truncate max-w-full">
+                          {m.id === 'good' ? 'ખુશ' : m.id === 'awesome' ? 'ઉત્સાહી' : m.id === 'neutral' ? 'શાંત' : m.id === 'tired' ? 'થાકેલા' : 'તણાવ'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Note Title & AI Prompts button */}
+              {/* Note Title */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700">{t('note_title', lang)}</label>
-                  <button
-                    type="button"
-                    onClick={() => setShowPromptsDrawer(!showPromptsDrawer)}
-                    className="text-[11px] font-extrabold text-indigo-600 hover:underline flex items-center gap-1"
-                  >
-                    <Sparkles size={12} className="text-amber-500" />
-                    <span>💡 {t('ai_prompts', lang)}</span>
-                  </button>
+                  <label className="text-xs font-bold text-slate-700">
+                    {isShopping
+                      ? (lang === 'hi' ? '🛒 खरीदारी सूची का नाम:' : lang === 'en' ? '🛒 Shopping List Title:' : '🛒 ખરીદીની યાદીનું શીર્ષક:')
+                      : isWork
+                      ? (lang === 'hi' ? '💼 कार्य / प्रोजेक्ट का नाम:' : lang === 'en' ? '💼 Task / Work Title:' : '💼 કામ / પ્રોજેક્ટનું શીર્ષક:')
+                      : t('note_title', lang)}
+                  </label>
+                  {!isShoppingOrWork && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPromptsDrawer(!showPromptsDrawer)}
+                      className="text-[11px] font-extrabold text-indigo-600 hover:underline flex items-center gap-1"
+                    >
+                      <Sparkles size={12} className="text-amber-500" />
+                      <span>💡 {t('ai_prompts', lang)}</span>
+                    </button>
+                  )}
                 </div>
                 <input
                   type="text"
                   lang={lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : lang}
                   inputMode="text"
-                  placeholder={t('note_title_placeholder', lang)}
+                  placeholder={
+                    isShopping
+                      ? (lang === 'hi' ? 'उदा. सुपरमार्केट, किराना, डी-मार्ट...' : lang === 'en' ? 'e.g. Grocery list, Supermarket...' : 'દા.ત. કરિયાણાનું લિસ્ટ, શાકભાજી, ડીમાર્ટ...')
+                      : isWork
+                      ? (lang === 'hi' ? 'उदा. ऑफिस रिपोर्ट, बैंक का काम...' : lang === 'en' ? 'e.g. Office work, Bank deposit...' : 'દા.ત. ઓફિસ ફાઇલ સબમિટ કરવી, બેંકનું કામ...')
+                      : t('note_title_placeholder', lang)
+                  }
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-blue-500 font-bold"
                 />
               </div>
 
-              {/* Inline AI Prompts Accordion */}
-              {showPromptsDrawer && (
+              {/* Inline AI Prompts Accordion - ONLY when !isShoppingOrWork */}
+              {!isShoppingOrWork && showPromptsDrawer && (
                 <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200 space-y-2 animate-in fade-in">
                   <span className="text-[11px] font-bold text-amber-900 block">
                     ✨ કોઈ એક પ્રશ્ન પસંદ કરો, એપ આપમેળે ડાયરી શરૂ કરી આપશે:
@@ -1447,7 +1578,13 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
                   <label className="text-xs font-bold text-slate-700 block mb-1">{t('category', lang)}</label>
                   <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      setCategory(newCat);
+                      if (['ખરીદી', 'Shopping', 'खरीदारी', 'કામ', 'Work', 'काम'].includes(newCat)) {
+                        setFontFamily('sans');
+                      }
+                    }}
                     className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
                   >
                     {noteCategories.slice(1).map((c) => (
@@ -1472,421 +1609,622 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
               </div>
 
               {/* ======================================================= */}
-              {/* MULTIMEDIA ATTACHMENTS BAR (PHOTO, AUDIO, LOCATION)     */}
               {/* ======================================================= */}
-              <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                <span className="text-xs font-bold text-slate-700 block">
-                  મલ્ટીમીડિયા અટેચમેન્ટ (Photos, Audio, Location):
-                </span>
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Photo Upload */}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
-                      photo ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    <ImageIcon size={14} className="text-emerald-600" />
-                    <span>{photo ? '✓ ફોટો ઉમેરાયો' : t('add_photo', lang)}</span>
-                  </button>
+              {/* MULTIMEDIA ATTACHMENTS BAR                              */}
+              {/* ======================================================= */}
+              {isShoppingOrWork ? (
+                /* Streamlined Bar for Shopping & Work: Photo/Bill Attachment + Voice Button */
+                <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
+                        photo
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                      }`}
+                    >
+                      <ImageIcon size={14} className="text-emerald-600" />
+                      <span>
+                        {photo
+                          ? '✓ ફોટો ઉમેરાયો'
+                          : isShopping
+                          ? (lang === 'hi' ? '🧾 बिल / फोटो जोड़ें' : lang === 'en' ? '🧾 Bill / Photo' : '🧾 બિલ / ફોટો ઉમેરો')
+                          : (lang === 'hi' ? '📎 दस्तावेज / फोटो जोड़ें' : lang === 'en' ? '📎 Doc / Photo' : '📎 દસ્તાવેજ / ફોટો ઉમેરો')}
+                      </span>
+                    </button>
 
-                  {/* Audio Recording */}
-                  <button
-                    type="button"
-                    onClick={isRecordingAudio ? handleStopAudioRecord : handleStartAudioRecord}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
-                      isRecordingAudio
-                        ? 'bg-red-500 text-white animate-pulse'
-                        : audio
-                        ? 'bg-blue-50 border-blue-300 text-blue-800'
-                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Mic size={14} className={isRecordingAudio ? 'text-white' : 'text-blue-600'} />
-                    <span>{isRecordingAudio ? '⏹️ રેકોર્ડિંગ બંધ કરો' : audio ? '✓ ઓડિયો મેમો' : t('record_audio', lang)}</span>
-                  </button>
+                    {photo && (
+                      <div className="relative inline-block">
+                        <img src={photo} alt="Preview" className="h-8 w-12 object-cover rounded-lg border border-slate-200 shadow-2xs" />
+                        <button
+                          type="button"
+                          onClick={() => setPhoto('')}
+                          className="absolute -top-1.5 -right-1.5 p-0.5 bg-red-600 text-white rounded-full shadow-md"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
-                  {/* Location Tag */}
+                  {/* Voice Button embedded in shopping/work row */}
                   <button
                     type="button"
-                    onClick={handleGetLocation}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
-                      location ? 'bg-rose-50 border-rose-300 text-rose-800' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                    onClick={toggleVoiceRecording}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 shadow-2xs ${
+                      isListening
+                        ? 'bg-red-500 text-white animate-pulse ring-2 ring-red-300'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}
                   >
-                    <MapPin size={14} className="text-rose-600" />
-                    <span>{location ? `✓ ${location}` : t('add_location', lang)}</span>
+                    {isListening ? <MicOff size={14} /> : <Mic size={14} />}
+                    <span>
+                      {isListening
+                        ? (lang === 'gu' ? 'સાંભળી રહ્યા છીએ...' : 'Listening...')
+                        : isShopping
+                        ? (lang === 'gu' ? '🎙️ બોલીને ઉમેરો' : '🎙️ Voice Add')
+                        : (lang === 'gu' ? '🎙️ બોલીને લખો' : '🎙️ Voice Write')}
+                    </span>
                   </button>
                 </div>
-
-                {/* Previews if any attachment */}
-                {photo && (
-                  <div className="relative inline-block mt-1">
-                    <img src={photo} alt="Preview" className="h-20 w-32 object-cover rounded-xl border border-slate-200 shadow-2xs" />
-                    <button
-                      type="button"
-                      onClick={() => setPhoto('')}
-                      className="absolute -top-1.5 -right-1.5 p-1 bg-red-600 text-white rounded-full shadow-md"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                )}
-
-                {audio && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <audio controls src={audio} className="h-7 w-48" />
-                    <button
-                      type="button"
-                      onClick={() => setAudio('')}
-                      className="text-xs font-bold text-red-600 hover:underline"
-                    >
-                      {t('clear_text', lang)}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* ======================================================= */}
-              {/* TYPOGRAPHY, FONT STYLE & FORMATTING TOOLBAR             */}
-              {/* ======================================================= */}
-              <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-700 flex items-center gap-1">
-                    <Type size={14} className="text-indigo-600" />
-                    <span>{t('font_style', lang)}:</span>
+              ) : (
+                /* Full Multimedia Bar for Personal Diary Notes */
+                <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                  <span className="text-xs font-bold text-slate-700 block">
+                    મલ્ટીમીડિયા અટેચમેન્ટ (Photos, Audio, Location):
                   </span>
-
-                  <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
-                    {fontSizeOptions.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => setFontSize(opt.id)}
-                        className={`px-2 py-0.5 rounded text-[11px] font-bold transition ${
-                          fontSize === opt.id
-                            ? 'bg-blue-600 text-white shadow-2xs'
-                            : 'text-slate-600 hover:bg-slate-100'
-                        }`}
-                        title={opt.title}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                  {fontOptions.map((f) => (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Photo Upload */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
                     <button
-                      key={f.id}
                       type="button"
-                      onClick={() => setFontFamily(f.id)}
-                      className={`p-2 rounded-xl text-left border transition text-xs flex items-center gap-1.5 ${
-                        fontFamily === f.id
-                          ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold ring-2 ring-blue-100'
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
+                        photo ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <ImageIcon size={14} className="text-emerald-600" />
+                      <span>{photo ? '✓ ફોટો ઉમેરાયો' : t('add_photo', lang)}</span>
+                    </button>
+
+                    {/* Audio Recording */}
+                    <button
+                      type="button"
+                      onClick={isRecordingAudio ? handleStopAudioRecord : handleStartAudioRecord}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
+                        isRecordingAudio
+                          ? 'bg-red-500 text-white animate-pulse'
+                          : audio
+                          ? 'bg-blue-50 border-blue-300 text-blue-800'
                           : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
-                      <span className="text-base">{f.preview}</span>
-                      <span className={`truncate ${f.fontClass}`}>{f.label}</span>
+                      <Mic size={14} className={isRecordingAudio ? 'text-white' : 'text-blue-600'} />
+                      <span>{isRecordingAudio ? '⏹️ રેકોર્ડિંગ બંધ કરો' : audio ? '✓ ઓડિયો મેમો' : t('record_audio', lang)}</span>
                     </button>
-                  ))}
-                </div>
 
-                {/* Markdown Formatting Quick Buttons */}
-                <div className="flex items-center justify-between pt-1 border-t border-slate-200/80">
-                  <div className="flex items-center gap-1">
+                    {/* Location Tag */}
                     <button
                       type="button"
-                      onClick={() => wrapSelectedText('**')}
-                      className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 font-extrabold text-xs"
-                      title="Bold"
+                      onClick={handleGetLocation}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
+                        location ? 'bg-rose-50 border-rose-300 text-rose-800' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
                     >
-                      <Bold size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => wrapSelectedText('*')}
-                      className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 italic text-xs"
-                      title="Italic"
-                    >
-                      <Italic size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => insertAtCursor('\n• ')}
-                      className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-xs"
-                      title="Bullet point"
-                    >
-                      <List size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => insertAtCursor('\n> ')}
-                      className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-xs"
-                      title="Quote"
-                    >
-                      <Quote size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => insertAtCursor('\n')}
-                      className="px-2 py-1 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-0.5"
-                    >
-                      <CornerDownLeft size={11} />
-                      <span>{t('new_line', lang)}</span>
+                      <MapPin size={14} className="text-rose-600" />
+                      <span>{location ? `✓ ${location}` : t('add_location', lang)}</span>
                     </button>
                   </div>
 
-                  {content.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (window.confirm(lang === 'gu' ? 'શું લખાણ સાફ કરવું છે?' : 'Clear note content?')) {
-                          setContent('');
-                        }
-                      }}
-                      className="text-[11px] font-semibold text-rose-600 hover:underline px-1"
-                    >
-                      {t('clear_text', lang)}
-                    </button>
+                  {/* Previews if any attachment */}
+                  {photo && (
+                    <div className="relative inline-block mt-1">
+                      <img src={photo} alt="Preview" className="h-20 w-32 object-cover rounded-xl border border-slate-200 shadow-2xs" />
+                      <button
+                        type="button"
+                        onClick={() => setPhoto('')}
+                        className="absolute -top-1.5 -right-1.5 p-1 bg-red-600 text-white rounded-full shadow-md"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )}
+
+                  {audio && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <audio controls src={audio} className="h-7 w-48" />
+                      <button
+                        type="button"
+                        onClick={() => setAudio('')}
+                        className="text-xs font-bold text-red-600 hover:underline"
+                      >
+                        {t('clear_text', lang)}
+                      </button>
+                    </div>
                   )}
                 </div>
-              </div>
+              )}
+
+              {/* ======================================================= */}
+              {/* TYPOGRAPHY / CHECKLIST TOOLBAR                          */}
+              {/* ======================================================= */}
+              {isShoppingOrWork ? (
+                /* Specialized Quick Checklist Toolbar for Shopping / Work */
+                <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                      {isShopping ? (
+                        <>
+                          <ShoppingCart size={14} className="text-emerald-600" />
+                          <span>{lang === 'gu' ? '🛒 ખરીદી આઇટમ્સ (ઝડપી ઉમેરો):' : lang === 'hi' ? '🛒 खरीदारी सामग्री (त्वरित जोड़ें):' : '🛒 Shopping Items (Quick Add):'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Briefcase size={14} className="text-blue-600" />
+                          <span>{lang === 'gu' ? '💼 કામ / ટાસ્ક લિસ્ટ (ઝડપી ઉમેરો):' : lang === 'hi' ? '💼 कार्य / टास्क (त्वरित जोड़ें):' : '💼 Tasks / Work List (Quick Add):'}</span>
+                        </>
+                      )}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-semibold">
+                      {lang === 'gu' ? 'ક્લિક કરી લિસ્ટમાં ઉમેરો' : 'Click to insert'}
+                    </span>
+                  </div>
+
+                  {/* 1-Tap Category Item Chips */}
+                  <div className="flex flex-wrap items-center gap-1.5 pb-0.5">
+                    {(isShopping ? quickShoppingChips : quickWorkChips).map((chip, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => insertAtCursor(content ? chip.insert : chip.insert.trimStart())}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition border shadow-2xs active:scale-95 ${
+                          chip.isAction
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600'
+                            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Quick Checklist Formatting Actions */}
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/80">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => insertAtCursor(content ? '\n☐ ' : '☐ ')}
+                        className="px-2 py-1 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-1"
+                        title="Add Checkbox"
+                      >
+                        <CheckSquare size={12} className="text-blue-600" />
+                        <span>{lang === 'gu' ? 'ચેકબોક્સ (☐)' : 'Checkbox'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertAtCursor(content ? '\n• ' : '• ')}
+                        className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-xs"
+                        title="Bullet point"
+                      >
+                        <List size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertAtCursor('\n')}
+                        className="px-2 py-1 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-0.5"
+                        title="New line"
+                      >
+                        <CornerDownLeft size={11} />
+                        <span>{t('new_line', lang)}</span>
+                      </button>
+                    </div>
+
+                    {content.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(lang === 'gu' ? 'શું લખાણ સાફ કરવું છે?' : 'Clear note content?')) {
+                            setContent('');
+                          }
+                        }}
+                        className="text-[11px] font-semibold text-rose-600 hover:underline px-1"
+                      >
+                        {t('clear_text', lang)}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Standard Typography & Font Style Toolbar for Diary Notes */
+                <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-700 flex items-center gap-1">
+                      <Type size={14} className="text-indigo-600" />
+                      <span>{t('font_style', lang)}:</span>
+                    </span>
+
+                    <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
+                      {fontSizeOptions.map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setFontSize(opt.id)}
+                          className={`px-2 py-0.5 rounded text-[11px] font-bold transition ${
+                            fontSize === opt.id
+                              ? 'bg-blue-600 text-white shadow-2xs'
+                              : 'text-slate-600 hover:bg-slate-100'
+                          }`}
+                          title={opt.title}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    {fontOptions.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setFontFamily(f.id)}
+                        className={`p-2 rounded-xl text-left border transition text-xs flex items-center gap-1.5 ${
+                          fontFamily === f.id
+                            ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold ring-2 ring-blue-100'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="text-base">{f.preview}</span>
+                        <span className={`truncate ${f.fontClass}`}>{f.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Markdown Formatting Quick Buttons */}
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/80">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => wrapSelectedText('**')}
+                        className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 font-extrabold text-xs"
+                        title="Bold"
+                      >
+                        <Bold size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => wrapSelectedText('*')}
+                        className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 italic text-xs"
+                        title="Italic"
+                      >
+                        <Italic size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertAtCursor('\n• ')}
+                        className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-xs"
+                        title="Bullet point"
+                      >
+                        <List size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertAtCursor('\n> ')}
+                        className="p-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-xs"
+                        title="Quote"
+                      >
+                        <Quote size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertAtCursor('\n')}
+                        className="px-2 py-1 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-0.5"
+                      >
+                        <CornerDownLeft size={11} />
+                        <span>{t('new_line', lang)}</span>
+                      </button>
+                    </div>
+
+                    {content.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(lang === 'gu' ? 'શું લખાણ સાફ કરવું છે?' : 'Clear note content?')) {
+                            setContent('');
+                          }
+                        }}
+                        className="text-[11px] font-semibold text-rose-600 hover:underline px-1"
+                      >
+                        {t('clear_text', lang)}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* ======================================================= */}
               {/* EMOJI & KEYBOARD ASSISTANT TOGGLES                      */}
               {/* ======================================================= */}
-              <div className="flex items-center justify-between gap-1 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEmojiPicker(!showEmojiPicker);
-                      if (!showEmojiPicker) setShowKeyboardHelper(false);
-                    }}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition border ${
-                      showEmojiPicker
-                        ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs'
-                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <Smile size={14} className="text-amber-500" />
-                    <span>{t('quick_emojis', lang)}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowKeyboardHelper(!showKeyboardHelper);
-                      if (!showKeyboardHelper) setShowEmojiPicker(false);
-                    }}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition border ${
-                      showKeyboardHelper
-                        ? 'bg-indigo-100 border-indigo-300 text-indigo-900 shadow-2xs'
-                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <Keyboard size={14} className="text-indigo-600" />
-                    <span>{t('keyboard_helper', lang)}</span>
-                  </button>
+              {isShoppingOrWork ? (
+                /* Compact 1-Tap Emojis Strip for Shopping & Work */
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none bg-slate-50/80 p-1.5 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-bold px-1 shrink-0">
+                    {isShopping ? '🛒 1-Tap:' : '💼 1-Tap:'}
+                  </span>
+                  {(isShopping ? quickShoppingEmojis : quickWorkEmojis).map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => insertAtCursor(emoji)}
+                      className="p-1 px-2 bg-white hover:bg-amber-50 border border-slate-200/80 rounded-lg text-sm transition shrink-0 active:scale-90"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
                 </div>
-
-                <button
-                  type="button"
-                  onClick={toggleVoiceRecording}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 shadow-2xs ${
-                    isListening
-                      ? 'bg-red-500 text-white animate-pulse ring-2 ring-red-300'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  {isListening ? <MicOff size={14} /> : <Mic size={14} />}
-                  <span>{isListening ? t('listening', lang) : t('voice_typing', lang)}</span>
-                </button>
-              </div>
-
-              {/* 1-Tap Quick Emojis Strip */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none bg-slate-50/80 p-1.5 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 font-bold px-1 shrink-0">✨ 1-Tap:</span>
-                {quickEmojiBar.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => insertAtCursor(emoji)}
-                    className="p-1 px-2 bg-white hover:bg-amber-50 border border-slate-200/80 rounded-lg text-sm transition shrink-0 active:scale-90"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-
-              {/* Expandable Full Emoji Drawer */}
-              {showEmojiPicker && (
-                <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-200 space-y-2 animate-in fade-in zoom-in-95">
-                  <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
-                    {Object.keys(emojiCategories).map((catKey) => (
+              ) : (
+                /* Standard Emoji & Smart Keyboard Helper for Personal Diary Notes */
+                <>
+                  <div className="flex items-center justify-between gap-1 text-xs">
+                    <div className="flex items-center gap-1.5">
                       <button
-                        key={catKey}
                         type="button"
-                        onClick={() => setSelectedEmojiCat(catKey)}
-                        className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                          selectedEmojiCat === catKey
-                            ? 'bg-amber-600 text-white shadow-2xs'
-                            : 'bg-white text-slate-600 border border-amber-200 hover:bg-amber-100'
+                        onClick={() => {
+                          setShowEmojiPicker(!showEmojiPicker);
+                          if (!showEmojiPicker) setShowKeyboardHelper(false);
+                        }}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition border ${
+                          showEmojiPicker
+                            ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                         }`}
                       >
-                        {emojiCategories[catKey].label}
+                        <Smile size={14} className="text-amber-500" />
+                        <span>{t('quick_emojis', lang)}</span>
                       </button>
-                    ))}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowKeyboardHelper(!showKeyboardHelper);
+                          if (!showKeyboardHelper) setShowEmojiPicker(false);
+                        }}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition border ${
+                          showKeyboardHelper
+                            ? 'bg-indigo-100 border-indigo-300 text-indigo-900 shadow-2xs'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        <Keyboard size={14} className="text-indigo-600" />
+                        <span>{t('keyboard_helper', lang)}</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={toggleVoiceRecording}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 shadow-2xs ${
+                        isListening
+                          ? 'bg-red-500 text-white animate-pulse ring-2 ring-red-300'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                    >
+                      {isListening ? <MicOff size={14} /> : <Mic size={14} />}
+                      <span>{isListening ? t('listening', lang) : t('voice_typing', lang)}</span>
+                    </button>
                   </div>
 
-                  <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 p-2 bg-white rounded-xl border border-amber-200/70 max-h-36 overflow-y-auto">
-                    {emojiCategories[selectedEmojiCat]?.emojis.map((emoji, idx) => (
+                  {/* 1-Tap Quick Emojis Strip */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none bg-slate-50/80 p-1.5 rounded-xl border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-bold px-1 shrink-0">✨ 1-Tap:</span>
+                    {quickEmojiBar.map((emoji) => (
                       <button
-                        key={idx}
+                        key={emoji}
                         type="button"
                         onClick={() => insertAtCursor(emoji)}
-                        className="h-9 flex items-center justify-center text-lg hover:bg-amber-50 rounded-lg transition active:scale-90"
+                        className="p-1 px-2 bg-white hover:bg-amber-50 border border-slate-200/80 rounded-lg text-sm transition shrink-0 active:scale-90"
                       >
                         {emoji}
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
 
-              {/* Expandable Smart Language Keyboard Bar */}
-              {showKeyboardHelper && (
-                <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-200 space-y-2 animate-in fade-in zoom-in-95">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-indigo-900 flex items-center gap-1">
-                      <Keyboard size={13} className="text-indigo-600" />
-                      <span>{t('matra_helper', lang)} ({lang.toUpperCase()}):</span>
-                    </span>
-                    <span className="text-[10px] text-indigo-600 font-semibold">
-                      {lang === 'gu' ? 'અક્ષર પાછળ માત્રા જોડવા ક્લિક કરો' : 'अक्षर के साथ मात्रा जोड़ें'}
-                    </span>
-                  </div>
+                  {/* Expandable Full Emoji Drawer */}
+                  {showEmojiPicker && (
+                    <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-200 space-y-2 animate-in fade-in zoom-in-95">
+                      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
+                        {Object.keys(emojiCategories).map((catKey) => (
+                          <button
+                            key={catKey}
+                            type="button"
+                            onClick={() => setSelectedEmojiCat(catKey)}
+                            className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                              selectedEmojiCat === catKey
+                                ? 'bg-amber-600 text-white shadow-2xs'
+                                : 'bg-white text-slate-600 border border-amber-200 hover:bg-amber-100'
+                            }`}
+                          >
+                            {emojiCategories[catKey].label}
+                          </button>
+                        ))}
+                      </div>
 
-                  {activeHelper.matras && (
-                    <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
-                      {activeHelper.matras.map((m, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => insertAtCursor(m.label)}
-                          className="min-w-[34px] h-8 px-2 flex items-center justify-center text-sm font-extrabold bg-indigo-50/70 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-100 transition active:scale-90"
-                          title={m.name}
-                        >
-                          {m.label}
-                        </button>
-                      ))}
+                      <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 p-2 bg-white rounded-xl border border-amber-200/70 max-h-36 overflow-y-auto">
+                        {emojiCategories[selectedEmojiCat]?.emojis.map((emoji, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => insertAtCursor(emoji)}
+                            className="h-9 flex items-center justify-center text-lg hover:bg-amber-50 rounded-lg transition active:scale-90"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
-                  {activeHelper.vowels && (
-                    <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
-                      <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
-                        {lang === 'gu' ? 'મુખ્ય સ્વરો & જોડાક્ષરો:' : 'स्वर व संयुक्त वर्ण:'}
-                      </span>
-                      {activeHelper.vowels.map((v, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => insertAtCursor(v)}
-                          className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-slate-50 hover:bg-blue-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
-                        >
-                          {v}
-                        </button>
-                      ))}
-                      {activeHelper.conjuncts?.map((c, idx) => (
-                        <button
-                          key={'c-' + idx}
-                          type="button"
-                          onClick={() => insertAtCursor(c)}
-                          className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-900 rounded-lg border border-amber-200 transition active:scale-90"
-                        >
-                          {c}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {/* Expandable Smart Language Keyboard Bar */}
+                  {showKeyboardHelper && (
+                    <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-200 space-y-2 animate-in fade-in zoom-in-95">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-indigo-900 flex items-center gap-1">
+                          <Keyboard size={13} className="text-indigo-600" />
+                          <span>{t('matra_helper', lang)} ({lang.toUpperCase()}):</span>
+                        </span>
+                        <span className="text-[10px] text-indigo-600 font-semibold">
+                          {lang === 'gu' ? 'અક્ષર પાછળ માત્રા જોડવા ક્લિક કરો' : 'अक्षर के साथ मात्रा जोड़ें'}
+                        </span>
+                      </div>
 
-                  {activeHelper.consonants && (
-                    <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70 max-h-28 overflow-y-auto">
-                      <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
-                        {lang === 'gu' ? 'વ્યંજનો:' : 'व्यंजन:'}
-                      </span>
-                      {activeHelper.consonants.map((k, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => insertAtCursor(k)}
-                          className="w-7 h-7 flex items-center justify-center text-xs font-bold bg-slate-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
-                        >
-                          {k}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                      {activeHelper.matras && (
+                        <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
+                          {activeHelper.matras.map((m, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => insertAtCursor(m.label)}
+                              className="min-w-[34px] h-8 px-2 flex items-center justify-center text-sm font-extrabold bg-indigo-50/70 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-100 transition active:scale-90"
+                              title={m.name}
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
-                  {activeHelper.symbols && (
-                    <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
-                      {activeHelper.symbols.map((s, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => insertAtCursor(s)}
-                          className="min-w-[32px] h-8 px-2 flex items-center justify-center text-sm font-bold bg-slate-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
-                        >
-                          {s}
-                        </button>
-                      ))}
+                      {activeHelper.vowels && (
+                        <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
+                          <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
+                            {lang === 'gu' ? 'મુખ્ય સ્વરો & જોડાક્ષરો:' : 'स्वर व संयुक्त वर्ण:'}
+                          </span>
+                          {activeHelper.vowels.map((v, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => insertAtCursor(v)}
+                              className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-slate-50 hover:bg-blue-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
+                            >
+                              {v}
+                            </button>
+                          ))}
+                          {activeHelper.conjuncts?.map((c, idx) => (
+                            <button
+                              key={'c-' + idx}
+                              type="button"
+                              onClick={() => insertAtCursor(c)}
+                              className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-900 rounded-lg border border-amber-200 transition active:scale-90"
+                            >
+                              {c}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {activeHelper.consonants && (
+                        <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70 max-h-28 overflow-y-auto">
+                          <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
+                            {lang === 'gu' ? 'વ્યંજનો:' : 'व्यंजन:'}
+                          </span>
+                          {activeHelper.consonants.map((k, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => insertAtCursor(k)}
+                              className="w-7 h-7 flex items-center justify-center text-xs font-bold bg-slate-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
+                            >
+                              {k}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {activeHelper.symbols && (
+                        <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
+                          {activeHelper.symbols.map((s, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => insertAtCursor(s)}
+                              className="min-w-[32px] h-8 px-2 flex items-center justify-center text-sm font-bold bg-slate-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
+                </>
               )}
 
               {/* Textarea */}
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">{t('note_content', lang)}</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {isShopping
+                    ? (lang === 'gu' ? '🛒 ખરીદીનું લિસ્ટ (Shopping Checklist)' : lang === 'hi' ? '🛒 खरीदारी सूची' : '🛒 Shopping Checklist')
+                    : isWork
+                    ? (lang === 'gu' ? '💼 કામ / ટાસ્ક લિસ્ટ (Task Checklist)' : lang === 'hi' ? '💼 कार्य / टास्क सूची' : '💼 Task Checklist')
+                    : t('note_content', lang)}
+                </label>
                 <textarea
                   ref={contentRef}
-                  rows={6}
+                  rows={7}
                   lang={lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : lang}
                   inputMode="text"
                   autoCapitalize="sentences"
                   autoCorrect="on"
                   spellCheck="true"
-                  placeholder={t('note_content_placeholder', lang)}
+                  placeholder={
+                    isShopping
+                      ? (lang === 'hi'
+                          ? 'लिखें या 🎙️ बोलें...\nउदा:\n☐ १. आटा - ५ किलो\n☐ २. सब्जियां (आलू, टमाटर)\n☐ ३. दूध और तेल'
+                          : lang === 'en'
+                          ? 'Type or 🎙️ speak your items...\nExample:\n☐ 1. Wheat flour - 5 kg\n☐ 2. Fresh vegetables\n☐ 3. Milk and oil'
+                          : 'લખો અથવા 🎙️ બોલો...\nઉદાહરણ:\n☐ ૧. ઘઉંનો લોટ - ૫ કિલો\n☐ ૨. શાકભાજી (બટાકા, ટામેટા)\n☐ ૩. દૂધ અને તેલ')
+                      : isWork
+                      ? (lang === 'hi'
+                          ? 'लिखें या 🎙️ बोलें...\nउदा:\n☐ १. ११:०० बजे क्लाइंट को कॉल करना\n☐ २. बैंक में चेक जमा करना\n☐ ३. रिपोर्ट सबमिट करना'
+                          : lang === 'en'
+                          ? 'Type or 🎙️ speak your tasks...\nExample:\n☐ 1. Call client at 11:00 AM\n☐ 2. Deposit check in bank\n☐ 3. Submit monthly report'
+                          : 'લખો અથવા 🎙️ બોલો...\nઉદાહરણ:\n☐ ૧. ૧૧:૦૦ વાગ્યે ક્લાયન્ટને કોલ કરવો\n☐ ૨. બેંકમાં ચેક જમા કરાવવો\n☐ ૩. ફાઇલ સબમિટ કરવી')
+                      : t('note_content_placeholder', lang)
+                  }
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   className={`w-full p-3.5 rounded-2xl border border-slate-200 focus:outline-blue-500 transition leading-relaxed shadow-inner ${
-                    fontFamily === 'handwriting'
-                      ? 'font-handwriting text-slate-800'
-                      : fontFamily === 'serif'
-                      ? 'font-serif-diary text-slate-900'
-                      : fontFamily === 'mono'
-                      ? 'font-mono-diary text-slate-800'
-                      : 'font-sans-diary text-slate-700'
-                  } ${
-                    fontSize === 'sm'
-                      ? 'text-xs'
-                      : fontSize === 'lg'
-                      ? 'text-base'
-                      : fontSize === 'xl'
-                      ? 'text-lg'
-                      : 'text-sm'
+                    isShoppingOrWork
+                      ? 'font-sans-diary text-slate-800 text-sm'
+                      : (fontFamily === 'handwriting'
+                          ? 'font-handwriting text-slate-800'
+                          : fontFamily === 'serif'
+                          ? 'font-serif-diary text-slate-900'
+                          : fontFamily === 'mono'
+                          ? 'font-mono-diary text-slate-800'
+                          : 'font-sans-diary text-slate-700') +
+                        ' ' +
+                        (fontSize === 'sm'
+                          ? 'text-xs'
+                          : fontSize === 'lg'
+                          ? 'text-base'
+                          : fontSize === 'xl'
+                          ? 'text-lg'
+                          : 'text-sm')
                   }`}
                 />
               </div>
