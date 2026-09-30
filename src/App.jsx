@@ -495,23 +495,32 @@ export default function App() {
 
   // Test Alarm trigger
   const handleTestAlarm = () => {
+    const globalAlarmSettings = storageService.getAlarmSettings();
     setActiveAlarm({
       id: 'test-alarm-' + Date.now(),
-      type: 'medicine',
-      title: 'પેરાસિટામોલ 650mg',
-      dosage: '૧ ગોળી',
-      time: '૧૩:૪૫',
-      mealRelation: 'after_food',
-      notes: 'ટેસ્ટ એલાર્મ: સમયસર દવા લેવાનું રિમાઇન્ડર સાઉન્ડ સાથે!',
+      type: 'task',
+      title: 'અગત્યનું કામ / મીટિંગ ટેસ્ટ',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      description: 'ટેસ્ટ એલાર્મ: મોબાઈલ રીંગટોન અને સાઉન્ડ સાથે!',
+      ringtone: globalAlarmSettings?.ringtone || 'classic_bell',
+      customAudioUrl: globalAlarmSettings?.customRingtoneData,
+      customRingtoneName: globalAlarmSettings?.customRingtoneName,
     });
-    notificationService.send('દવા લેવાનું એલાર્મ!', {
-      body: 'પેરાસિટામોલ 650mg - જમ્યા પછી',
+    notificationService.send('⏰ એલાર્મ ટેસ્ટ!', {
+      body: 'મોબાઈલ રીંગટોન સાથે એલાર્મ કાર્યરત છે.',
     });
   };
 
   // Custom Alarm trigger (from medicine or reminder card)
   const handleCustomTriggerAlarm = (alarmData) => {
-    setActiveAlarm(alarmData);
+    const globalAlarmSettings = storageService.getAlarmSettings();
+    const resolvedAlarm = {
+      ...alarmData,
+      ringtone: alarmData.ringtone || globalAlarmSettings?.ringtone || 'classic_bell',
+      customAudioUrl: alarmData.customAudioUrl || globalAlarmSettings?.customRingtoneData,
+      customRingtoneName: alarmData.customRingtoneName || globalAlarmSettings?.customRingtoneName,
+    };
+    setActiveAlarm(resolvedAlarm);
     notificationService.send(alarmData.title, {
       body: alarmData.description || `સમય: ${alarmData.time}`,
     });
@@ -571,6 +580,7 @@ export default function App() {
             time: med.time,
             mealRelation: med.mealRelation,
             notes: med.notes,
+            ringtone: 'medicine',
           });
 
           notificationService.send(`💊 દવા લેવાનો સમય: ${med.name}`, {
@@ -590,12 +600,16 @@ export default function App() {
           !firedAlarmsRef.current.has(alarmKey)
         ) {
           firedAlarmsRef.current.add(alarmKey);
+          const globalAlarmSettings = storageService.getAlarmSettings();
           setActiveAlarm({
             id: rem.id,
             type: rem.type,
             title: rem.title,
             time: rem.time,
             description: rem.description,
+            ringtone: rem.ringtone || globalAlarmSettings?.ringtone || 'classic_bell',
+            customAudioUrl: rem.customAudioUrl || globalAlarmSettings?.customRingtoneData,
+            customRingtoneName: rem.customRingtoneName || globalAlarmSettings?.customRingtoneName,
           });
 
           notificationService.send(`⏰ અગત્યનું કામ: ${rem.title}`, {

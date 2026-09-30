@@ -1,40 +1,50 @@
-import React, { useState } from 'react';
-import {
-  Clock,
-  Plus,
-  Building2,
-  Users,
-  CheckCircle2,
-  Bell,
-  Trash2,
-  Calendar,
-  X,
-  Check,
-  Volume2,
-  Sparkles,
-  Cake,
-  Heart,
-  PartyPopper,
-  Phone,
-  MessageCircle,
-  Share2,
-  Edit2,
-  Gift,
-  ShoppingCart,
-  Briefcase,
-  CheckSquare,
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
+import {
+  Clock as ClockIcon,
+  Plus as PlusIcon,
+  Building2 as Building2Icon,
+  Users as UsersIcon,
+  CheckCircle2 as CheckCircle2Icon,
+  Bell as BellIcon,
+  Trash2 as Trash2Icon,
+  Calendar as CalendarIcon,
+  X as XIcon,
+  Check as CheckIcon,
+  Volume2 as Volume2Icon,
+  Sparkles as SparklesIcon,
+  Cake as CakeIcon,
+  Heart as HeartIcon,
+  Phone as PhoneIcon,
+  MessageCircle as MessageCircleIcon,
+  Share2 as Share2Icon,
+  Edit2 as Edit2Icon,
+  Gift as GiftIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Briefcase as BriefcaseIcon,
+  CheckSquare as CheckSquareIcon,
+  Music as MusicIcon,
+  Upload as UploadIcon,
+  Play as PlayIcon,
+  Square as SquareIcon,
+  Sliders as SlidersIcon,
+  Repeat as RepeatIcon,
+  Search as SearchIcon,
+  VolumeX as VolumeXIcon,
+  Smartphone as SmartphoneIcon,
+} from 'lucide-react';
 import { t } from '../../services/i18n';
 import { whatsappService } from '../../services/whatsappService';
+import { storageService } from '../../services/storageService';
+import { soundAlarm, RINGTONE_OPTIONS } from '../../services/audioService';
 
 const getTaskTypes = (lang) => [
   { id: 'all', label: t('filter_all', lang), icon: null },
-  { id: 'meeting', label: t('meeting', lang), icon: Users },
-  { id: 'bank', label: t('bank_work', lang), icon: Building2 },
-  { id: 'task', label: t('task', lang), icon: Clock },
-  { id: 'shopping', label: t('shopping_task', lang) || '🛒 ખરીદી', icon: ShoppingCart },
-  { id: 'work', label: t('work_task', lang) || '💼 ઓફિસ / કામ', icon: Briefcase },
+  { id: 'meeting', label: t('meeting', lang), icon: UsersIcon },
+  { id: 'bank', label: t('bank_work', lang), icon: Building2Icon },
+  { id: 'task', label: t('task', lang), icon: ClockIcon },
+  { id: 'shopping', label: t('shopping_task', lang) || '🛒 ખરીદી', icon: ShoppingCartIcon },
+  { id: 'work', label: t('work_task', lang) || '💼 ઓફિસ / કામ', icon: BriefcaseIcon },
 ];
 
 const quickShoppingItems = [
@@ -81,6 +91,30 @@ export const getDaysUntilEvent = (dateStr) => {
   return diffDays;
 };
 
+// Calculate subtask progress from description checklist
+export const getSubtaskStats = (desc) => {
+  if (!desc) return null;
+  const lines = desc.split('\n');
+  let total = 0;
+  let completed = 0;
+  lines.forEach((l) => {
+    const trimmed = l.trim();
+    if (
+      trimmed.startsWith('☐') ||
+      trimmed.startsWith('☑️') ||
+      trimmed.startsWith('[ ]') ||
+      trimmed.startsWith('[x]')
+    ) {
+      total++;
+      if (trimmed.startsWith('☑️') || trimmed.startsWith('[x]')) {
+        completed++;
+      }
+    }
+  });
+  if (total === 0) return null;
+  return { total, completed, percent: Math.round((completed / total) * 100) };
+};
+
 export default function RemindersTab({
   reminders = [],
   onSaveReminders,
@@ -98,10 +132,17 @@ export default function RemindersTab({
   // Primary subview: 'tasks' vs 'events'
   const [activeSubView, setActiveSubView] = useState('tasks');
 
-  // Task filters
+  // Task filters & Search
   const [selectedTaskType, setSelectedTaskType] = useState('all');
   const [dateFilter, setDateFilter] = useState('all'); // 'all', 'today', 'future'
+  const [priorityFilter, setPriorityFilter] = useState('all'); // 'all', 'high', 'medium', 'low'
+  const [searchQuery, setSearchQuery] = useState('');
   const [showCompleted, setShowCompleted] = useState(true);
+
+  // Alarm & Ringtone Global Settings
+  const [alarmSettings, setAlarmSettings] = useState(() => storageService.getAlarmSettings());
+  const [isRingtoneModalOpen, setIsRingtoneModalOpen] = useState(false);
+  const [previewingRingtone, setPreviewingRingtone] = useState(null);
 
   // Modals
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -118,6 +159,8 @@ export default function RemindersTab({
   const [date, setDate] = useState(todayStr);
   const [hasAlarm, setHasAlarm] = useState(true);
   const [priority, setPriority] = useState('high');
+  const [taskRingtone, setTaskRingtone] = useState('default'); // 'default' uses alarmSettings
+  const [taskRepeat, setTaskRepeat] = useState('none'); // 'none', 'daily', 'weekly', 'monthly'
 
   // Event form state (Birthday & Anniversary)
   const [evName, setEvName] = useState('');
@@ -126,6 +169,107 @@ export default function RemindersTab({
   const [evPhone, setEvPhone] = useState('');
   const [evRelation, setEvRelation] = useState('મિત્ર (Friend)');
   const [evNotes, setEvNotes] = useState('');
+
+  // Stop any audio preview when component unmounts
+  useEffect(() => {
+    return () => {
+      soundAlarm.stopAlarm();
+    };
+  }, []);
+
+  // -------------------------------------------------------------
+  // Ringtone Settings Handlers
+  // -------------------------------------------------------------
+  const handleSelectDefaultRingtone = (toneId) => {
+    const updated = { ...alarmSettings, ringtone: toneId };
+    setAlarmSettings(updated);
+    storageService.saveAlarmSettings(updated);
+  };
+
+  const handleTogglePreview = (toneId, customAudioData = null) => {
+    if (previewingRingtone === toneId) {
+      soundAlarm.stopAlarm();
+      setPreviewingRingtone(null);
+    } else {
+      setPreviewingRingtone(toneId);
+      soundAlarm.previewRingtone(toneId, customAudioData, () => {
+        setPreviewingRingtone(null);
+      });
+    }
+  };
+
+  const handleUploadCustomRingtone = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert(
+        lang === 'gu'
+          ? 'ઓડિયો ફાઇલ 5MB કરતાં નાની હોવી જોઈએ.'
+          : 'Audio file must be under 5MB.'
+      );
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Data = event.target.result;
+      const updated = {
+        ...alarmSettings,
+        ringtone: 'custom',
+        customRingtoneName: file.name,
+        customRingtoneData: base64Data,
+      };
+      setAlarmSettings(updated);
+      storageService.saveAlarmSettings(updated);
+      handleTogglePreview('custom', base64Data);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveCustomAudio = () => {
+    const updated = {
+      ...alarmSettings,
+      ringtone: 'classic_bell',
+      customRingtoneName: '',
+      customRingtoneData: null,
+    };
+    setAlarmSettings(updated);
+    storageService.saveAlarmSettings(updated);
+    if (previewingRingtone === 'custom') {
+      soundAlarm.stopAlarm();
+      setPreviewingRingtone(null);
+    }
+  };
+
+  const handleVolumeChange = (vol) => {
+    const updated = { ...alarmSettings, volume: vol };
+    setAlarmSettings(updated);
+    storageService.saveAlarmSettings(updated);
+    soundAlarm.setVolume(vol);
+  };
+
+  const handleToggleVibrate = () => {
+    const updated = { ...alarmSettings, vibrate: !alarmSettings.vibrate };
+    setAlarmSettings(updated);
+    storageService.saveAlarmSettings(updated);
+    soundAlarm.setVibrate(updated.vibrate);
+  };
+
+  // Helper to format ringtone badge name
+  const getRingtoneDisplayName = (toneId) => {
+    if (!toneId || toneId === 'default') {
+      const defaultTone = RINGTONE_OPTIONS.find((r) => r.id === alarmSettings.ringtone);
+      return defaultTone
+        ? (lang === 'gu' ? defaultTone.nameGu.split(' ')[0] + ' ' + defaultTone.nameGu.split(' ')[1] : defaultTone.nameEn)
+        : '🔔 ડિફોલ્ટ';
+    }
+    if (toneId === 'custom') {
+      return lang === 'gu' ? '📁 મોબાઈલ ટોન' : '📁 Mobile Tone';
+    }
+    const found = RINGTONE_OPTIONS.find((r) => r.id === toneId);
+    return found ? (lang === 'gu' ? found.nameGu.split(' ')[0] + ' ' + found.nameGu.split(' ')[1] : found.nameEn) : toneId;
+  };
 
   // -------------------------------------------------------------
   // Task Handlers
@@ -141,6 +285,8 @@ export default function RemindersTab({
     setDate(defaultDate);
     setHasAlarm(true);
     setPriority('high');
+    setTaskRingtone('default');
+    setTaskRepeat('none');
     setIsTaskModalOpen(true);
   };
 
@@ -153,6 +299,8 @@ export default function RemindersTab({
     setDate(rem.date);
     setHasAlarm(rem.hasAlarm ?? true);
     setPriority(rem.priority || 'high');
+    setTaskRingtone(rem.ringtone || 'default');
+    setTaskRepeat(rem.repeat || 'none');
     setIsTaskModalOpen(true);
   };
 
@@ -172,6 +320,8 @@ export default function RemindersTab({
               date,
               hasAlarm,
               priority,
+              ringtone: taskRingtone,
+              repeat: taskRepeat,
             }
           : r
       );
@@ -186,6 +336,8 @@ export default function RemindersTab({
         date,
         hasAlarm,
         priority,
+        ringtone: taskRingtone,
+        repeat: taskRepeat,
         isCompleted: false,
       };
       onSaveReminders([newReminder, ...reminders]);
@@ -296,7 +448,9 @@ export default function RemindersTab({
     }
   };
 
-  // Filter tasks
+  // -------------------------------------------------------------
+  // Filter Tasks
+  // -------------------------------------------------------------
   const filteredTasks = reminders.filter((r) => {
     const matchesType = selectedTaskType === 'all' || r.type === selectedTaskType;
     const matchesStatus = showCompleted || !r.isCompleted;
@@ -308,80 +462,116 @@ export default function RemindersTab({
       matchesDate = r.date > todayStr;
     }
 
-    return matchesType && matchesStatus && matchesDate;
+    let matchesPriority = true;
+    if (priorityFilter !== 'all') {
+      matchesPriority = (r.priority || 'high') === priorityFilter;
+    }
+
+    let matchesSearch = true;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      matchesSearch =
+        r.title.toLowerCase().includes(q) ||
+        (r.description && r.description.toLowerCase().includes(q));
+    }
+
+    return matchesType && matchesStatus && matchesDate && matchesPriority && matchesSearch;
   });
 
   const futureTasksCount = reminders.filter((r) => r.date > todayStr && !r.isCompleted).length;
+  const todayTasksCount = reminders.filter((r) => r.date === todayStr && !r.isCompleted).length;
+  const highPriorityCount = reminders.filter((r) => (r.priority || 'high') === 'high' && !r.isCompleted).length;
+  const completedTasksCount = reminders.filter((r) => r.isCompleted).length;
+
   const typesList = getTaskTypes(lang);
 
   // Process & Sort Events by days remaining
-  const sortedEvents = [...events].map((ev) => ({
-    ...ev,
-    daysLeft: getDaysUntilEvent(ev.date),
-  })).sort((a, b) => a.daysLeft - b.daysLeft);
+  const sortedEvents = [...events]
+    .map((ev) => ({
+      ...ev,
+      daysLeft: getDaysUntilEvent(ev.date),
+    }))
+    .sort((a, b) => a.daysLeft - b.daysLeft);
 
   const todayCelebrations = sortedEvents.filter((ev) => ev.daysLeft === 0);
 
   return (
     <div className="space-y-4 pb-24 animate-in fade-in duration-200">
-      {/* Top Header & Sub-tab Switcher */}
+      {/* ======================================================= */}
+      {/* 1. TOP HEADER & ACTION BUTTONS                          */}
+      {/* ======================================================= */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
             {activeSubView === 'tasks' ? (
-              <Clock className="text-indigo-600" size={22} />
+              <ClockIcon className="text-indigo-600" size={22} />
             ) : (
-              <Cake className="text-pink-600" size={22} />
+              <CakeIcon className="text-pink-600" size={22} />
             )}
             {activeSubView === 'tasks' ? t('reminders_title', lang) : t('events_title', lang)}
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 font-medium">
             {activeSubView === 'tasks' ? t('reminders_sub', lang) : t('events_sub', lang)}
           </p>
         </div>
 
-        {activeSubView === 'tasks' ? (
-          <button
-            onClick={() => handleOpenAddTask(todayStr)}
-            className="flex items-center gap-1 py-2 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-semibold shadow-md shadow-indigo-500/20 active:scale-95 transition"
-          >
-            <Plus size={16} />
-            {t('new_task', lang)}
-          </button>
-        ) : (
-          <button
-            onClick={handleOpenAddEvent}
-            className="flex items-center gap-1 py-2 px-3.5 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl text-xs font-semibold shadow-md shadow-pink-500/20 active:scale-95 transition"
-          >
-            <Plus size={16} />
-            {t('add_event', lang)}
-          </button>
-        )}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {activeSubView === 'tasks' && (
+            <button
+              onClick={() => setIsRingtoneModalOpen(true)}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2 px-3 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-2xl text-xs font-bold shadow-2xs active:scale-95 transition"
+              title="રીંગટોન અને સાઉન્ડ સેટિંગ્સ"
+            >
+              <MusicIcon size={15} className="text-purple-600" />
+              <span>{lang === 'gu' ? '🔔 રીંગટોન' : '🔔 Ringtone'}</span>
+            </button>
+          )}
+
+          {activeSubView === 'tasks' ? (
+            <button
+              onClick={() => handleOpenAddTask(todayStr)}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-indigo-500/25 active:scale-95 transition"
+            >
+              <PlusIcon size={16} />
+              <span>{t('new_task', lang)}</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleOpenAddEvent}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2 px-3.5 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-pink-500/25 active:scale-95 transition"
+            >
+              <PlusIcon size={16} />
+              <span>{t('add_event', lang)}</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Main Mode Toggle: Tasks vs Celebrations */}
+      {/* ======================================================= */}
+      {/* 2. SUB-VIEW SWITCHER: TASKS vs CELEBRATIONS             */}
+      {/* ======================================================= */}
       <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
         <button
           onClick={() => setActiveSubView('tasks')}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
             activeSubView === 'tasks'
               ? 'bg-white text-indigo-600 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Clock size={15} />
+          <ClockIcon size={15} />
           <span>{t('subtab_tasks', lang)} ({reminders.length})</span>
         </button>
 
         <button
           onClick={() => setActiveSubView('events')}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
             activeSubView === 'events'
               ? 'bg-white text-pink-600 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Gift size={15} />
+          <GiftIcon size={15} />
           <span>{t('subtab_events', lang)} ({events.length})</span>
           {todayCelebrations.length > 0 && (
             <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping" />
@@ -390,11 +580,51 @@ export default function RemindersTab({
       </div>
 
       {/* ======================================================= */}
-      {/* 1. TASKS & MEETINGS VIEW                                */}
+      {/* 3. TASKS & MEETINGS VIEW                                */}
       {/* ======================================================= */}
       {activeSubView === 'tasks' && (
-        <div className="space-y-4">
-          {/* Date Filter Tabs (Today, Upcoming/Advance, All) */}
+        <div className="space-y-3.5">
+          {/* Smart Stats Summary Cards */}
+          <div className="grid grid-cols-4 gap-2 text-center">
+            <div className="bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span className="text-[10px] text-slate-500 font-bold block">{lang === 'gu' ? 'કુલ કામો' : 'Total'}</span>
+              <span className="text-base font-black text-slate-800">{reminders.length}</span>
+            </div>
+            <div className="bg-white p-2.5 rounded-2xl border border-indigo-100 bg-indigo-50/20 shadow-2xs">
+              <span className="text-[10px] text-indigo-700 font-bold block">{lang === 'gu' ? 'આજના' : 'Today'}</span>
+              <span className="text-base font-black text-indigo-600">{todayTasksCount}</span>
+            </div>
+            <div className="bg-white p-2.5 rounded-2xl border border-rose-100 bg-rose-50/20 shadow-2xs">
+              <span className="text-[10px] text-rose-700 font-bold block">{lang === 'gu' ? 'અગત્યનું' : 'Priority'}</span>
+              <span className="text-base font-black text-rose-600">{highPriorityCount}</span>
+            </div>
+            <div className="bg-white p-2.5 rounded-2xl border border-emerald-100 bg-emerald-50/20 shadow-2xs">
+              <span className="text-[10px] text-emerald-700 font-bold block">{lang === 'gu' ? 'પૂર્ણ' : 'Done'}</span>
+              <span className="text-base font-black text-emerald-600">{completedTasksCount}</span>
+            </div>
+          </div>
+
+          {/* Search Box */}
+          <div className="relative">
+            <SearchIcon size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder={lang === 'gu' ? 'કામ કે વિગત શોધો...' : 'Search tasks & checklists...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full text-xs pl-9 pr-8 py-2 rounded-2xl bg-white border border-slate-200 focus:outline-indigo-500 font-medium placeholder:text-slate-400 shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <XIcon size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Date Filter Tabs (All, Today, Upcoming) */}
           <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
             <button
               onClick={() => setDateFilter('all')}
@@ -415,7 +645,7 @@ export default function RemindersTab({
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               }`}
             >
-              {t('today', lang)}
+              {t('today', lang)} ({todayTasksCount})
             </button>
 
             <button
@@ -426,7 +656,7 @@ export default function RemindersTab({
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               }`}
             >
-              🚀 {t('upcoming', lang)} ({futureTasksCount})
+              🚀 {lang === 'gu' ? 'આગામી (Upcoming)' : t('upcoming', lang)} ({futureTasksCount})
             </button>
           </div>
 
@@ -436,7 +666,7 @@ export default function RemindersTab({
               <button
                 key={tItem.id}
                 onClick={() => setSelectedTaskType(tItem.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
                   selectedTaskType === tItem.id
                     ? 'bg-slate-800 text-white shadow-xs'
                     : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
@@ -447,12 +677,35 @@ export default function RemindersTab({
             ))}
           </div>
 
+          {/* Priority Quick Filter */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+            <span className="text-[11px] font-bold text-slate-400 shrink-0">{lang === 'gu' ? 'પ્રાથમિકતા:' : 'Priority:'}</span>
+            {[
+              { id: 'all', label: lang === 'gu' ? 'બધી' : 'All' },
+              { id: 'high', label: '🔴 ' + t('priority_high', lang) },
+              { id: 'medium', label: '🟡 ' + t('priority_medium', lang) },
+              { id: 'low', label: '🟢 ' + t('priority_low', lang) },
+            ].map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPriorityFilter(p.id)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition whitespace-nowrap ${
+                  priorityFilter === p.id
+                    ? 'bg-slate-700 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
           {/* Shopping Shortcut Banner */}
           {selectedTaskType === 'shopping' && onOpenShopping && (
             <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-3 flex items-center justify-between shadow-2xs">
               <div className="flex items-center gap-2.5">
                 <span className="p-2 bg-emerald-600 text-white rounded-xl shadow-xs">
-                  <ShoppingCart size={18} />
+                  <ShoppingCartIcon size={18} />
                 </span>
                 <div>
                   <h4 className="text-xs font-bold text-emerald-950">
@@ -473,15 +726,17 @@ export default function RemindersTab({
             </div>
           )}
 
-          {/* Completed toggle checkbox */}
+          {/* Completed toggle checkbox & count */}
           <div className="flex items-center justify-between px-1 text-xs text-slate-500">
-            <span>કુલ: {filteredTasks.length} કામો</span>
+            <span>
+              {lang === 'gu' ? `દર્શાવેલ: ${filteredTasks.length} કામો` : `Showing: ${filteredTasks.length} tasks`}
+            </span>
             <label className="flex items-center gap-1.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={showCompleted}
                 onChange={(e) => setShowCompleted(e.target.checked)}
-                className="w-3.5 h-3.5 text-indigo-600 rounded-sm"
+                className="w-3.5 h-3.5 text-indigo-600 rounded-sm cursor-pointer"
               />
               {t('show_completed', lang)}
             </label>
@@ -489,12 +744,19 @@ export default function RemindersTab({
 
           {/* Reminders List */}
           {filteredTasks.length === 0 ? (
-            <div className="bg-white rounded-3xl p-8 text-center border border-slate-200 space-y-2">
+            <div className="bg-white rounded-3xl p-8 text-center border border-slate-200 space-y-2.5">
               <span className="text-4xl block">🎉</span>
               <h3 className="text-sm font-bold text-slate-700">{t('no_tasks', lang)}</h3>
               <p className="text-xs text-slate-400 max-w-xs mx-auto">
                 {t('no_tasks_sub', lang)}
               </p>
+              <button
+                onClick={() => handleOpenAddTask(todayStr)}
+                className="mt-2 inline-flex items-center gap-1 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 active:scale-95 transition shadow-sm"
+              >
+                <PlusIcon size={14} />
+                <span>{t('new_task', lang)}</span>
+              </button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -504,26 +766,24 @@ export default function RemindersTab({
                 const isShopping = r.type === 'shopping';
                 const isWork = r.type === 'work';
                 const isFuture = r.date > todayStr;
+                const subStats = getSubtaskStats(r.description);
 
                 return (
                   <div
                     key={r.id}
-                    className={`p-4 rounded-3xl border transition shadow-xs bg-white ${
+                    className={`p-4 rounded-3xl border transition shadow-xs bg-white relative overflow-hidden ${
                       r.isCompleted
-                        ? 'opacity-60 border-slate-200 bg-slate-50'
-                        : isShopping
-                        ? 'border-emerald-200/90 hover:border-emerald-300'
-                        : isWork
-                        ? 'border-blue-200/90 hover:border-blue-300'
-                        : isBank
-                        ? 'border-amber-200/90 hover:border-amber-300'
-                        : isMeeting
-                        ? 'border-indigo-200/90 hover:border-indigo-300'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? 'opacity-65 border-slate-200 bg-slate-50'
+                        : r.priority === 'high'
+                        ? 'border-l-4 border-l-rose-500 border-slate-200 hover:border-slate-300'
+                        : r.priority === 'medium'
+                        ? 'border-l-4 border-l-amber-500 border-slate-200 hover:border-slate-300'
+                        : 'border-l-4 border-l-emerald-500 border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {/* Completion Checkmark Button */}
                         <button
                           onClick={() => handleToggleComplete(r.id)}
                           className={`w-7 h-7 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0 mt-0.5 ${
@@ -532,11 +792,13 @@ export default function RemindersTab({
                               : 'border-2 border-slate-300 hover:border-indigo-500 text-transparent'
                           }`}
                         >
-                          <CheckCircle2 size={18} />
+                          <CheckCircle2Icon size={18} />
                         </button>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
+                          {/* Tags Bar */}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {/* Type badge */}
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
                                 isShopping
@@ -553,7 +815,7 @@ export default function RemindersTab({
                               {isShopping
                                 ? (t('shopping_task', lang) || '🛒 ખરીદી')
                                 : isWork
-                                ? (t('work_task', lang) || '💼 ઓફિસ / કામ')
+                                ? (t('work_task', lang) || '💼 કામ')
                                 : isBank
                                 ? t('bank_work', lang)
                                 : isMeeting
@@ -561,29 +823,96 @@ export default function RemindersTab({
                                 : t('task', lang)}
                             </span>
 
+                            {/* Priority tag */}
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                                r.priority === 'high'
+                                  ? 'bg-rose-100 text-rose-800'
+                                  : r.priority === 'medium'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-emerald-100 text-emerald-800'
+                              }`}
+                            >
+                              {r.priority === 'high'
+                                ? '🔴 ' + t('priority_high', lang)
+                                : r.priority === 'medium'
+                                ? '🟡 ' + t('priority_medium', lang)
+                                : '🟢 ' + t('priority_low', lang)}
+                            </span>
+
+                            {/* Advance Date indicator */}
                             {isFuture && (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-cyan-100 text-cyan-800 flex items-center gap-1">
-                                <Calendar size={11} />
+                                <CalendarIcon size={11} />
                                 {t('advance', lang)}: {r.date}
                               </span>
                             )}
 
-                            <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
-                              <Clock size={12} />
+                            {/* Time badge */}
+                            <span className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                              <ClockIcon size={12} className="text-slate-400" />
                               {r.time}
                             </span>
+
+                            {/* Ringtone badge */}
+                            {r.hasAlarm && (
+                              <span
+                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200/60 flex items-center gap-1"
+                                title="સેટ કરેલ રીંગટોન"
+                              >
+                                <MusicIcon size={10} className="text-purple-600" />
+                                <span>{getRingtoneDisplayName(r.ringtone)}</span>
+                              </span>
+                            )}
+
+                            {/* Repeat badge */}
+                            {r.repeat && r.repeat !== 'none' && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 flex items-center gap-1">
+                                <RepeatIcon size={10} />
+                                {r.repeat === 'daily'
+                                  ? (lang === 'gu' ? 'દરરોજ' : 'Daily')
+                                  : r.repeat === 'weekly'
+                                  ? (lang === 'gu' ? 'દર અઠવાડિયે' : 'Weekly')
+                                  : (lang === 'gu' ? 'દર મહિને' : 'Monthly')}
+                              </span>
+                            )}
                           </div>
 
+                          {/* Task Title */}
                           <h4
-                            className={`text-sm font-bold mt-1 ${
+                            className={`text-sm font-bold mt-1.5 ${
                               r.isCompleted ? 'line-through text-slate-400' : 'text-slate-800'
                             }`}
                           >
                             {r.title}
                           </h4>
 
+                          {/* Subtask checklist progress bar */}
+                          {subStats && (
+                            <div className="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-200/70 space-y-1">
+                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
+                                <span className="flex items-center gap-1">
+                                  <CheckSquareIcon size={12} className="text-indigo-600" />
+                                  {lang === 'gu' ? 'ચેકલિસ્ટ પ્રગતિ' : 'Checklist Progress'}
+                                </span>
+                                <span>
+                                  {subStats.completed}/{subStats.total} {lang === 'gu' ? 'પૂર્ણ' : 'done'} ({subStats.percent}%)
+                                </span>
+                              </div>
+                              <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full transition-all duration-300 ${
+                                    subStats.percent === 100 ? 'bg-emerald-500' : 'bg-indigo-600'
+                                  }`}
+                                  style={{ width: `${subStats.percent}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Checklist items in description */}
                           {r.description && (
-                            <div className="mt-1.5 space-y-1">
+                            <div className="mt-2 space-y-1">
                               {r.description.split('\n').map((line, lIdx) => {
                                 const trimmed = line.trim();
                                 const isCheckItem =
@@ -604,9 +933,9 @@ export default function RemindersTab({
                                         e.stopPropagation();
                                         handleToggleTaskSubItem(r.id, lIdx);
                                       }}
-                                      className={`text-xs flex items-center gap-2 text-left py-0.5 px-1 rounded-md transition ${
+                                      className={`text-xs flex items-center gap-2 text-left py-0.5 px-1.5 rounded-lg transition ${
                                         isChecked
-                                          ? 'line-through text-slate-400 hover:text-slate-500'
+                                          ? 'line-through text-slate-400 hover:text-slate-500 bg-slate-50'
                                           : 'text-slate-700 hover:bg-slate-100 font-medium'
                                       }`}
                                     >
@@ -618,7 +947,7 @@ export default function RemindersTab({
                                   );
                                 }
                                 return (
-                                  <p key={lIdx} className="text-xs text-slate-500 leading-relaxed">
+                                  <p key={lIdx} className="text-xs text-slate-500 leading-relaxed pl-1">
                                     {line}
                                   </p>
                                 );
@@ -628,7 +957,7 @@ export default function RemindersTab({
                         </div>
                       </div>
 
-                      {/* Actions */}
+                      {/* Right-side Card Actions */}
                       <div className="flex items-center gap-1 shrink-0">
                         {/* 1-Tap WhatsApp Share */}
                         <button
@@ -636,23 +965,35 @@ export default function RemindersTab({
                           className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition"
                           title={t('whatsapp_share', lang)}
                         >
-                          <Share2 size={16} />
+                          <Share2Icon size={16} />
                         </button>
 
+                        {/* Test Alarm Sound */}
                         {onTriggerAlarm && (
                           <button
-                            onClick={() =>
+                            onClick={() => {
+                              const ringtoneToPlay =
+                                r.ringtone && r.ringtone !== 'default'
+                                  ? r.ringtone
+                                  : alarmSettings.ringtone;
+                              const customAudioToPlay =
+                                ringtoneToPlay === 'custom'
+                                  ? r.customAudioUrl || alarmSettings.customRingtoneData
+                                  : null;
                               onTriggerAlarm({
+                                id: r.id,
                                 title: r.title,
                                 time: r.time,
                                 type: r.type,
                                 description: r.description,
-                              })
-                            }
+                                ringtone: ringtoneToPlay,
+                                customAudioUrl: customAudioToPlay,
+                              });
+                            }}
                             className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition"
-                            title={t('test', lang)}
+                            title={lang === 'gu' ? 'એલાર્મ સાઉન્ડ ચેક કરો' : 'Test Alarm Sound'}
                           >
-                            <Volume2 size={16} />
+                            <Volume2Icon size={16} />
                           </button>
                         )}
 
@@ -661,7 +1002,7 @@ export default function RemindersTab({
                           className="p-2 text-slate-400 hover:text-indigo-600 rounded-xl transition"
                           title={t('edit', lang)}
                         >
-                          <Edit2 size={15} />
+                          <Edit2Icon size={15} />
                         </button>
 
                         <button
@@ -669,7 +1010,7 @@ export default function RemindersTab({
                           className="p-2 text-slate-300 hover:text-red-500 rounded-xl transition"
                           title={t('delete', lang)}
                         >
-                          <Trash2 size={15} />
+                          <Trash2Icon size={15} />
                         </button>
                       </div>
                     </div>
@@ -682,7 +1023,7 @@ export default function RemindersTab({
       )}
 
       {/* ======================================================= */}
-      {/* 2. BIRTHDAYS & ANNIVERSARIES CELEBRATION VIEW           */}
+      {/* 4. BIRTHDAYS & ANNIVERSARIES CELEBRATION VIEW           */}
       {/* ======================================================= */}
       {activeSubView === 'events' && (
         <div className="space-y-4">
@@ -705,7 +1046,7 @@ export default function RemindersTab({
                   onClick={() => confetti({ particleCount: 70, spread: 80, origin: { y: 0.4 } })}
                   className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition active:scale-95"
                 >
-                  <Sparkles size={16} />
+                  <SparklesIcon size={16} />
                 </button>
               </div>
 
@@ -748,7 +1089,7 @@ export default function RemindersTab({
                         }
                         className="w-full sm:w-auto px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-emerald-700/30 active:scale-95 transition"
                       >
-                        <MessageCircle size={15} />
+                        <MessageCircleIcon size={15} />
                         <span>{t('wish_whatsapp', lang)}</span>
                       </button>
                     </div>
@@ -778,7 +1119,7 @@ export default function RemindersTab({
                 onClick={handleOpenAddEvent}
                 className="mt-3 inline-flex items-center gap-1 px-4 py-2 bg-pink-600 text-white rounded-xl text-xs font-bold hover:bg-pink-700 transition"
               >
-                <Plus size={14} />
+                <PlusIcon size={14} />
                 <span>{t('add_event', lang)}</span>
               </button>
             </div>
@@ -843,7 +1184,7 @@ export default function RemindersTab({
 
                           <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 mt-2">
                             <span className="flex items-center gap-1 font-semibold text-slate-700">
-                              <Calendar size={12} className="text-pink-600" />
+                              <CalendarIcon size={12} className="text-pink-600" />
                               {t('date', lang)}: {ev.date}
                             </span>
 
@@ -866,7 +1207,7 @@ export default function RemindersTab({
                                 href={`tel:${ev.phone}`}
                                 className="flex items-center gap-1 text-blue-600 font-bold hover:underline"
                               >
-                                <Phone size={12} />
+                                <PhoneIcon size={12} />
                                 {ev.phone}
                               </a>
                             )}
@@ -891,7 +1232,7 @@ export default function RemindersTab({
                           className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs active:scale-95 transition"
                           title={t('wish_whatsapp', lang)}
                         >
-                          <MessageCircle size={14} />
+                          <MessageCircleIcon size={14} />
                           <span className="hidden sm:inline">{t('wish_whatsapp', lang)}</span>
                         </button>
 
@@ -900,7 +1241,7 @@ export default function RemindersTab({
                           className="p-1.5 text-slate-400 hover:text-pink-600 rounded-lg transition"
                           title="સુધારો"
                         >
-                          <Edit2 size={15} />
+                          <Edit2Icon size={15} />
                         </button>
 
                         <button
@@ -908,7 +1249,7 @@ export default function RemindersTab({
                           className="p-1.5 text-slate-300 hover:text-red-500 rounded-lg transition"
                           title="કાઢી નાખો"
                         >
-                          <Trash2 size={15} />
+                          <Trash2Icon size={15} />
                         </button>
                       </div>
                     </div>
@@ -921,11 +1262,306 @@ export default function RemindersTab({
       )}
 
       {/* ======================================================= */}
-      {/* MODAL 1: ADD / EDIT TASK WITH ADVANCE DATE PRESETS      */}
+      {/* MODAL 1: RINGTONE & ALARM SOUND SETTINGS MODAL          */}
+      {/* ======================================================= */}
+      {isRingtoneModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="p-2 bg-purple-100 text-purple-700 rounded-xl">
+                  <MusicIcon size={20} />
+                </span>
+                <div>
+                  <h3 className="text-base font-black text-slate-800">
+                    {lang === 'gu' ? '🔔 એલાર્મ & રીંગટોન સેટિંગ્સ' : '🔔 Alarm & Ringtone Settings'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {lang === 'gu' ? 'કામો અને દવાઓ માટે મનપસંદ રિંગટોન પસંદ કરો' : 'Choose mobile ringtone for reminders'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  soundAlarm.stopAlarm();
+                  setPreviewingRingtone(null);
+                  setIsRingtoneModalOpen(false);
+                }}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <XIcon size={18} />
+              </button>
+            </div>
+
+            {/* Currently Selected Ringtone Banner */}
+            <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border border-purple-200 rounded-2xl p-3.5 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wide">
+                  {lang === 'gu' ? 'હાલની સેટ કરેલી રિંગટોન' : 'Active Ringtone'}
+                </span>
+                <h4 className="text-sm font-black text-slate-800 mt-0.5">
+                  {alarmSettings.ringtone === 'custom'
+                    ? `📁 ${alarmSettings.customRingtoneName || 'મોબાઈલ ઓડિયો'}`
+                    : getRingtoneDisplayName(alarmSettings.ringtone)}
+                </h4>
+              </div>
+              <button
+                onClick={() =>
+                  handleTogglePreview(
+                    alarmSettings.ringtone,
+                    alarmSettings.customRingtoneData
+                  )
+                }
+                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+              >
+                {previewingRingtone === alarmSettings.ringtone ? (
+                  <>
+                    <SquareIcon size={13} />
+                    <span>{lang === 'gu' ? 'બંધ કરો' : 'Stop'}</span>
+                  </>
+                ) : (
+                  <>
+                    <PlayIcon size={13} />
+                    <span>{lang === 'gu' ? 'સાંભળો' : 'Test'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Section 1: Built-in Melodic Ringtones */}
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-700 block">
+                {lang === 'gu' ? '🎵 બિલ્ટ-ઇન રીંગટોન્સ (ઑફલાઇન)' : '🎵 Built-in Ringtones (Offline)'}
+              </label>
+              <div className="space-y-1.5">
+                {RINGTONE_OPTIONS.filter((r) => r.id !== 'custom').map((opt) => {
+                  const isSelected = alarmSettings.ringtone === opt.id;
+                  const isPreviewing = previewingRingtone === opt.id;
+
+                  return (
+                    <div
+                      key={opt.id}
+                      onClick={() => handleSelectDefaultRingtone(opt.id)}
+                      className={`p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? 'border-purple-500 bg-purple-50/40 ring-1 ring-purple-400'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
+                        <span className="text-xl shrink-0">{opt.icon}</span>
+                        <div className="min-w-0">
+                          <h5 className="text-xs font-bold text-slate-800 truncate">
+                            {lang === 'gu' ? opt.nameGu : opt.nameEn}
+                          </h5>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {opt.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {/* Preview play button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTogglePreview(opt.id);
+                          }}
+                          className={`p-2 rounded-xl transition ${
+                            isPreviewing
+                              ? 'bg-purple-600 text-white animate-pulse'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                          title="સાંભળો"
+                        >
+                          {isPreviewing ? <SquareIcon size={14} /> : <PlayIcon size={14} />}
+                        </button>
+
+                        {/* Selection check */}
+                        <div
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                            isSelected
+                              ? 'bg-purple-600 border-purple-600 text-white'
+                              : 'border-slate-300 text-transparent'
+                          }`}
+                        >
+                          <CheckIcon size={12} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Section 2: Custom Mobile Ringtone Upload */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <label className="text-xs font-black text-slate-700 block">
+                {lang === 'gu' ? '📁 તમારા મોબાઈલમાંથી રિંગટોન પસંદ કરો' : '📁 Custom Mobile Audio File'}
+              </label>
+
+              {alarmSettings.customRingtoneData ? (
+                <div
+                  onClick={() => handleSelectDefaultRingtone('custom')}
+                  className={`p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                    alarmSettings.ringtone === 'custom'
+                      ? 'border-purple-500 bg-purple-50/40 ring-1 ring-purple-400'
+                      : 'border-slate-200 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
+                    <span className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+                      <SmartphoneIcon size={18} />
+                    </span>
+                    <div className="min-w-0">
+                      <h5 className="text-xs font-bold text-slate-800 truncate">
+                        {alarmSettings.customRingtoneName || 'મોબાઈલ ઓડિયો ફાઈલ'}
+                      </h5>
+                      <span className="text-[10px] text-emerald-600 font-semibold">
+                        {lang === 'gu' ? 'સફળતાપૂર્વક અપલોડ થયેલ' : 'Ready to play'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTogglePreview('custom', alarmSettings.customRingtoneData);
+                      }}
+                      className={`p-2 rounded-xl transition ${
+                        previewingRingtone === 'custom'
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      {previewingRingtone === 'custom' ? (
+                        <SquareIcon size={14} />
+                      ) : (
+                        <PlayIcon size={14} />
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveCustomAudio();
+                      }}
+                      className="p-2 text-slate-400 hover:text-red-500 rounded-xl transition"
+                      title="હટાવો"
+                    >
+                      <Trash2Icon size={14} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-purple-200 hover:border-purple-400 rounded-2xl bg-purple-50/30 cursor-pointer transition text-center group">
+                  <UploadIcon size={24} className="text-purple-600 mb-1 group-hover:scale-110 transition" />
+                  <span className="text-xs font-bold text-purple-900">
+                    {lang === 'gu' ? 'મોબાઈલ માંથી .mp3 / .wav / .m4a લાવો' : 'Upload MP3 / WAV from Phone'}
+                  </span>
+                  <span className="text-[10px] text-purple-600/80 mt-0.5">
+                    {lang === 'gu' ? 'તમારું મનપસંદ ગીત કે રિંગટોન સેટ કરો (Max 5MB)' : 'Select your favorite tune (Max 5MB)'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleUploadCustomRingtone}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* Section 3: Volume & Vibration Controls */}
+            <div className="space-y-3 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <SlidersIcon size={14} className="text-purple-600" />
+                  <span>{lang === 'gu' ? 'એલાર્મ અવાજ (Volume)' : 'Alarm Volume'}</span>
+                </label>
+                <span className="text-xs font-bold text-slate-600">
+                  {Math.round((alarmSettings.volume ?? 1) * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.2"
+                max="1.0"
+                step="0.1"
+                value={alarmSettings.volume ?? 1}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="w-full accent-purple-600 cursor-pointer"
+              />
+
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-700">
+                    {lang === 'gu' ? '📳 મોબાઈલ વાઇબ્રેશન (Vibration)' : '📳 Mobile Vibration'}
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={alarmSettings.vibrate ?? true}
+                  onChange={handleToggleVibrate}
+                  className="w-4 h-4 text-purple-600 rounded-sm cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="pt-2 flex gap-2">
+              {onTriggerAlarm && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundAlarm.stopAlarm();
+                    setPreviewingRingtone(null);
+                    onTriggerAlarm({
+                      id: 'test-ringtone-' + Date.now(),
+                      title: lang === 'gu' ? 'રીંગટોન ટેસ્ટ એલાર્મ' : 'Ringtone Test Alarm',
+                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                      type: 'task',
+                      description: lang === 'gu' ? 'આ અવાજ અને રીંગટોન સાથે તમારું એલાર્મ વાગશે.' : 'This ringtone will play for your reminders.',
+                      ringtone: alarmSettings.ringtone,
+                      customAudioUrl: alarmSettings.customRingtoneData,
+                      customRingtoneName: alarmSettings.customRingtoneName,
+                    });
+                    setIsRingtoneModalOpen(false);
+                  }}
+                  className="flex-1 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-purple-200"
+                >
+                  <Volume2Icon size={15} />
+                  <span>{lang === 'gu' ? 'ફૂલ એલાર્મ ટેસ્ટ' : 'Test Full Alarm'}</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  soundAlarm.stopAlarm();
+                  setPreviewingRingtone(null);
+                  setIsRingtoneModalOpen(false);
+                }}
+                className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-600/30 transition text-center"
+              >
+                {lang === 'gu' ? 'સાચવો અને બહાર નીકળો' : 'Done & Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================= */}
+      {/* MODAL 2: ADD / EDIT TASK WITH ADVANCE DATE & RINGTONE   */}
       {/* ======================================================= */}
       {isTaskModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-3.5 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <h3 className="text-base font-bold text-slate-800">
                 {editingReminder
@@ -937,14 +1573,19 @@ export default function RemindersTab({
                   : (lang === 'gu' ? 'નવું કામ / મીટિંગ ઉમેરો' : t('new_task', lang))}
               </h3>
               <button
-                onClick={() => setIsTaskModalOpen(false)}
+                onClick={() => {
+                  soundAlarm.stopAlarm();
+                  setPreviewingRingtone(null);
+                  setIsTaskModalOpen(false);
+                }}
                 className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
               >
-                <X size={18} />
+                <XIcon size={18} />
               </button>
             </div>
 
             <form onSubmit={handleSaveTask} className="space-y-3">
+              {/* Task Title */}
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
                   {type === 'shopping'
@@ -970,12 +1611,13 @@ export default function RemindersTab({
                 />
               </div>
 
+              {/* Type selector */}
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">{t('type', lang)}</label>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
                   {[
                     { id: 'task', label: t('task', lang) },
-                    { id: 'work', label: t('work_task', lang) || '💼 ઓફિસ / કામ' },
+                    { id: 'work', label: t('work_task', lang) || '💼 કામ' },
                     { id: 'shopping', label: t('shopping_task', lang) || '🛒 ખરીદી' },
                     { id: 'meeting', label: t('meeting', lang) },
                     { id: 'bank', label: t('bank_work', lang) },
@@ -1036,7 +1678,7 @@ export default function RemindersTab({
                     }}
                     className="px-2.5 py-1 rounded-lg font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
                   >
-                    +7 {t('days_left_suffix', lang)}
+                    +7 {lang === 'gu' ? 'દિવસ' : 'Days'}
                   </button>
                 </div>
                 <input
@@ -1047,6 +1689,7 @@ export default function RemindersTab({
                 />
               </div>
 
+              {/* Time & Priority Grid */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">{t('time', lang)}</label>
@@ -1071,6 +1714,83 @@ export default function RemindersTab({
                 </div>
               </div>
 
+              {/* Ringtone Selector for this Task */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <MusicIcon size={13} className="text-purple-600" />
+                    <span>{lang === 'gu' ? 'આ કામની રીંગટોન' : 'Task Ringtone'}</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const toneToPlay =
+                        taskRingtone === 'default'
+                          ? alarmSettings.ringtone
+                          : taskRingtone;
+                      const audioData =
+                        toneToPlay === 'custom'
+                          ? alarmSettings.customRingtoneData
+                          : null;
+                      handleTogglePreview(toneToPlay, audioData);
+                    }}
+                    className="text-[10px] font-bold text-purple-700 hover:text-purple-900 bg-purple-50 px-2 py-0.5 rounded-md flex items-center gap-1 transition"
+                  >
+                    {previewingRingtone ? (
+                      <>
+                        <SquareIcon size={10} />
+                        <span>{lang === 'gu' ? 'બંધ કરો' : 'Stop'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <PlayIcon size={10} />
+                        <span>{lang === 'gu' ? 'સાંભળો' : 'Preview'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <select
+                  value={taskRingtone}
+                  onChange={(e) => setTaskRingtone(e.target.value)}
+                  className="w-full text-xs p-2 rounded-xl border border-slate-200 font-bold bg-white"
+                >
+                  <option value="default">
+                    {lang === 'gu'
+                      ? `🔔 ડિફોલ્ટ (${getRingtoneDisplayName(alarmSettings.ringtone)})`
+                      : `🔔 Default (${getRingtoneDisplayName(alarmSettings.ringtone)})`}
+                  </option>
+                  {RINGTONE_OPTIONS.filter((r) => r.id !== 'custom').map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {lang === 'gu' ? opt.nameGu : opt.nameEn}
+                    </option>
+                  ))}
+                  {alarmSettings.customRingtoneData && (
+                    <option value="custom">
+                      📁 {alarmSettings.customRingtoneName || 'મોબાઈલ ઓડિયો'}
+                    </option>
+                  )}
+                </select>
+              </div>
+
+              {/* Repeat Frequency Option */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  <RepeatIcon size={12} className="inline mr-1 text-slate-500" />
+                  {lang === 'gu' ? 'રીપીટ (વારંવારતા)' : 'Repeat Frequency'}
+                </label>
+                <select
+                  value={taskRepeat}
+                  onChange={(e) => setTaskRepeat(e.target.value)}
+                  className="w-full text-xs p-2 rounded-xl border border-slate-200 font-bold bg-white"
+                >
+                  <option value="none">{lang === 'gu' ? 'એક જ વાર (No repeat)' : 'Once'}</option>
+                  <option value="daily">{lang === 'gu' ? 'દરરોજ (Daily)' : 'Daily'}</option>
+                  <option value="weekly">{lang === 'gu' ? 'દર અઠવાડિયે (Weekly)' : 'Weekly'}</option>
+                  <option value="monthly">{lang === 'gu' ? 'દર મહિને (Monthly)' : 'Monthly'}</option>
+                </select>
+              </div>
+
+              {/* Checklist / Description */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-slate-700">
@@ -1085,7 +1805,7 @@ export default function RemindersTab({
                     }}
                     className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-md flex items-center gap-1 transition"
                   >
-                    <CheckSquare size={11} />
+                    <CheckSquareIcon size={11} />
                     {lang === 'gu' ? '+ નવી આઇટમ (☐)' : '+ New Item (☐)'}
                   </button>
                 </div>
@@ -1140,13 +1860,14 @@ export default function RemindersTab({
                 />
               </div>
 
+              {/* Sound Alarm Checkbox */}
               <div className="flex items-center gap-2 pt-1">
                 <input
                   type="checkbox"
                   id="alarm-check"
                   checked={hasAlarm}
                   onChange={(e) => setHasAlarm(e.target.checked)}
-                  className="w-4 h-4 text-indigo-600 rounded-sm"
+                  className="w-4 h-4 text-indigo-600 rounded-sm cursor-pointer"
                 />
                 <label htmlFor="alarm-check" className="text-xs font-bold text-slate-700 cursor-pointer">
                   {t('sound_alarm_label', lang)}
@@ -1156,7 +1877,11 @@ export default function RemindersTab({
               <div className="pt-2 flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsTaskModalOpen(false)}
+                  onClick={() => {
+                    soundAlarm.stopAlarm();
+                    setPreviewingRingtone(null);
+                    setIsTaskModalOpen(false);
+                  }}
                   className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
                 >
                   {t('cancel', lang)}
@@ -1174,11 +1899,11 @@ export default function RemindersTab({
       )}
 
       {/* ======================================================= */}
-      {/* MODAL 2: ADD / EDIT BIRTHDAY & ANNIVERSARY              */}
+      {/* MODAL 3: ADD / EDIT BIRTHDAY & ANNIVERSARY              */}
       {/* ======================================================= */}
       {isEventModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <h3 className="text-base font-bold text-slate-800">
                 {editingEvent ? t('edit', lang) : t('add_event', lang)}
@@ -1187,7 +1912,7 @@ export default function RemindersTab({
                 onClick={() => setIsEventModalOpen(false)}
                 className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
               >
-                <X size={18} />
+                <XIcon size={18} />
               </button>
             </div>
 
@@ -1199,7 +1924,6 @@ export default function RemindersTab({
                 <input
                   type="text"
                   required
-                  placeholder=""
                   value={evName}
                   onChange={(e) => setEvName(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-pink-500 font-bold"
@@ -1246,7 +1970,6 @@ export default function RemindersTab({
                   <label className="text-xs font-bold text-slate-700 block mb-1">{t('relation', lang)}</label>
                   <input
                     type="text"
-                    placeholder=""
                     value={evRelation}
                     onChange={(e) => setEvRelation(e.target.value)}
                     className="w-full text-xs p-2 rounded-xl border border-slate-200 font-bold"
@@ -1271,7 +1994,6 @@ export default function RemindersTab({
                 <label className="text-xs font-bold text-slate-700 block mb-1">{t('notes', lang)}</label>
                 <textarea
                   rows={2}
-                  placeholder=""
                   value={evNotes}
                   onChange={(e) => setEvNotes(e.target.value)}
                   className="w-full text-xs p-2 rounded-xl border border-slate-200 focus:outline-pink-500"

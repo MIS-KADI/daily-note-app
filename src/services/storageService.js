@@ -18,10 +18,16 @@ const STORAGE_KEYS = {
   KHATA: 'daily_diary_khata',
   EVENTS: 'daily_diary_events',
   PEDOMETER_AUTO: 'daily_diary_pedometer_auto',
+  ALARM_SETTINGS: 'daily_diary_alarm_settings',
 };
 
-
-
+const DEFAULT_ALARM_SETTINGS = {
+  ringtone: 'classic_bell',
+  customRingtoneName: '',
+  customRingtoneData: null,
+  volume: 1.0,
+  vibrate: true,
+};
 
 const DEFAULT_USER = {
   name: '',
@@ -479,6 +485,23 @@ export const storageService = {
 
   saveEvents(events) {
     localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+  },
+
+  getAlarmSettings() {
+    const data = localStorage.getItem(STORAGE_KEYS.ALARM_SETTINGS);
+    if (!data) {
+      localStorage.setItem(STORAGE_KEYS.ALARM_SETTINGS, JSON.stringify(DEFAULT_ALARM_SETTINGS));
+      return DEFAULT_ALARM_SETTINGS;
+    }
+    try {
+      return { ...DEFAULT_ALARM_SETTINGS, ...JSON.parse(data) };
+    } catch {
+      return DEFAULT_ALARM_SETTINGS;
+    }
+  },
+
+  saveAlarmSettings(settings) {
+    localStorage.setItem(STORAGE_KEYS.ALARM_SETTINGS, JSON.stringify(settings));
   },
 
   getDailyQuote(lang, offset = 0) {
