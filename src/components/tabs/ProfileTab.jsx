@@ -19,7 +19,6 @@ import { storageService } from '../../services/storageService';
 import { biometricService } from '../../services/biometricService';
 import { t } from '../../services/i18n';
 import CartoonVideoPlayerCard from '../CartoonVideoPlayerCard';
-import OtpVerificationModal from '../OtpVerificationModal';
 
 export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpenSignup, onOpenMobilePermissions, lang = 'gu' }) {
   const [name, setName] = useState(user?.name || '');
@@ -30,9 +29,6 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpen
   const [isPinRequired, setIsPinRequired] = useState(user?.isPinRequired ?? false);
   const [pin, setPin] = useState(user?.pin || '1234');
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(user?.isBiometricEnabled ?? true);
-  const [isMobileVerified, setIsMobileVerified] = useState(user?.isMobileVerified ?? true);
-  const [isEmailVerified, setIsEmailVerified] = useState(user?.isEmailVerified ?? true);
-  const [otpModalConfig, setOtpModalConfig] = useState({ isOpen: false, type: 'mobile', target: '' });
   const [isNightDiaryReminder, setIsNightDiaryReminder] = useState(user?.isNightDiaryReminder ?? true);
   const [isWaterReminder, setIsWaterReminder] = useState(user?.isWaterReminder ?? true);
   const [savedNotice, setSavedNotice] = useState(false);
@@ -78,30 +74,6 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpen
       onUpdateUser(updated);
       setBiometricNotice(lang === 'gu' ? 'બાયોમેટ્રિક લૉક બંધ કરવામાં આવ્યું.' : 'Biometrics disabled.');
       setTimeout(() => setBiometricNotice(''), 2500);
-    }
-  };
-
-  const handleOtpVerified = (verifiedTarget) => {
-    if (otpModalConfig.type === 'mobile') {
-      setIsMobileVerified(true);
-      const updated = {
-        ...user,
-        mobile,
-        isMobileVerified: true,
-      };
-      onUpdateUser(updated);
-      setBiometricNotice(lang === 'gu' ? '✅ મોબાઇલ નંબર OTP થી સફળતાપૂર્વક વેરિફાય થયો!' : 'Mobile Verified!');
-      setTimeout(() => setBiometricNotice(''), 4000);
-    } else if (otpModalConfig.type === 'email') {
-      setIsEmailVerified(true);
-      const updated = {
-        ...user,
-        email,
-        isEmailVerified: true,
-      };
-      onUpdateUser(updated);
-      setBiometricNotice(lang === 'gu' ? '✅ ઈમેલ ID OTP થી સફળતાપૂર્વક વેરિફાય થયું!' : 'Email Verified!');
-      setTimeout(() => setBiometricNotice(''), 4000);
     }
   };
 
@@ -165,8 +137,6 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpen
       isPinRequired,
       pin,
       isBiometricEnabled,
-      isMobileVerified,
-      isEmailVerified,
       isNightDiaryReminder,
       isWaterReminder,
     };
@@ -236,16 +206,6 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpen
               </span>
             </div>
           </div>
-          {onOpenSignup && (
-            <button
-              type="button"
-              onClick={onOpenSignup}
-              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 active:scale-95 shadow-2xs"
-            >
-              <Sparkles size={12} />
-              <span>{lang === 'gu' ? 'નવું રજીસ્ટ્રેશન' : 'New Signup'}</span>
-            </button>
-          )}
         </div>
 
         {/* Edit Form */}
@@ -263,88 +223,36 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpen
             />
           </div>
 
-          {/* Mobile Number with OTP Verification */}
+          {/* Mobile Number */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-                <Phone size={12} className="text-slate-500" />
-                {t('mobile_number', lang)}
-              </label>
-              {isMobileVerified ? (
-                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
-                  <CheckCircle2 size={11} />
-                  {t('otp_verified', lang)}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-bold">
-                  <AlertTriangle size={11} />
-                  {lang === 'gu' ? 'OTP ચકાસણી બાકી' : 'Unverified'}
-                </span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="tel"
-                value={mobile}
-                onChange={(e) => {
-                  setMobile(e.target.value);
-                  if (e.target.value !== user?.mobile) setIsMobileVerified(false);
-                }}
-                className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                placeholder="+91 98765 43210"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setOtpModalConfig({ isOpen: true, type: 'mobile', target: mobile })}
-                className="px-3 py-2 bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-bold whitespace-nowrap active:scale-95 transition shadow-2xs flex items-center gap-1"
-              >
-                <span>📲</span>
-                <span>{isMobileVerified ? (lang === 'gu' ? 'OTP ચકાસો' : 'Verify') : (lang === 'gu' ? 'OTP મોકલો' : 'Send OTP')}</span>
-              </button>
-            </div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
+              <Phone size={12} className="text-slate-500" />
+              {t('mobile_number', lang)}
+            </label>
+            <input
+              type="tel"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              placeholder="+91 98765 43210"
+              required
+            />
           </div>
 
-          {/* Email ID with OTP Verification */}
+          {/* Email ID */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-                <Mail size={12} className="text-slate-500" />
-                {t('email_id', lang)}
-              </label>
-              {isEmailVerified ? (
-                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
-                  <CheckCircle2 size={11} />
-                  {t('confirmed', lang)}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-bold">
-                  <AlertTriangle size={11} />
-                  {lang === 'gu' ? 'ઈમેલ ચકાસણી બાકી' : 'Unverified'}
-                </span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (e.target.value !== user?.email) setIsEmailVerified(false);
-                }}
-                className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                placeholder="user@example.com"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setOtpModalConfig({ isOpen: true, type: 'email', target: email })}
-                className="px-3 py-2 bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-bold whitespace-nowrap active:scale-95 transition shadow-2xs flex items-center gap-1"
-              >
-                <span>📧</span>
-                <span>{isEmailVerified ? (lang === 'gu' ? 'OTP ચકાસો' : 'Verify') : (lang === 'gu' ? 'OTP મોકલો' : 'Send OTP')}</span>
-              </button>
-            </div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
+              <Mail size={12} className="text-slate-500" />
+              {t('email_id', lang)}
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              placeholder="user@example.com"
+              required
+            />
           </div>
 
           {/* Date of Birth (DOB) */}
@@ -644,17 +552,6 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpen
         </div>
         <CartoonVideoPlayerCard />
       </div>
-
-      {/* Universal Mobile & Email OTP Verification Modal */}
-      <OtpVerificationModal
-        isOpen={otpModalConfig.isOpen}
-        onClose={() => setOtpModalConfig({ isOpen: false, type: 'mobile', target: '' })}
-        type={otpModalConfig.type}
-        target={otpModalConfig.target}
-        user={user}
-        onVerified={handleOtpVerified}
-        lang={lang}
-      />
     </div>
   );
 }

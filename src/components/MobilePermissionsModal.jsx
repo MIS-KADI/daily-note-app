@@ -31,15 +31,14 @@ export default function MobilePermissionsModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    // Check Notification status
-    if ('Notification' in window) {
-      setNotifStatus(Notification.permission);
-    } else {
-      setNotifStatus('unsupported');
-    }
-
-    // Check Microphone permission state if Permissions API available
-    if (navigator.permissions && navigator.permissions.query) {
+    // Check Android Native Speech Bridge permission
+    if (window.AndroidSpeechBridge && typeof window.AndroidSpeechBridge.hasPermission === 'function') {
+      if (window.AndroidSpeechBridge.hasPermission()) {
+        setMicStatus('granted');
+      } else {
+        setMicStatus('prompt');
+      }
+    } else if (navigator.permissions && navigator.permissions.query) {
       navigator.permissions
         .query({ name: 'microphone' })
         .then((perm) => {
@@ -52,6 +51,13 @@ export default function MobilePermissionsModal({
     } else {
       setMicStatus('prompt');
     }
+
+    // Check Notification status
+    if ('Notification' in window) {
+      setNotifStatus(Notification.permission);
+    } else {
+      setNotifStatus('unsupported');
+    }
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -60,6 +66,25 @@ export default function MobilePermissionsModal({
   const handleTestMic = async () => {
     setIsTestingMic(true);
     try {
+      if (window.AndroidSpeechBridge) {
+        if (typeof window.AndroidSpeechBridge.requestPermission === 'function') {
+          window.AndroidSpeechBridge.requestPermission();
+        }
+        setTimeout(() => {
+          const granted = typeof window.AndroidSpeechBridge.hasPermission === 'function' 
+            ? window.AndroidSpeechBridge.hasPermission() 
+            : true;
+          if (granted) {
+            setMicStatus('granted');
+            aiAssistantService.speak('માઇક્રોફોન પરવાનગી સફળતાપૂર્વક સક્રિય થઈ ગઈ છે!', lang);
+          } else {
+            setMicStatus('denied');
+          }
+          setIsTestingMic(false);
+        }, 1000);
+        return;
+      }
+
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach((track) => track.stop());
@@ -242,22 +267,6 @@ export default function MobilePermissionsModal({
               <Volume2 size={12} />
               <span>સાઉન્ડ ટેસ્ટ કરો 🔊</span>
             </button>
-          </div>
-
-          {/* 4. Add to Home Screen (Mobile Installation Guide) */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-950/40 border border-blue-200 dark:border-indigo-900/50 space-y-2">
-            <div className="flex items-center gap-2 font-bold text-blue-900 dark:text-blue-200">
-              <Smartphone size={16} className="text-blue-600" />
-              <span>૪. મોબાઈલ હોમ સ્ક્રીન પર એપ સેવ કરો (PWA)</span>
-            </div>
-
-            <div className="text-[11px] text-slate-700 dark:text-slate-300 space-y-1 pl-1">
-              <p>• <b>Android Chrome:</b> ઉપર જમણે <b>(⋮) ત્રણ ટપકાં</b> પર ક્લિક કરો ➔ <b>'Add to Home screen'</b> પસંદ કરો.</p>
-              <p>• <b>iPhone Safari:</b> નીચે શેર આઇકન <b>(⎋)</b> ➔ <b>'Add to Home Screen'</b> દબાવો.</p>
-              <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold pt-0.5">
-                ⚡ આમ કરવાથી એપ ઇન્ટરનેટ વગર પણ ૧૦૦% ઓફલાઇન અને ફાસ્ટ ચાલશે!
-              </p>
-            </div>
           </div>
 
         </div>

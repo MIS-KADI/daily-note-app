@@ -52,31 +52,36 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.0.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.2.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
         uses: actions/upload-artifact@v4
         with:
           name: daily-diary-apk
-          path: daily-diary-v1.0.0.apk
+          path: |
+            daily-diary-v1.0.2.apk
+            Daily-Diary-App.apk
           retention-days: 30
 
       - name: Create or Update GitHub Release with APK
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.0
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.0)"
+          tag_name: v1.0.2
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.2 Latest)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.2)
 
-            આ APK ફાઇલ તમારા મોબાઇલમાં ઇન્સ્ટોલ કરવા માટે તૈયાર છે:
-            - **એપ બંધ હોય તો પણ એલાર્મ વાગશે:** નેટિવ Android AlarmManager અને LocalNotifications સપોર્ટ.
-            - **ઓફલાઈન મોડ:** ઇન્ટરનેટ વગર સંપૂર્ણ ડેટા સેવ થશે.
-            - **વોકિંગ સ્ટેપ ટ્રેકિંગ:** મોશન સેન્સર સાથે આપોઆપ સ્ટેપ ગણતરી.
-            - **દવાઓ & કામોના રીમાઇન્ડર:** હેડ્સ-અપ નોટિફિકેશન અને વાઇબ્રેશન.
+            આ અપડેટમાં નવી સુવિધાઓ:
+            - **નેટિવ માઇક્રોફોન અને સ્પીચ રેકગ્નિશન સુધારો:** Android Native SpeechRecognizer સાથે અવાજથી ઝડપી અને ૧૦૦% સચોટ ગુજરાતી ટાઇપિંગ.
+            - **પ્રોફાઇલ સરળ અને ક્લીન:** ઓટીપી અને અનિચ્છનીય વિકલ્પો હટાવી સીધી અને સરળ પ્રોફાઇલ.
+            - **સ્પીડ અને પર્ફોર્મન્સ બૂસ્ટ:** એકદમ સ્મૂધ અને ફાસ્ટ અનુભવ.
+            - **એપ બંધ હોય તો પણ એલાર્મ:** નેટિવ Android AlarmManager અને LocalNotifications સપોર્ટ.
 
-            નીચે આપેલ **`daily-diary-v1.0.0.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
-          files: daily-diary-v1.0.0.apk
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.2.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
+          files: |
+            daily-diary-v1.0.2.apk
+            Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

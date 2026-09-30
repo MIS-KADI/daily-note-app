@@ -101,6 +101,13 @@ export default function SmartAssistantModal({
   const currentPrompts = PROMPTS[lang] || PROMPTS.gu;
 
   const stopListening = () => {
+    if (window.AndroidSpeechBridge && typeof window.AndroidSpeechBridge.stopListening === 'function') {
+      try {
+        window.AndroidSpeechBridge.stopListening();
+      } catch (e) {
+        // Ignore
+      }
+    }
     try {
       recognitionRef.current?.stop();
     } catch (e) {
@@ -330,6 +337,25 @@ export default function SmartAssistantModal({
   };
 
   const startListening = async () => {
+    setVoiceError('');
+    setInterimText('');
+
+    // 1. Check if Android Native Speech Bridge is available (in APK)
+    if (window.AndroidSpeechBridge) {
+      try {
+        if (typeof window.AndroidSpeechBridge.hasPermission === 'function' && !window.AndroidSpeechBridge.hasPermission()) {
+          window.AndroidSpeechBridge.requestPermission();
+        }
+        setIsListening(true);
+        setParsedResult(null);
+        setIsSaved(false);
+        window.AndroidSpeechBridge.startListening(voiceLang);
+        return;
+      } catch (nativeErr) {
+        console.warn('Native speech bridge call failed, falling back to Web Speech:', nativeErr);
+      }
+    }
+
     if (!speechSupported) {
       setVoiceError(
         lang === 'gu'
@@ -339,25 +365,13 @@ export default function SmartAssistantModal({
       return;
     }
 
-    setVoiceError('');
-    setInterimText('');
-
-    // Pre-flight check audio permission via mediaDevices to trigger Android system permission popup
+    // Pre-flight check audio permission via mediaDevices if available
     if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach((track) => track.stop());
       } catch (micErr) {
         console.warn('Microphone permission check warning:', micErr);
-        if (micErr.name === 'NotAllowedError' || micErr.name === 'PermissionDeniedError') {
-          setVoiceError(
-            lang === 'gu'
-              ? 'માઇક્રોફોનની પરવાનગી નથી મળી. કૃપા કરીને સેટિંગ્સમાં માઇક્રોફોન Allow કરો.'
-              : 'Microphone permission denied. Please allow microphone access.'
-          );
-          setIsListening(false);
-          return;
-        }
       }
     }
 
@@ -393,11 +407,83 @@ export default function SmartAssistantModal({
     }
   };
 
-  // Initialize SpeechRecognition
+  // Register native Android SpeechBridge callbacks and Web SpeechRecognition
   useEffect(() => {
+    // 1. Setup native Android callbacks
+    window.onNativeSpeechReady = () => {
+      setIsListening(true);
+      setVoiceError('');
+      setInterimText('');
+    };
+
+    window.onNativeSpeechStart = () => {
+      setIsListening(true);
+      setVoiceError('');
+    };
+
+    window.onNativeSpeechPartial = (partialText) => {
+      if (partialText) {
+        setInterimText(partialText);
+        setInputText(partialText);
+      }
+    };
+
+    window.onNativeSpeechResult = (finalText) => {
+      setInterimText('');
+      setInputText(finalText);
+      setIsListening(false);
+      handleAnalyze(finalText);
+    };
+
+    window.onNativeSpeechError = (errorCode) => {
+      console.warn('Native speech error code:', errorCode);
+      setIsListening(false);
+      setInterimText('');
+
+      if (errorCode === 'permission_denied') {
+        setVoiceError(
+          lang === 'gu'
+            ? 'માઇક્રોફોનની પરવાનગી નથી મળી. કૃપા કરીને સેટિંગ્સમાં માઇક્રોફોન Allow કરો.'
+            : 'Microphone permission denied. Please allow microphone in settings.'
+        );
+      } else if (errorCode === 'no_match' || errorCode === 'timeout') {
+        setVoiceError(
+          lang === 'gu'
+            ? 'કોઈ અવાજ ઓળખાયો નથી. ફરીથી માઇક બટન દબાવીને સ્પષ્ટ બોલો.'
+            : 'No speech recognized. Tap mic and speak again.'
+        );
+      } else if (errorCode === 'network') {
+        setVoiceError(
+          lang === 'gu'
+            ? 'ગૂગલ સ્પીચ માટે ઇન્ટરનેટ કનેક્શન તપાસો અથવા નીચે બોક્સમાં લખો.'
+            : 'Please check internet connection or type your entry below.'
+        );
+      } else {
+        setVoiceError(
+          lang === 'gu'
+            ? 'અવાજ પકડવામાં તકલીફ થઈ. ફરી માઇક દબાવો અથવા નીચે લખો.'
+            : 'Speech error. Tap mic again or type below.'
+        );
+      }
+    };
+
+    window.onNativeSpeechEnd = () => {
+      setIsListening(false);
+    };
+
+    // 2. Setup Web Speech Recognition
+    const isNative = window.AndroidSpeechBridge && typeof window.AndroidSpeechBridge.isAvailable === 'function'
+      ? window.AndroidSpeechBridge.isAvailable()
+      : !!window.AndroidSpeechBridge;
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
+    if (isNative || SpeechRecognition) {
       setSpeechSupported(true);
+    } else {
+      setSpeechSupported(false);
+    }
+
+    if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = true;
@@ -473,10 +559,17 @@ export default function SmartAssistantModal({
       };
 
       recognitionRef.current = recognition;
-    } else {
-      setSpeechSupported(false);
     }
-  }, [voiceLang, lang]);
+
+    return () => {
+      delete window.onNativeSpeechReady;
+      delete window.onNativeSpeechStart;
+      delete window.onNativeSpeechPartial;
+      delete window.onNativeSpeechResult;
+      delete window.onNativeSpeechError;
+      delete window.onNativeSpeechEnd;
+    };
+  }, [voiceLang, lang, selectedCategory]);
 
   // Handle auto-start when opened via "✨ બોલો"
   useEffect(() => {
