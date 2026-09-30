@@ -127,6 +127,122 @@ export const aiAssistantService = {
       };
     }
 
+    // 2. Medicine / Tablet Schedule Check
+    if (
+      lower.includes('દવા') ||
+      lower.includes('ગોળી') ||
+      lower.includes('ટેબ્લેટ') ||
+      lower.includes('કેપ્સ્યુલ') ||
+      lower.includes('સિરપ') ||
+      lower.includes('medicine') ||
+      lower.includes('tablet') ||
+      lower.includes('pill') ||
+      lower.includes('capsule') ||
+      lower.includes('दवा') ||
+      lower.includes('गोली')
+    ) {
+      let timeSlot = 'morning';
+      if (lower.includes('બપોરે') || lower.includes('afternoon') || lower.includes('दोपहर')) timeSlot = 'afternoon';
+      else if (lower.includes('સાંજે') || lower.includes('evening') || lower.includes('शाम')) timeSlot = 'evening';
+      else if (lower.includes('રાત્રે') || lower.includes('night') || lower.includes('रात')) timeSlot = 'night';
+
+      const mealRelation = lower.includes('ભૂખ્યા') || lower.includes('ખાલી પેટે') || lower.includes('before') || lower.includes('भूखे') ? 'before_food' : 'after_food';
+      const dosage = amount ? `${Math.round(amount)} ગોળી` : '૧ ગોળી';
+
+      // Clean medicine name
+      let medName = text
+        .replace(/(સવારે|બપોરે|સાંજે|રાત્રે|દરરોજ|ગોળી|ટેબ્લેટ|દવા|લેવાની|છે|પીવાની|ખાવાની|૧|૨|૩|\d+|tablet|pill|medicine)/gi, '')
+        .trim();
+      if (!medName || medName.length < 2) medName = 'નવી દવા';
+
+      const medTime = time !== '10:00' ? time : timeSlot === 'morning' ? '08:30' : timeSlot === 'afternoon' ? '13:30' : timeSlot === 'evening' ? '18:00' : '21:00';
+
+      return {
+        intent: 'medicine',
+        name: medName,
+        dosage,
+        timeSlot,
+        mealRelation,
+        time: medTime,
+        notes: text,
+        title: `દવા: ${medName} (${dosage})`,
+        confirmationMessage: `દવા '${medName}' (${dosage}) સમય ${medTime} વાગ્યે સફળતાપૂર્વક હેલ્થ હબમાં શેડ્યુલ થઈ ગઈ! 💊`,
+      };
+    }
+
+    // 3. Shopping List Check (buying items, not yet paid)
+    if (
+      !lower.includes('આપ્યા') &&
+      !lower.includes('ખર્ચ્યા') &&
+      !lower.includes('ચૂકવ્યા') &&
+      !lower.includes('paid') &&
+      !lower.includes('spent') &&
+      (
+        lower.includes('લાવવાનું') ||
+        lower.includes('લાવવાની') ||
+        lower.includes('લાવવાનો') ||
+        lower.includes('ખરીદી યાદી') ||
+        lower.includes('ખરીદવાનું') ||
+        lower.includes('કરિયાણું લાવ') ||
+        lower.includes('shopping') ||
+        lower.includes('groceries')
+      )
+    ) {
+      let itemName = text
+        .replace(/(લાવવાનું|લાવવાની|લાવવાનો|છે|ખરીદવાનું|ખરીદી|યાદી|કરિયાણું|બજારમાંથી|shopping)/gi, '')
+        .trim();
+      if (!itemName || itemName.length < 2) itemName = text;
+
+      let quantity = '૧';
+      if (lower.includes('કિલો') || lower.includes('kg')) {
+        const qMatch = text.match(/\d+\s*(?:કિલો|kg)/i);
+        if (qMatch) quantity = qMatch[0];
+      } else if (lower.includes('લિટર') || lower.includes('લીટર') || lower.includes('liter')) {
+        const lMatch = text.match(/\d+\s*(?:લિટર|લીટર|liter)/i);
+        if (lMatch) quantity = lMatch[0];
+      } else if (amount) {
+        quantity = `${amount}`;
+      }
+
+      return {
+        intent: 'shopping',
+        name: itemName,
+        quantity,
+        category: lower.includes('શાકભાજી') ? 'શાકભાજી' : lower.includes('દૂધ') ? 'ડેરી' : 'કરિયાણું',
+        title: `ખરીદી: ${itemName} (${quantity})`,
+        confirmationMessage: `'${itemName}' (${quantity}) ખરીદીની યાદીમાં સફળતાપૂર્વક ઉમેરી દીધું! 🛒`,
+      };
+    }
+
+    // 4. Events / Celebrations Check (Birthday, Anniversary, Festival)
+    if (
+      lower.includes('જન્મદિવસ') ||
+      lower.includes('બરથડે') ||
+      lower.includes('birthday') ||
+      lower.includes('વર્ષગાંઠ') ||
+      lower.includes('એનિવર્સરી') ||
+      lower.includes('anniversary') ||
+      lower.includes('તહેવાર') ||
+      lower.includes('ઉત્સવ') ||
+      lower.includes('લગ્ન') ||
+      lower.includes('સગાઈ')
+    ) {
+      let eventType = 'birthday';
+      if (lower.includes('વર્ષગાંઠ') || lower.includes('એનિવર્સરી') || lower.includes('લગ્ન')) eventType = 'anniversary';
+      else if (lower.includes('તહેવાર') || lower.includes('ઉત્સવ')) eventType = 'festival';
+
+      let title = text.replace(/(છે|તારીખે|રોજ|નો|ની|ના)/gi, '').trim();
+      return {
+        intent: 'event',
+        title: title || text,
+        personName: title,
+        date,
+        type: eventType,
+        notes: text,
+        confirmationMessage: `ઉત્સવ/ઇવેન્ટ '${title}' તારીખ ${date} માટે સફળતાપૂર્વક ડાયરીમાં સાચવાઈ ગયો! 🎉`,
+      };
+    }
+
     // 2. Khata (To Receive or To Pay)
     if (
       lower.includes('લેવાના') ||

@@ -24,14 +24,16 @@ const STORAGE_KEYS = {
 
 
 const DEFAULT_USER = {
-  name: 'પ્રિય યુઝર',
-  mobile: '+91 98765 43210',
-  email: 'user@example.com',
-  isLinked: true,
-  isMobileVerified: true,
-  isEmailVerified: true,
+  name: '',
+  mobile: '',
+  email: '',
+  dob: '',
+  isRegistered: false,
+  isLinked: false,
+  isMobileVerified: false,
+  isEmailVerified: false,
   pin: '1234',
-  isPinRequired: false, // by default off, user can enable anytime
+  isPinRequired: true,
   isBiometricEnabled: true,
   isEncrypted: true,
   createdAt: new Date().toISOString(),
@@ -208,7 +210,20 @@ export const storageService = {
       localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(DEFAULT_USER));
       return DEFAULT_USER;
     }
-    return JSON.parse(data);
+    try {
+      const parsed = JSON.parse(data);
+      // If user profile does not have isRegistered flag, check if it was dummy user
+      if (parsed.isRegistered === undefined) {
+        if (!parsed.name || parsed.name === 'પ્રિય યુઝર' || !parsed.dob) {
+          parsed.isRegistered = false;
+        } else {
+          parsed.isRegistered = true;
+        }
+      }
+      return parsed;
+    } catch {
+      return DEFAULT_USER;
+    }
   },
 
   saveUserProfile(profile) {

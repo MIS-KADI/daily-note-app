@@ -21,10 +21,11 @@ import { t } from '../../services/i18n';
 import CartoonVideoPlayerCard from '../CartoonVideoPlayerCard';
 import OtpVerificationModal from '../OtpVerificationModal';
 
-export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang = 'gu' }) {
+export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpenSignup, lang = 'gu' }) {
   const [name, setName] = useState(user?.name || '');
   const [mobile, setMobile] = useState(user?.mobile || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [dob, setDob] = useState(user?.dob || '');
   const [upiId, setUpiId] = useState(user?.upiId || '9876543210@paytm');
   const [isPinRequired, setIsPinRequired] = useState(user?.isPinRequired ?? false);
   const [pin, setPin] = useState(user?.pin || '1234');
@@ -159,6 +160,7 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
       name,
       mobile,
       email,
+      dob,
       upiId,
       isPinRequired,
       pin,
@@ -221,17 +223,29 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
 
       {/* Linked Account Card */}
       <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xl flex items-center justify-center shadow-md shadow-blue-500/20">
-            {name ? name.charAt(0).toUpperCase() : 'U'}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xl flex items-center justify-center shadow-md shadow-blue-500/20">
+              {name ? name.charAt(0).toUpperCase() : 'U'}
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-800">{name || t('user_profile_heading', lang)}</h3>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full mt-0.5">
+                <CheckCircle2 size={12} />
+                {t('mobile_email_linked', lang)}
+              </span>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-sm text-slate-800">{name || t('user_profile_heading', lang)}</h3>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full mt-0.5">
-              <CheckCircle2 size={12} />
-              {t('mobile_email_linked', lang)}
-            </span>
-          </div>
+          {onOpenSignup && (
+            <button
+              type="button"
+              onClick={onOpenSignup}
+              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 active:scale-95 shadow-2xs"
+            >
+              <Sparkles size={12} />
+              <span>{lang === 'gu' ? 'નવું રજીસ્ટ્રેશન' : 'New Signup'}</span>
+            </button>
+          )}
         </div>
 
         {/* Edit Form */}
@@ -331,6 +345,19 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
                 <span>{isEmailVerified ? (lang === 'gu' ? 'OTP ચકાસો' : 'Verify') : (lang === 'gu' ? 'OTP મોકલો' : 'Send OTP')}</span>
               </button>
             </div>
+          </div>
+
+          {/* Date of Birth (DOB) */}
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+              {lang === 'gu' ? 'જન્મ તારીખ (DOB)' : 'Date of Birth'}
+            </label>
+            <input
+              type="date"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
           </div>
 
           {/* Receiving UPI ID for Khata QR Code */}
@@ -520,54 +547,6 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, lang =
             )}
           </div>
         </form>
-      </div>
-
-      {/* Direct Android APK Download Card */}
-      <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 rounded-3xl p-5 border border-emerald-200 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="p-2.5 bg-emerald-600 text-white rounded-2xl shadow-sm text-lg">
-              📱
-            </span>
-            <div>
-              <h3 className="text-sm font-bold text-slate-800">
-                {lang === 'gu' ? 'Android APK સીધું ડાઉનલોડ કરો' : 'Download Android APK'}
-              </h3>
-              <p className="text-[10px] text-emerald-700 font-semibold">
-                v1.0.1 • 7.88 MB • {lang === 'gu' ? 'તમામ નવા ફીચર્સ સાથે' : 'With latest features'}
-              </p>
-            </div>
-          </div>
-          <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white uppercase tracking-wide">
-            OFFLINE READY
-          </span>
-        </div>
-
-        <p className="text-xs text-slate-600 leading-relaxed">
-          {lang === 'gu'
-            ? 'ફોનમાં ઇન્સ્ટોલ કરવા માટે નીચે આપેલ બટન દબાવો. એપ બંધ હશે તો પણ એલાર્મ અને ફિંગરપ્રિન્ટ લૉગિન કામ કરશે.'
-            : 'Download and install directly to get background alarms and hardware biometric fingerprint login.'}
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-          <a
-            href="Daily-Diary-App.apk"
-            download="Daily-Diary-App.apk"
-            className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
-          >
-            <Download size={15} />
-            <span>{lang === 'gu' ? '📥 સીધું ડાઉનલોડ (Fast APK)' : 'Download APK'}</span>
-          </a>
-
-          <a
-            href="https://github.com/MIS-KADI/daily-note-app/releases/download/v1.0.1/Daily-Diary-v1.0.1-Latest.apk"
-            target="_blank"
-            rel="noreferrer"
-            className="w-full py-2.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
-          >
-            <span>🌐 {lang === 'gu' ? 'GitHub સર્વર પરથી' : 'From GitHub'}</span>
-          </a>
-        </div>
       </div>
 
       {/* Privacy & Anti-Leak Guarantee */}

@@ -2,18 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Lock,
   ShieldCheck,
-  KeyRound,
   Delete,
   Fingerprint,
   CheckCircle2,
   AlertCircle,
-  MessageSquare,
   Sparkles,
-  Smartphone,
 } from 'lucide-react';
 import { biometricService } from '../services/biometricService';
 import { t } from '../services/i18n';
-import OtpVerificationModal from './OtpVerificationModal';
 
 export default function PinLockModal({
   correctPin = '1234',
@@ -29,7 +25,6 @@ export default function PinLockModal({
   const [isSuccess, setIsSuccess] = useState(false);
   const [isHoldingTouch, setIsHoldingTouch] = useState(false);
   const [touchProgress, setTouchProgress] = useState(0);
-  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const holdIntervalRef = useRef(null);
 
   const triggerBiometric = async () => {
@@ -307,40 +302,15 @@ export default function PinLockModal({
           </button>
         </div>
 
-        {/* Bottom Options: Forgot PIN / Login with OTP */}
-        <div className="pt-1 flex items-center justify-between text-[11px] text-slate-400 px-1">
-          <span className="flex items-center gap-1">
-            <KeyRound size={11} className="text-slate-500" />
-            PIN: {correctPin === '1234' ? '1234' : '••••'}
+        {/* Secure login indicator */}
+        <div className="pt-2 flex items-center justify-center text-[11px] text-slate-400">
+          <span className="flex items-center gap-1.5 text-slate-400/80">
+            <ShieldCheck size={14} className="text-emerald-400" />
+            <span>{lang === 'gu' ? 'સુરક્ષિત એન્ક્રિપ્ટેડ લૉગિન' : lang === 'hi' ? 'सुरक्षित एन्क्रिप्टेड लॉगिन' : 'Secure Encrypted Login'}</span>
           </span>
-
-          <button
-            type="button"
-            onClick={() => setIsOtpModalOpen(true)}
-            className="font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 active:scale-95 transition"
-          >
-            <Smartphone size={11} />
-            <span>{lang === 'gu' ? '📩 OTP વડે અનલૉક કરો' : 'Unlock via OTP'}</span>
-          </button>
         </div>
 
       </div>
-
-      {/* OTP Unlock Fallback Modal */}
-      {isOtpModalOpen && (
-        <OtpVerificationModal
-          isOpen={isOtpModalOpen}
-          onClose={() => setIsOtpModalOpen(false)}
-          type="unlock"
-          target={user?.mobile || user?.email || 'User'}
-          user={user}
-          onVerified={() => {
-            setIsOtpModalOpen(false);
-            onUnlock();
-          }}
-          lang={lang}
-        />
-      )}
     </div>
   );
 }

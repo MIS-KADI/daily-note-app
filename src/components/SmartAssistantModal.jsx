@@ -17,9 +17,13 @@ import {
   AlertCircle,
   RefreshCw,
   Globe,
+  Pill,
+  ShoppingBag,
+  Zap,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { aiAssistantService } from '../services/aiAssistantService';
+import { audioService } from '../services/audioService';
 import { t } from '../services/i18n';
 
 export default function SmartAssistantModal({
@@ -32,6 +36,9 @@ export default function SmartAssistantModal({
   onAddNote,
   onAddKhata,
   onAddWater,
+  onAddMedicine,
+  onAddShopping,
+  onAddEvent,
 }) {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -40,6 +47,7 @@ export default function SmartAssistantModal({
   const [speechSupported, setSpeechSupported] = useState(false);
   const [voiceError, setVoiceError] = useState('');
   const [interimText, setInterimText] = useState('');
+  const [autoDirectEntry, setAutoDirectEntry] = useState(true); // Default true for direct entry!
   
   // Voice language selection
   const defaultVoiceLang = lang === 'hi' ? 'hi-IN' : lang === 'en' ? 'en-IN' : 'gu-IN';
@@ -48,28 +56,37 @@ export default function SmartAssistantModal({
   const recognitionRef = useRef(null);
   const autoStartedRef = useRef(false);
 
-  // Suggested quick prompts in current language
+  // Suggested quick prompts in current language across all tabs
   const PROMPTS = {
     gu: [
       'આજે શાકભાજી માટે ૨૫૦ રૂપિયા ખર્ચ્યા',
       'બેંક ઓફ બરોડામાં ૫૦૦૦ જમા કરાવ્યા',
       'કાલે સવારે ૧૧ વાગ્યે ડોક્ટર સાથે મીટિંગ છે',
+      'સવારે ૮ વાગ્યે બીપીની દવા ૧ ગોળી લેવાની છે',
+      '૨ કિલો બટાકા અને તેલ લાવવાના છે',
+      'કાલે રમેશભાઈનો જન્મદિવસ છે',
       'રમેશભાઈ પાસેથી ૨૦૦૦ લેવાના છે',
       '૨ ગ્લાસ પાણી પીધું',
       'આજે પરિવાર સાથે ખૂબ સુંદર સમય વિતાવ્યો',
     ],
     hi: [
       'आज सब्जी के लिए 250 रुपये खर्च किए',
-      'बैंक ऑफ बड़ौदा में 5000 जमा किए',
+      'बैंक में 5000 जमा किए',
       'कल सुबह 11 बजे डॉक्टर के साथ मीटिंग है',
+      'सुबह 8 बजे बीपी की 1 गोली लेनी है',
+      '2 किलो आलू और तेल लाना है',
+      'कल राहुल का जन्मदिन है',
       'रमेश भाई से 2000 लेने हैं',
       '2 ग्लास पानी पिया',
       'आज का दिन बहुत अच्छा और सुखद रहा',
     ],
     en: [
       'Spent 250 rupees on vegetables',
-      'Deposited 5000 in Bank of Baroda',
+      'Deposited 5000 in Bank',
       'Meeting with doctor tomorrow at 11 am',
+      'Take BP medicine 1 tablet at 8 am',
+      'Need to buy 2 kg potatoes and cooking oil',
+      'Tomorrow is Rahul birthday celebration',
       'Ramesh owes me 2000 rupees',
       'Drank 2 glasses of water',
       'Had a wonderful productive day today',
@@ -88,14 +105,106 @@ export default function SmartAssistantModal({
     setInterimText('');
   };
 
+  // Direct Save Entry into whichever tab it belongs to!
+  const executeSaveEntry = (result) => {
+    if (!result) return;
+
+    if (result.intent === 'finance') {
+      onAddFinance?.({
+        id: 'f-' + Date.now(),
+        type: result.type,
+        amount: result.amount,
+        category: result.category,
+        description: result.description,
+        paymentMode: result.paymentMode,
+        date: result.date,
+      });
+    } else if (result.intent === 'reminder') {
+      onAddReminder?.({
+        id: 'rem-' + Date.now(),
+        title: result.title,
+        description: result.description,
+        type: result.type,
+        time: result.time,
+        date: result.date,
+        hasAlarm: true,
+        isCompleted: false,
+        priority: 'high',
+      });
+    } else if (result.intent === 'khata') {
+      onAddKhata?.({
+        id: 'kh-' + Date.now(),
+        partyName: result.partyName,
+        phone: '',
+        type: result.type,
+        amount: result.amount,
+        date: new Date().toISOString().split('T')[0],
+        dueDate: result.dueDate,
+        description: result.description,
+        isSettled: false,
+      });
+    } else if (result.intent === 'water') {
+      onAddWater?.(result.glasses);
+    } else if (result.intent === 'medicine') {
+      onAddMedicine?.({
+        name: result.name,
+        dosage: result.dosage,
+        timeSlot: result.timeSlot,
+        mealRelation: result.mealRelation,
+        time: result.time,
+        notes: result.notes,
+      });
+    } else if (result.intent === 'shopping') {
+      onAddShopping?.({
+        name: result.name,
+        quantity: result.quantity,
+        category: result.category,
+      });
+    } else if (result.intent === 'event') {
+      onAddEvent?.({
+        title: result.title,
+        personName: result.personName,
+        date: result.date,
+        type: result.type,
+        notes: result.notes,
+      });
+    } else {
+      // Note
+      onAddNote?.({
+        id: 'n-' + Date.now(),
+        title: result.title,
+        content: result.content,
+        category: 'અંગત',
+        date: result.date,
+        isPinned: false,
+        color: '#eff6ff',
+      });
+    }
+
+    try {
+      confetti({ particleCount: 70, spread: 65, origin: { y: 0.65 } });
+    } catch {}
+
+    try {
+      if (audioService?.playSuccess) audioService.playSuccess();
+    } catch {}
+
+    setIsSaved(true);
+  };
+
   const handleAnalyze = (text) => {
     if (!text || !text.trim()) return;
     const result = aiAssistantService.parseInput(text, lang);
     setParsedResult(result);
-    setIsSaved(false);
 
-    // Speak brief feedback
     if (result) {
+      if (autoDirectEntry) {
+        executeSaveEntry(result);
+      } else {
+        setIsSaved(false);
+      }
+
+      // Voice output response
       aiAssistantService.speak(result.confirmationMessage, lang);
     }
   };
@@ -142,7 +251,6 @@ export default function SmartAssistantModal({
       }
     } catch (err) {
       console.warn('Speech start error:', err);
-      // Already running or busy
       if (err.name === 'InvalidStateError') {
         recognitionRef.current?.stop();
         setTimeout(() => {
@@ -254,7 +362,7 @@ export default function SmartAssistantModal({
     } else {
       setSpeechSupported(false);
     }
-  }, [voiceLang, lang]);
+  }, [voiceLang, lang, autoDirectEntry]);
 
   // Handle auto-start when opened via "✨ બોલો"
   useEffect(() => {
@@ -271,68 +379,6 @@ export default function SmartAssistantModal({
     }
   }, [isOpen, autoStart]);
 
-  const handleConfirmSave = () => {
-    if (!parsedResult) return;
-
-    if (parsedResult.intent === 'finance') {
-      onAddFinance?.({
-        id: 'f-' + Date.now(),
-        type: parsedResult.type,
-        amount: parsedResult.amount,
-        category: parsedResult.category,
-        description: parsedResult.description,
-        paymentMode: parsedResult.paymentMode,
-        date: parsedResult.date,
-      });
-    } else if (parsedResult.intent === 'reminder') {
-      onAddReminder?.({
-        id: 'rem-' + Date.now(),
-        title: parsedResult.title,
-        description: parsedResult.description,
-        type: parsedResult.type,
-        time: parsedResult.time,
-        date: parsedResult.date,
-        hasAlarm: true,
-        isCompleted: false,
-        priority: 'high',
-      });
-    } else if (parsedResult.intent === 'khata') {
-      onAddKhata?.({
-        id: 'kh-' + Date.now(),
-        partyName: parsedResult.partyName,
-        phone: '',
-        type: parsedResult.type,
-        amount: parsedResult.amount,
-        date: new Date().toISOString().split('T')[0],
-        dueDate: parsedResult.dueDate,
-        description: parsedResult.description,
-        isSettled: false,
-      });
-    } else if (parsedResult.intent === 'water') {
-      onAddWater?.(parsedResult.glasses);
-    } else {
-      // Note
-      onAddNote?.({
-        id: 'n-' + Date.now(),
-        title: parsedResult.title,
-        content: parsedResult.content,
-        category: 'અંગત',
-        date: parsedResult.date,
-        isPinned: false,
-        color: '#eff6ff',
-      });
-    }
-
-    confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
-    setIsSaved(true);
-    setTimeout(() => {
-      onClose();
-      setParsedResult(null);
-      setInputText('');
-      setIsSaved(false);
-    }, 1500);
-  };
-
   const getIntentBadge = (intent) => {
     switch (intent) {
       case 'finance':
@@ -343,6 +389,12 @@ export default function SmartAssistantModal({
         return { label: '🤝 ખાતાવહી (Khata)', color: 'bg-amber-500/20 text-amber-300 border-amber-500/30', icon: Users };
       case 'water':
         return { label: '💧 વોટર ટ્રેકર (Water)', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30', icon: Droplet };
+      case 'medicine':
+        return { label: '💊 દવા શેડ્યૂલ (Medicine)', color: 'bg-rose-500/20 text-rose-300 border-rose-500/30', icon: Pill };
+      case 'shopping':
+        return { label: '🛒 ખરીદી યાદી (Shopping)', color: 'bg-teal-500/20 text-teal-300 border-teal-500/30', icon: ShoppingBag };
+      case 'event':
+        return { label: '🎉 ઉત્સવ / ઇવેન્ટ (Event)', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', icon: Calendar };
       default:
         return { label: '📝 ડાયરી નોંધ (Diary Note)', color: 'bg-purple-500/20 text-purple-300 border-purple-500/30', icon: BookOpen };
     }
@@ -353,6 +405,7 @@ export default function SmartAssistantModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="w-full sm:max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-700/80 flex flex-col max-h-[92vh]">
+        
         {/* Top Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-900/80">
           <div className="flex items-center gap-2.5">
@@ -362,12 +415,12 @@ export default function SmartAssistantModal({
             <div>
               <h3 className="font-bold text-base leading-tight flex items-center gap-1.5">
                 રોજિંદો AI આસિસ્ટન્ટ
-                <span className="text-[9px] bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold">
-                  Smart Voice
+                <span className="text-[9px] bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 px-2 py-0.5 rounded-full uppercase tracking-wider font-black flex items-center gap-1">
+                  <Zap size={10} /> ડાયરેક્ટ એન્ટ્રી
                 </span>
               </h3>
               <p className="text-[11px] text-slate-400">
-                બોલો અને એપ જાતે હિસાબ, કામ કે ડાયરીમાં નોંધશે!
+                તમે બોલશો એટલે તમામ ટેબમાં સીધી એન્ટ્રી થઈ જશે!
               </p>
             </div>
           </div>
@@ -380,13 +433,9 @@ export default function SmartAssistantModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 overflow-y-auto space-y-4 flex-1">
-          {/* Voice Language Selection Bar */}
-          <div className="flex items-center justify-between bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60">
-            <span className="text-[10px] text-slate-400 font-bold px-2 flex items-center gap-1">
-              <Globe size={11} className="text-blue-400" />
-              ભાષા:
-            </span>
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1">
+          {/* Controls: Voice Language & Auto-Save Toggle */}
+          <div className="flex items-center justify-between bg-slate-800/80 p-2 rounded-2xl border border-slate-700/60">
             <div className="flex items-center gap-1">
               {[
                 { code: 'gu-IN', label: 'ગુજરાતી' },
@@ -397,11 +446,9 @@ export default function SmartAssistantModal({
                   key={item.code}
                   onClick={() => {
                     setVoiceLang(item.code);
-                    if (isListening) {
-                      stopListening();
-                    }
+                    if (isListening) stopListening();
                   }}
-                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition active:scale-95 ${
+                  className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition active:scale-95 ${
                     voiceLang === item.code
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
@@ -411,6 +458,20 @@ export default function SmartAssistantModal({
                 </button>
               ))}
             </div>
+
+            {/* Direct Auto-Save Toggle */}
+            <button
+              onClick={() => setAutoDirectEntry(!autoDirectEntry)}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-bold border transition ${
+                autoDirectEntry
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                  : 'bg-slate-700/50 text-slate-400 border-slate-600/50'
+              }`}
+              title="ઓટોમેટિક સેવ કરો"
+            >
+              <Zap size={11} className={autoDirectEntry ? 'text-amber-400 fill-amber-400' : ''} />
+              <span>{autoDirectEntry ? 'ઓટો-સેવ ચાલુ' : 'મેન્યુઅલ સેવ'}</span>
+            </button>
           </div>
 
           {/* Voice Error Notification Banner */}
@@ -431,7 +492,7 @@ export default function SmartAssistantModal({
           )}
 
           {/* Pulsing Mic Visualizer */}
-          <div className="flex flex-col items-center justify-center py-3">
+          <div className="flex flex-col items-center justify-center py-2">
             <button
               onClick={toggleListening}
               className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 relative ${
@@ -476,14 +537,42 @@ export default function SmartAssistantModal({
             </span>
           </div>
 
-          {/* Quick Voice Chips */}
+          {/* Direct Auto-Save Status Banner */}
+          {isSaved && parsedResult && (
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-900/60 to-teal-900/60 border border-emerald-500/50 flex items-center justify-between text-xs text-emerald-200 animate-fade-in shadow-md">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
+                <div>
+                  <div className="font-extrabold text-white text-[12px]">
+                    ⚡ ડાયરેક્ટ એન્ટ્રી સાચવી લીધી!
+                  </div>
+                  <div className="text-[10px] text-emerald-300/90">
+                    {parsedResult.confirmationMessage}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setInputText('');
+                  setParsedResult(null);
+                  setIsSaved(false);
+                  startListening();
+                }}
+                className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shrink-0 active:scale-95 transition"
+              >
+                🎙️ બીજી બોલો
+              </button>
+            </div>
+          )}
+
+          {/* Quick Voice Prompt Chips across all tabs */}
           <div className="space-y-1.5">
             <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
               <HelpCircle size={12} className="text-blue-400" />
-              આવી રીતે બોલી શકો છો (ઉદાહરણો પર ક્લિક કરો):
+              તમામ ટેબના ઉદાહરણો (ક્લિક કરી સીધી એન્ટ્રી કરો):
             </span>
-            <div className="flex flex-wrap gap-1.5">
-              {currentPrompts.slice(0, 4).map((p, idx) => (
+            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+              {currentPrompts.map((p, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
@@ -510,7 +599,7 @@ export default function SmartAssistantModal({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="અથવા અહીં લખો (e.g. આજે ૨૦૦ ખર્ચ્યા)..."
+              placeholder="અથવા અહીં લખો (દા.ત. આજે ૨૦૦ શાકભાજી ખર્ચ્યા)..."
               className="flex-1 bg-transparent text-xs text-white focus:outline-none placeholder:text-slate-500"
             />
             <button
@@ -522,8 +611,8 @@ export default function SmartAssistantModal({
             </button>
           </form>
 
-          {/* AI Decision / Action Preview Card */}
-          {parsedResult && (
+          {/* AI Decision Card */}
+          {parsedResult && !isSaved && (
             <div className="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-3 animate-in fade-in slide-in-from-bottom duration-200">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-slate-400 font-medium">આસિસ્ટન્ટ નિર્ણય:</span>
@@ -566,18 +655,13 @@ export default function SmartAssistantModal({
                 )}
               </div>
 
-              {/* Confirm / Save Button */}
+              {/* Confirm / Save Button (for manual mode) */}
               <button
-                onClick={handleConfirmSave}
-                disabled={isSaved}
-                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold shadow-md transition active:scale-98 ${
-                  isSaved
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white shadow-blue-500/25'
-                }`}
+                onClick={() => executeSaveEntry(parsedResult)}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold shadow-md transition active:scale-98 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white shadow-blue-500/25"
               >
                 <CheckCircle2 size={16} />
-                {isSaved ? 'સફળતાપૂર્વક સાચવી લેવાયું! ✅' : 'આ એન્ટ્રી એપમાં કન્ફર્મ કરો'}
+                <span>આ એન્ટ્રી એપમાં કન્ફર્મ કરો</span>
               </button>
             </div>
           )}

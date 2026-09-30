@@ -11,6 +11,7 @@ import SmartAssistantModal from './components/SmartAssistantModal';
 import BankSmsParserModal from './components/BankSmsParserModal';
 import UpiPaymentModal from './components/UpiPaymentModal';
 import AppVideoGuideModal from './components/AppVideoGuideModal';
+import SignupModal from './components/SignupModal';
 
 // Tabs
 import HomeTab from './components/tabs/HomeTab';
@@ -55,6 +56,7 @@ export default function App() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [isSignupOpen, setIsSignupOpen] = useState(!user?.isRegistered);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [assistantAutoStart, setAssistantAutoStart] = useState(false);
   const [isVideoGuideOpen, setIsVideoGuideOpen] = useState(false);
@@ -80,10 +82,14 @@ export default function App() {
   // Track fired alarms to prevent duplicate ringing in the same minute
   const firedAlarmsRef = useRef(new Set());
 
-  // Check PIN or Biometric lock on launch
+  // Check PIN or Biometric lock on launch (for registered users)
   useEffect(() => {
-    if (user?.isPinRequired || user?.isBiometricEnabled) {
-      setIsLocked(true);
+    if (user?.isRegistered) {
+      if (user?.isPinRequired || user?.isBiometricEnabled) {
+        setIsLocked(true);
+      }
+    } else {
+      setIsSignupOpen(true);
     }
   }, []);
 
@@ -434,6 +440,56 @@ export default function App() {
     streakService.recordActivityToday();
   };
 
+  const handleAddParsedMedicine = (med) => {
+    setActiveTab('health');
+    const newMed = {
+      id: 'med-' + Date.now(),
+      name: med.name || 'નવી દવા',
+      dosage: med.dosage || '૧ ગોળી',
+      timeSlot: med.timeSlot || 'morning',
+      mealRelation: med.mealRelation || 'after_food',
+      time: med.time || '08:30',
+      notes: med.notes || 'AI Voice દ્વારા ઉમેરાયેલ',
+      hasAlarm: true,
+      active: true,
+    };
+    handleSaveMedicines([newMed, ...medicines]);
+    streakService.recordActivityToday();
+  };
+
+  const handleAddParsedShopping = (item) => {
+    const newItem = {
+      id: 'shop-' + Date.now(),
+      name: item.name || 'નવી વસ્તુ',
+      quantity: item.quantity || '૧',
+      category: item.category || 'સામાન્ય',
+      completed: false,
+      date: new Date().toISOString().split('T')[0],
+    };
+    handleSaveShopping([newItem, ...shoppingList]);
+    streakService.recordActivityToday();
+  };
+
+  const handleAddParsedEvent = (evt) => {
+    setActiveTab('reminders');
+    const newEvt = {
+      id: 'evt-' + Date.now(),
+      title: evt.title || 'નવો ઉત્સવ',
+      personName: evt.personName || '',
+      date: evt.date || new Date().toISOString().split('T')[0],
+      type: evt.type || 'birthday',
+      notes: evt.notes || '',
+    };
+    handleSaveEvents([newEvt, ...events]);
+    streakService.recordActivityToday();
+  };
+
+  const handleCompleteSignup = (newUserProfile) => {
+    setUser(newUserProfile);
+    setIsSignupOpen(false);
+    setIsLocked(false);
+  };
+
 
   // Test Alarm trigger
   const handleTestAlarm = () => {
@@ -770,6 +826,7 @@ export default function App() {
             user={user}
             onUpdateUser={handleUpdateUser}
             onReloadAllData={handleReloadAllData}
+            onOpenSignup={() => setIsSignupOpen(true)}
             lang={lang}
           />
         )}
@@ -820,8 +877,18 @@ export default function App() {
         lang={lang}
       />
 
-      {/* PIN Lock Screen Modal */}
-      {isLocked && (
+      {/* First-Time Signup Onboarding Modal */}
+      {(!user?.isRegistered || isSignupOpen) && (
+        <SignupModal
+          isOpen={!user?.isRegistered || isSignupOpen}
+          onComplete={handleCompleteSignup}
+          lang={lang}
+          initialData={user || {}}
+        />
+      )}
+
+      {/* PIN Lock Screen Modal (Only for registered users) */}
+      {user?.isRegistered && isLocked && (
         <PinLockModal
           correctPin={user?.pin || '1234'}
           isBiometricEnabled={user?.isBiometricEnabled ?? true}
@@ -845,6 +912,9 @@ export default function App() {
         onAddKhata={handleAddParsedKhata}
         onAddNote={handleAddParsedNote}
         onAddWater={handleAddParsedWater}
+        onAddMedicine={handleAddParsedMedicine}
+        onAddShopping={handleAddParsedShopping}
+        onAddEvent={handleAddParsedEvent}
       />
 
       {/* Bank SMS Auto-Expense Parser Modal */}

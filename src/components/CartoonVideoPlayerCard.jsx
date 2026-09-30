@@ -244,17 +244,17 @@ export const CARTOON_SCENES = [
   },
   {
     id: 7,
-    title: "સુપરહીરો મોડ: APK ઇન્સ્ટોલ કરો!",
-    shortTitle: "૭. ડાઉનલોડ કરો",
+    title: "સુપરહીરો મોડ: ડાયરી વાપરવાનું શરૂ કરો!",
+    shortTitle: "૭. ડાયરી શરૂ કરો",
     prop: "📱",
-    bubble: "તમારા ફોનમાં! 🚀",
+    bubble: "શરૂ કરો! 🚀",
     glasses: false,
     cape: true,
     duration: 14,
     accentGlow: "from-indigo-600/25 to-purple-600/25",
     themeColor: "indigo",
-    audioText: "તો કેવો લાગ્યો આપણો આ મિતુ કાર્ટૂન શો? આ એપ તમારા મોબાઈલમાં ચલાવવા માટે તૈયાર છે! નીચે આપેલી લિંક પરથી સીધી APK ફાઇલ ઇન્સ્ટોલ કરી લો અને તમારા રોજિંદા જીવનને સુપર સ્માર્ટ બનાવો!",
-    subtitles: "૧૦૦% ઓફલાઇન સપોર્ટ! તમારા ફોનમાં સીધી Android APK ઇન્સ્ટોલ કરો.",
+    audioText: "તો કેવો લાગ્યો આપણો આ મિતુ કાર્ટૂન શો? આ એપ તમારા મોબાઈલમાં વાપરવા માટે તૈયાર છે! તમારા રોજિંદા જીવનને સુપર સ્માર્ટ બનાવો અને ડાયરીનો આનંદ માણો!",
+    subtitles: "૧૦૦% સુરક્ષિત અને ઓફલાઇન સપોર્ટ! તમારા ફોનમાં ડાયરી શરૂ કરો.",
     renderPhoneUI: () => (
       <div className="flex flex-col h-full justify-between p-3 text-slate-100 select-none text-center">
         <div className="text-2xl animate-bounce">🚀🎉</div>
@@ -262,22 +262,14 @@ export const CARTOON_SCENES = [
           <div className="text-xs font-black text-amber-300">એપ તૈયાર છે!</div>
           <div className="text-[9px] text-indigo-200">Android & iPhone સપોર્ટ</div>
         </div>
-        <div className="space-y-1.5 pt-1">
-          <a
-            href="https://github.com/MIS-KADI/daily-note-app/releases/download/v1.0.0/daily-diary-v1.0.0.apk"
-            target="_blank"
-            rel="noreferrer"
-            className="block py-1.5 px-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] shadow-lg transition"
-          >
-            📲 Android APK
-          </a>
+        <div className="pt-2">
           <a
             href="https://mis-kadi.github.io/daily-note-app/"
             target="_blank"
             rel="noreferrer"
-            className="block py-1 px-2 rounded-xl bg-slate-800 text-white font-bold text-[9px] border border-slate-700"
+            className="block py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-[11px] shadow-lg transition"
           >
-            🌐 Web / iPhone
+            🌟 ડાયરી શરૂ કરો
           </a>
         </div>
       </div>
