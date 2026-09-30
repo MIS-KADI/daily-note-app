@@ -21,7 +21,7 @@ import { t } from '../../services/i18n';
 import CartoonVideoPlayerCard from '../CartoonVideoPlayerCard';
 import OtpVerificationModal from '../OtpVerificationModal';
 
-export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpenSignup, lang = 'gu' }) {
+export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpenSignup, onOpenMobilePermissions, lang = 'gu' }) {
   const [name, setName] = useState(user?.name || '');
   const [mobile, setMobile] = useState(user?.mobile || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -548,6 +548,37 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpen
           </div>
         </form>
       </div>
+
+      {/* Mobile Permissions & Setup Access Card */}
+      {onOpenMobilePermissions && (
+        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-3xl p-5 border border-blue-200 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2.5 bg-blue-600 text-white rounded-2xl shadow-sm text-lg">
+                📱
+              </span>
+              <div>
+                <h3 className="text-sm font-bold text-slate-800">
+                  {lang === 'gu' ? 'મોબાઇલ પરવાનગીઓ & ઍક્સેસ' : 'Mobile Permissions & Access'}
+                </h3>
+                <p className="text-[10px] text-blue-700 font-semibold">
+                  માઇક્રોફોન, એલાર્મ નોટિફિકેશન અને સાઉન્ડ સેટિંગ્સ
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenMobilePermissions}
+              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5"
+            >
+              <span>ચકાસો ⚙️</span>
+            </button>
+          </div>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            મોબાઈલમાં વૉઇસ ટાઇપિંગ અને સમયસર અલાર્મ વાગવા માટે જરૂરી પરવાનગીઓ સેટ કરવા માટે અહીં ક્લિક કરો.
+          </p>
+        </div>
+      )}
 
       {/* Privacy & Anti-Leak Guarantee */}
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-3xl p-4 border border-emerald-200 shadow-xs space-y-2">

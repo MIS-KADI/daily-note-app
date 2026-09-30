@@ -1,7 +1,7 @@
 /**
  * Smart AI Voice & Text Natural Language Assistant Service
- * Supports Gujarati (gu), Hindi (hi), and English (en)
- * Parses natural language commands into actionable diary, finance, task, khata, or health entries.
+ * High-accuracy intent parsing for Gujarati (gu), Hindi (hi), and English (en).
+ * Accurately parses Shopping, Meetings/Tasks, Medicines, Water, Khata, Finance, and Diary Notes.
  */
 
 // Convert Gujarati & Devanagari numerals to standard digits
@@ -22,29 +22,65 @@ export const normalizeNumerals = (str = '') => {
   return result;
 };
 
-// Extract numerical amount from text (e.g. "૨૫૦ રૂપિયા", "5000 rs", "₹1200")
+/**
+ * Extract numerical currency amount from text (e.g. "૨૫૦ રૂપિયા", "₹1200", "5000 rs")
+ * STRICT: Will NEVER confuse non-currency numbers like "૨ કિલો", "૧૧ વાગે", "૧ ગોળી", "૨ ગ્લાસ" as money!
+ */
 export const extractAmount = (text = '') => {
   const clean = normalizeNumerals(text);
-  // Match patterns like ₹500, 500 rs, 500 રૂપિયા, 500.00
-  const match = clean.match(/(?:₹|rs\.?|રૂપિયા|रुपये)?\s*(\d+(?:[.,]\d+)?)\s*(?:₹|rs\.?|રૂપિયા|रुपये|\/-)?/i);
-  if (match && match[1]) {
-    const num = parseFloat(match[1].replace(/,/g, ''));
+
+  // 1. Explicit currency pattern: ₹500, 500 rs, 500 રૂપિયા, 500/-, રૂ. 500, etc.
+  const explicitCurrencyMatch = clean.match(/(?:₹|rs\.?|રૂપિયા|रुपये|રૂ\.?|inr)\s*(\d+(?:[.,]\d+)?)|(\d+(?:[.,]\d+)?)\s*(?:₹|rs\.?|રૂપિયા|रुपये|રૂ\.?|\/-)/i);
+  if (explicitCurrencyMatch) {
+    const rawNum = explicitCurrencyMatch[1] || explicitCurrencyMatch[2];
+    const num = parseFloat(rawNum.replace(/,/g, ''));
     if (!isNaN(num) && num > 0) return num;
   }
-  // Generic number fallback
-  const fallbackMatch = clean.match(/\b\d+(\.\d+)?\b/);
-  if (fallbackMatch) {
-    const num = parseFloat(fallbackMatch[0]);
-    if (!isNaN(num) && num > 0) return num;
+
+  // 2. If it contains financial transaction words, check for number that is NOT attached to weight, time, or tablet units
+  const lower = clean.toLowerCase();
+  const hasFinancialVerbs =
+    lower.includes('ખર્ચ') ||
+    lower.includes('આપ્યા') ||
+    lower.includes('ચૂકવ્યા') ||
+    lower.includes('ભર્યા') ||
+    lower.includes('ભરાવ્યા') ||
+    lower.includes('જમા') ||
+    lower.includes('મળ્યા') ||
+    lower.includes('પગાર') ||
+    lower.includes('કમાણી') ||
+    lower.includes('spent') ||
+    lower.includes('paid') ||
+    lower.includes('cost') ||
+    lower.includes('fee') ||
+    lower.includes('ફી') ||
+    lower.includes('બિલ');
+
+  if (hasFinancialVerbs) {
+    // Strip non-currency numbers first:
+    // e.g. times ("11 વાગે", "5:00", "11 vage"), weights ("2 કિલો", "500 gram"), tablets ("1 ગોળી"), dates ("15 તારીખ")
+    const stripped = clean
+      .replace(/\d{1,2}:\d{2}/g, ' ')
+      .replace(/\d+\s*(?:વાગે|વાગ્યે|vage|vagye|baje|pm|am|o'clock)/gi, ' ')
+      .replace(/\d+\s*(?:કિલો|કિ\.ગ્રા|kg|ગ્રામ|gram|gm|લિટર|લીટર|ltr|મિ\.લિ|ml|ગોળી|ટેબ્લેટ|tablet|ગ્લાસ|glass|તારીખ|તારીખે)/gi, ' ');
+
+    const fallbackMatch = stripped.match(/\b\d+(\.\d+)?\b/);
+    if (fallbackMatch) {
+      const num = parseFloat(fallbackMatch[0]);
+      if (!isNaN(num) && num > 0) return num;
+    }
   }
+
   return null;
 };
 
-// Extract time (e.g. "૧૧:૩૦", "૫ વાગ્યે", "5:00 pm", "10 am")
+/**
+ * Extract time (e.g. "૧૧ વાગે", "11 vage", "૧૧:૩૦", "૫ વાગ્યે", "5:00 pm", "10 am")
+ */
 export const extractTime = (text = '') => {
   const clean = normalizeNumerals(text).toLowerCase();
-  
-  // E.g. "11:30", "05:00"
+
+  // 1. Colon match: "11:30", "05:00"
   const colonMatch = clean.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
   if (colonMatch) {
     let hours = parseInt(colonMatch[1], 10);
@@ -55,31 +91,47 @@ export const extractTime = (text = '') => {
     return `${String(hours).padStart(2, '0')}:${mins}`;
   }
 
-  // E.g. "૫ વાગ્યે", "5 baje", "5 pm", "5 o'clock"
-  const hourMatch = clean.match(/(\d{1,2})\s*(?:વાગ્યે|બપોરે|સવારે|સાંજે|રાત્રે|baje|pm|am|o'clock)/i);
+  // 2. Hour words match: "૧૧ વાગે", "11 vage", "૧૧ વાગ્યે", "11 baje", "5 pm", "5 o'clock"
+  const hourMatch = clean.match(/(\d{1,2})\s*(?:વાગે|વાગ્યે|vage|vagye|baje|બજે|pm|am|o'clock)/i);
   if (hourMatch) {
     let hour = parseInt(hourMatch[1], 10);
-    if ((clean.includes('સાંજે') || clean.includes('રાત્રે') || clean.includes('pm') || clean.includes('બપોરે')) && hour < 12) {
+    if ((clean.includes('સાંજે') || clean.includes('રાત્રે') || clean.includes('pm') || clean.includes('બપોરે')) && hour < 12 && hour !== 12) {
       hour += 12;
     }
     return `${String(hour).padStart(2, '0')}:00`;
   }
 
-  return '10:00';
+  // 3. Match relative phrases like "સવારે ૮", "બપોરે ૧", "સાંજે ૫"
+  const morningMatch = clean.match(/(?:સવારે|morning)\s*(\d{1,2})/i);
+  if (morningMatch) {
+    const h = parseInt(morningMatch[1], 10);
+    return `${String(h).padStart(2, '0')}:00`;
+  }
+
+  const eveningMatch = clean.match(/(?:સાંજે|રાત્રે|evening|night)\s*(\d{1,2})/i);
+  if (eveningMatch) {
+    let h = parseInt(eveningMatch[1], 10);
+    if (h < 12) h += 12;
+    return `${String(h).padStart(2, '0')}:00`;
+  }
+
+  return '10:00'; // Default fallback
 };
 
-// Extract date (e.g. "કાલે", "આવતીકાલે", "આજે", "પરમદિવસે", "tomorrow", "today")
+/**
+ * Extract date (e.g. "કાલે", "આવતીકાલે", "આજે", "પરમદિવસે", "tomorrow", "today")
+ */
 export const extractDate = (text = '') => {
   const t = text.toLowerCase();
   const today = new Date();
-  
-  if (t.includes('કાલે') || t.includes('આવતીકાલે') || t.includes('कल') || t.includes('tomorrow')) {
+
+  if (t.includes('કાલે') || t.includes('આવતીકાલે') || t.includes('कल') || t.includes('tomorrow') || t.includes('aavtikale')) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
   }
-  
-  if (t.includes('પરમદિવસે') || t.includes('परसों') || t.includes('day after tomorrow')) {
+
+  if (t.includes('પરમદિવસે') || t.includes('પરમ દિવસે') || t.includes('परसों') || t.includes('day after tomorrow') || t.includes('paramdivse')) {
     const dayAfter = new Date(today);
     dayAfter.setDate(dayAfter.getDate() + 2);
     return dayAfter.toISOString().split('T')[0];
@@ -90,13 +142,15 @@ export const extractDate = (text = '') => {
 
 export const aiAssistantService = {
   /**
-   * Main NLP parser to categorize user's voice command into:
-   * 1. expense (આવક/ખર્ચ)
-   * 2. income (આવક/જમા)
-   * 3. reminder (કામો/મીટિંગ)
-   * 4. khata (ખાતાવહી લેતી-દેતી)
-   * 5. water (પાણી પીવાનું લોગ)
-   * 6. note (ડાયરી નોંધ)
+   * Main NLP parser to accurately categorize user's voice command into:
+   * 1. water (વોટર ટ્રેકર)
+   * 2. medicine (દવા અને ગોળી શેડ્યૂલ)
+   * 3. shopping (ખરીદી યાદી / લાવવાની વસ્તુઓ)
+   * 4. reminder (કામો / મીટિંગ / બેંક / રીમાઇન્ડર)
+   * 5. event (જન્મદિવસ / ઉત્સવ / વર્ષગાંઠ)
+   * 6. khata (ખાતાવહી લેતી-દેતી)
+   * 7. finance (આવક અથવા ખર્ચ)
+   * 8. note (ડાયરી નોંધ)
    */
   parseInput(rawText = '', lang = 'gu') {
     const text = rawText.trim();
@@ -116,14 +170,16 @@ export const aiAssistantService = {
       lower.includes('water') ||
       lower.includes('glass')
     ) {
-      const glasses = amount && amount <= 10 ? Math.round(amount) : 1;
+      const glassesMatch = lower.match(/(\d+)\s*(?:ગ્લાસ|glass|ग्लास)/i);
+      const glasses = glassesMatch ? parseInt(glassesMatch[1], 10) : amount && amount <= 10 ? Math.round(amount) : 1;
       return {
         intent: 'water',
         type: 'water',
         glasses,
         title: lang === 'hi' ? `${glasses} ग्लास पानी पिया` : lang === 'en' ? `Drank ${glasses} glasses of water` : `${glasses} ગ્લાસ પાણી પીધું`,
-        details: `${glasses * 250} ml`,
-        confirmationMessage: lang === 'hi' ? `${glasses} ग्लास पानी का सेवन दर्ज किया गया!` : lang === 'en' ? `Logged ${glasses} glasses of water!` : `${glasses} ગ્લાસ પાણીની એન્ટ્રી ઉમેરી દીધી! 💧`,
+        details: `${glasses * 250} ml સ્વસ્થ હાઇડ્રેશન`,
+        targetTab: 'હેલ્થ હબ ટેબ (Health Hub)',
+        confirmationMessage: `${glasses} ગ્લાસ પાણીની એન્ટ્રી હેલ્થ હબમાં ઉમેરવા માટે તૈયાર છે! 💧`,
       };
     }
 
@@ -147,11 +203,12 @@ export const aiAssistantService = {
       else if (lower.includes('રાત્રે') || lower.includes('night') || lower.includes('रात')) timeSlot = 'night';
 
       const mealRelation = lower.includes('ભૂખ્યા') || lower.includes('ખાલી પેટે') || lower.includes('before') || lower.includes('भूखे') ? 'before_food' : 'after_food';
-      const dosage = amount ? `${Math.round(amount)} ગોળી` : '૧ ગોળી';
+      const dosageMatch = text.match(/(\d+)\s*(?:ગોળી|ટેબ્લેટ|tablet|pill|चम्मच)/i);
+      const dosage = dosageMatch ? `${dosageMatch[1]} ગોળી` : '૧ ગોળી';
 
       // Clean medicine name
       let medName = text
-        .replace(/(સવારે|બપોરે|સાંજે|રાત્રે|દરરોજ|ગોળી|ટેબ્લેટ|દવા|લેવાની|છે|પીવાની|ખાવાની|૧|૨|૩|\d+|tablet|pill|medicine)/gi, '')
+        .replace(/(સવારે|બપોરે|સાંજે|રાત્રે|દરરોજ|ગોળી|ટેબ્લેટ|દવા|લેવાની|છે|પીવાની|ખાવાની|૧|૨|૩|\d+|tablet|pill|medicine|લઈ|લેવી)/gi, '')
         .trim();
       if (!medName || medName.length < 2) medName = 'નવી દવા';
 
@@ -166,55 +223,117 @@ export const aiAssistantService = {
         time: medTime,
         notes: text,
         title: `દવા: ${medName} (${dosage})`,
-        confirmationMessage: `દવા '${medName}' (${dosage}) સમય ${medTime} વાગ્યે સફળતાપૂર્વક હેલ્થ હબમાં શેડ્યુલ થઈ ગઈ! 💊`,
+        details: `સમય: ${medTime} | ${mealRelation === 'before_food' ? 'ભૂખ્યા પેટે' : 'જમ્યા પછી'}`,
+        targetTab: 'હેલ્થ હબ ટેબ (Health Hub)',
+        confirmationMessage: `દવા '${medName}' (${dosage}) સમય ${medTime} વાગ્યે શેડ્યુલ કરવા તૈયાર છે! 💊`,
       };
     }
 
-    // 3. Shopping List Check (buying items, not yet paid)
-    if (
-      !lower.includes('આપ્યા') &&
+    // 3. Shopping List Check (CRITICAL: Any item to buy, bring home, market, vegetables, groceries)
+    // Matches: લાવવાના, લાવવાનું, લાવવાની, લાવવાનો, લાવવા, ખરીદવાના, ખરીદી, શાકભાજી, બટાકા, કરિયાણું, shopping, etc.
+    const isShoppingQuery =
       !lower.includes('ખર્ચ્યા') &&
       !lower.includes('ચૂકવ્યા') &&
+      !lower.includes('આપ્યા') &&
       !lower.includes('paid') &&
-      !lower.includes('spent') &&
       (
-        lower.includes('લાવવાનું') ||
-        lower.includes('લાવવાની') ||
-        lower.includes('લાવવાનો') ||
-        lower.includes('ખરીદી યાદી') ||
-        lower.includes('ખરીદવાનું') ||
-        lower.includes('કરિયાણું લાવ') ||
+        lower.includes('લાવવા') || // covers લાવવાના, લાવવાનું, લાવવાની, લાવવાનો, લાવવા
+        lower.includes('લાવવ') ||
+        lower.includes('લાવ') ||
+        lower.includes('ખરીદ') || // covers ખરીદવાના, ખરીદવાનું, ખરીદી, ખરીદવું
+        lower.includes('કરિયાણું') ||
+        lower.includes('ઘરે લઈ') ||
+        lower.includes('ઘરે લાવ') ||
+        lower.includes('ઘર માટે') ||
+        lower.includes('શાકભાજી') ||
+        lower.includes('બટાકા') ||
+        lower.includes('ડુંગળી') ||
+        lower.includes('તેલ') ||
         lower.includes('shopping') ||
+        lower.includes('grocery') ||
         lower.includes('groceries')
-      )
-    ) {
+      );
+
+    if (isShoppingQuery) {
+      // Extract quantity (e.g. ૨ કિલો, 500 ગ્રામ, 1 લીટર)
+      let quantity = '૧';
+      const weightMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:કિલો|કિ\.ગ્રા|kg|kilo|ગ્રામ|gram|gm|લિટર|લીટર|ltr|liter|નંગ|પેકેટ|ડબ્બો)/i);
+      if (weightMatch) {
+        quantity = weightMatch[0];
+      }
+
+      // Clean item name
       let itemName = text
-        .replace(/(લાવવાનું|લાવવાની|લાવવાનો|છે|ખરીદવાનું|ખરીદી|યાદી|કરિયાણું|બજારમાંથી|shopping)/gi, '')
+        .replace(/(લાવવાના|લાવવાનું|લાવવાની|લાવવાનો|લાવવા|લાવવું|છે|ખરીદવાના|ખરીદવાનું|ખરીદી|યાદી|કરિયાણું|બજારમાંથી|ઘરે|લઈ|જવાની|shopping|bring|buy)/gi, '')
         .trim();
       if (!itemName || itemName.length < 2) itemName = text;
 
-      let quantity = '૧';
-      if (lower.includes('કિલો') || lower.includes('kg')) {
-        const qMatch = text.match(/\d+\s*(?:કિલો|kg)/i);
-        if (qMatch) quantity = qMatch[0];
-      } else if (lower.includes('લિટર') || lower.includes('લીટર') || lower.includes('liter')) {
-        const lMatch = text.match(/\d+\s*(?:લિટર|લીટર|liter)/i);
-        if (lMatch) quantity = lMatch[0];
-      } else if (amount) {
-        quantity = `${amount}`;
+      // Determine category
+      let category = 'કરિયાણું / ઘરવખરી';
+      if (lower.includes('બટાકા') || lower.includes('ડુંગળી') || lower.includes('શાકભાજી') || lower.includes('ફળ')) {
+        category = 'શાકભાજી / ફળો';
+      } else if (lower.includes('દૂધ') || lower.includes('દહીં') || lower.includes('પનીર')) {
+        category = 'ડેરી / દૂધ';
+      } else if (lower.includes('તેલ') || lower.includes('ઘી')) {
+        category = 'તેલ / કરિયાણું';
       }
 
       return {
         intent: 'shopping',
         name: itemName,
         quantity,
-        category: lower.includes('શાકભાજી') ? 'શાકભાજી' : lower.includes('દૂધ') ? 'ડેરી' : 'કરિયાણું',
-        title: `ખરીદી: ${itemName} (${quantity})`,
-        confirmationMessage: `'${itemName}' (${quantity}) ખરીદીની યાદીમાં સફળતાપૂર્વક ઉમેરી દીધું! 🛒`,
+        category,
+        title: `ખરીદી: ${itemName}`,
+        details: `જથ્થો: ${quantity} | કેટેગરી: ${category}`,
+        targetTab: 'ખરીદી યાદી (Shopping List)',
+        confirmationMessage: `ખરીદીની યાદીમાં '${itemName}' (${quantity}) ઉમેરવા માટે તૈયાર છે! 🛒`,
       };
     }
 
-    // 4. Events / Celebrations Check (Birthday, Anniversary, Festival)
+    // 4. Tasks, Meetings & Reminders Check (CRITICAL: "આજે મીટિંગ છે ૧૧ વાગે" or "૧૧ વાગે મીટિંગ છે")
+    const isReminderQuery =
+      lower.includes('મીટિંગ') ||
+      lower.includes('મીટીંગ') ||
+      lower.includes('meeting') ||
+      lower.includes('miting') ||
+      lower.includes('કામ') ||
+      lower.includes('જવાનું') ||
+      lower.includes('રીમાઇન્ડર') ||
+      lower.includes('યાદ') ||
+      lower.includes('ડોક્ટર') ||
+      lower.includes('ચેક') ||
+      lower.includes('બેંક') ||
+      lower.includes('task') ||
+      lower.includes('reminder');
+
+    if (isReminderQuery) {
+      let remType = 'task';
+      if (lower.includes('મીટિંગ') || lower.includes('મીટીંગ') || lower.includes('meeting') || lower.includes('miting')) remType = 'meeting';
+      else if (lower.includes('બેંક') || lower.includes('ચેક') || lower.includes('bank')) remType = 'bank';
+
+      const taskTitle =
+        remType === 'meeting'
+          ? (text.length > 50 ? text.substring(0, 47) + '...' : text)
+          : remType === 'bank'
+          ? `બેંક કામ: ${text}`
+          : text;
+
+      return {
+        intent: 'reminder',
+        type: remType,
+        title: taskTitle,
+        description: text,
+        date,
+        time,
+        hasAlarm: true,
+        priority: 'high',
+        targetTab: 'કામો અને મીટિંગ ટેબ (Reminders Tab)',
+        details: `સમય: ${time} વાગ્યે | તારીખ: ${date} | ⏰ અલાર્મ સક્રિય`,
+        confirmationMessage: `આજે ${time} વાગ્યા માટે મીટિંગનું રીમાઇન્ડર અને અલાર્મ સેટ કરવા તૈયાર છે! ⏰`,
+      };
+    }
+
+    // 5. Events / Celebrations Check (Birthday, Anniversary, Festival)
     if (
       lower.includes('જન્મદિવસ') ||
       lower.includes('બરથડે') ||
@@ -239,11 +358,13 @@ export const aiAssistantService = {
         date,
         type: eventType,
         notes: text,
-        confirmationMessage: `ઉત્સવ/ઇવેન્ટ '${title}' તારીખ ${date} માટે સફળતાપૂર્વક ડાયરીમાં સાચવાઈ ગયો! 🎉`,
+        targetTab: 'ઇવેન્ટ્સ અને ઉત્સવ યાદી (Events Tab)',
+        details: `તારીખ: ${date} | પ્રકાર: ${eventType === 'birthday' ? 'જન્મદિવસ' : eventType === 'anniversary' ? 'વર્ષગાંઠ' : 'ઉત્સવ'}`,
+        confirmationMessage: `ઇવેન્ટ '${title}' તારીખ ${date} માટે ડાયરીમાં સાચવવા માટે તૈયાર છે! 🎉`,
       };
     }
 
-    // 2. Khata (To Receive or To Pay)
+    // 6. Khata (To Receive or To Pay)
     if (
       lower.includes('લેવાના') ||
       lower.includes('આપવાના') ||
@@ -256,29 +377,31 @@ export const aiAssistantService = {
       lower.includes('to pay')
     ) {
       const isToReceive = lower.includes('લેવાના') || lower.includes('લેના') || lower.includes('receive');
-      // Clean party name: remove common words
       let partyName = text
         .replace(/(પાસેથી|ને|ભાઈ|બેન|પાસે|થી|લેવાના|આપવાના|છે|રૂપિયા|rs|₹|\d+)/gi, '')
         .trim();
-      if (!partyName || partyName.length < 2) partyName = isToReceive ? 'પાર્ટી / ગ્રાહક' : 'વેપારી / મિત્ર';
+      if (!partyName || partyName.length < 2) partyName = isToReceive ? 'ગ્રાહક / પાર્ટી' : 'વેપારી / મિત્ર';
 
+      const khataAmount = amount || 500;
       return {
         intent: 'khata',
         type: isToReceive ? 'to_receive' : 'to_pay',
         partyName,
-        amount: amount || 500,
+        amount: khataAmount,
         dueDate: date,
         description: text,
         title: isToReceive
-          ? `${partyName} પાસેથી લેવાના: ₹${amount || 500}`
-          : `${partyName}ને આપવાના: ₹${amount || 500}`,
+          ? `${partyName} પાસેથી લેવાના: ₹${khataAmount.toLocaleString()}`
+          : `${partyName}ને આપવાના: ₹${khataAmount.toLocaleString()}`,
+        details: `પાર્ટી: ${partyName} | રકમ: ₹${khataAmount.toLocaleString()} | પરત તારીખ: ${date}`,
+        targetTab: 'ખાતાવહી ટેબ (Khata Tab)',
         confirmationMessage: isToReceive
-          ? `ખાતાવહીમાં ${partyName} પાસેથી ₹${amount || 500} લેવાના તરીકે નોંધ્યા!`
-          : `ખાતાવહીમાં ${partyName}ને ₹${amount || 500} આપવાના તરીકે નોંધ્યા!`,
+          ? `ખાતાવહીમાં ${partyName} પાસેથી ₹${khataAmount} લેવાના તરીકે નોંધવા તૈયાર છે!`
+          : `ખાતાવહીમાં ${partyName}ને ₹${khataAmount} આપવાના તરીકે નોંધવા તૈયાર છે!`,
       };
     }
 
-    // 3. Income / Deposit Check
+    // 7. Income / Deposit Check
     if (
       lower.includes('જમા') ||
       lower.includes('આવક') ||
@@ -288,39 +411,39 @@ export const aiAssistantService = {
       lower.includes('salary') ||
       lower.includes('credited') ||
       lower.includes('income') ||
-      lower.includes('वेतन') ||
-      lower.includes('जमा')
+      lower.includes('વેતન')
     ) {
       let category = 'પગાર / આવક';
       if (lower.includes('બેંક') || lower.includes('bank')) category = 'બેંક ડિપોઝિટ';
       if (lower.includes('ધંધો') || lower.includes('વેપાર') || lower.includes('business')) category = 'વેપાર / ધંધો';
 
+      const incAmount = amount || 1000;
       return {
         intent: 'finance',
         type: 'income',
-        amount: amount || 1000,
+        amount: incAmount,
         category,
         description: text,
         date,
         paymentMode: 'બેંક ટ્રાન્સફર',
-        title: `આવક: ₹${(amount || 1000).toLocaleString()} (${category})`,
-        confirmationMessage: `આવકમાં ₹${(amount || 1000).toLocaleString()} સફળતાપૂર્વક ઉમેરાયા! 💰`,
+        title: `આવક: ₹${incAmount.toLocaleString()} (${category})`,
+        details: `કેટેગરી: ${category} | તારીખ: ${date}`,
+        targetTab: 'હિસાબ ટેબ (Finance Tab)',
+        confirmationMessage: `આવકમાં ₹${incAmount.toLocaleString()} નોંધવા માટે તૈયાર છે! 💰`,
       };
     }
 
-    // 4. Expense Check
+    // 8. Expense Check (MUST have monetary amount or clear payment verbs)
     if (
       amount !== null ||
       lower.includes('ખર્ચ') ||
       lower.includes('આપ્યા') ||
       lower.includes('ચૂકવ્યા') ||
-      lower.includes('ખરીદ્યા') ||
       lower.includes('ભર્યા') ||
+      lower.includes('ભરાવ્યા') ||
       lower.includes('spent') ||
       lower.includes('paid') ||
-      lower.includes('expense') ||
-      lower.includes('दिए') ||
-      lower.includes('खर्च')
+      lower.includes('expense')
     ) {
       let category = 'કરિયાણું / ઘરખર્ચ';
       if (lower.includes('દૂધ') || lower.includes('ચા') || lower.includes('નાસ્તો')) category = 'દૂધ અને ચા-નાસ્તો';
@@ -330,51 +453,23 @@ export const aiAssistantService = {
       else if (lower.includes('લાઇટ') || lower.includes('રિચાર્જ') || lower.includes('બિલ')) category = 'લાઇટ બિલ / રિચાર્જ';
       else if (lower.includes('સ્કૂલ') || lower.includes('કોલેજ') || lower.includes('ફી')) category = 'શિક્ષણ / ફી';
 
+      const expAmount = amount || 100;
       return {
         intent: 'finance',
         type: 'expense',
-        amount: amount || 100,
+        amount: expAmount,
         category,
         description: text,
         date,
         paymentMode: 'UPI (GPay/PhonePe)',
-        title: `ખર્ચ: ₹${(amount || 100).toLocaleString()} (${category})`,
-        confirmationMessage: `ખર્ચમાં ₹${(amount || 100).toLocaleString()} સફળતાપૂર્વક ઉમેરાયા! 💸`,
+        title: `ખર્ચ: ₹${expAmount.toLocaleString()} (${category})`,
+        details: `કેટેગરી: ${category} | તારીખ: ${date}`,
+        targetTab: 'હિસાબ ટેબ (Finance Tab)',
+        confirmationMessage: `ખર્ચમાં ₹${expAmount.toLocaleString()} નોંધવા માટે તૈયાર છે! 💸`,
       };
     }
 
-    // 5. Tasks, Meetings & Reminders
-    if (
-      lower.includes('મીટિંગ') ||
-      lower.includes('કામ') ||
-      lower.includes('જવાનું') ||
-      lower.includes('રીમાઇન્ડર') ||
-      lower.includes('યાદ') ||
-      lower.includes('ડોક્ટર') ||
-      lower.includes('ચેક') ||
-      lower.includes('meeting') ||
-      lower.includes('task') ||
-      lower.includes('reminder') ||
-      lower.includes('कार्य')
-    ) {
-      let remType = 'task';
-      if (lower.includes('મીટિંગ') || lower.includes('meeting')) remType = 'meeting';
-      if (lower.includes('બેંક') || lower.includes('ચેક') || lower.includes('bank')) remType = 'bank';
-
-      return {
-        intent: 'reminder',
-        type: remType,
-        title: text.length > 50 ? text.substring(0, 47) + '...' : text,
-        description: text,
-        date,
-        time,
-        hasAlarm: true,
-        priority: 'high',
-        confirmationMessage: `કામ/મીટિંગ '${text}' તારીખ ${date} ના રોજ ${time} વાગ્યા માટે શેડ્યુલ થઈ ગઈ! ⏰`,
-      };
-    }
-
-    // 6. Default to Diary Note
+    // 9. Default to Diary Note
     return {
       intent: 'note',
       type: 'note',
@@ -383,7 +478,9 @@ export const aiAssistantService = {
       category: 'અંગત',
       date,
       isPinned: false,
-      confirmationMessage: `તમારી ડાયરીમાં આ નોંધ સુરક્ષિત રીતે સાચવી લેવામાં આવી છે! 📝`,
+      targetTab: 'ડાયરી નોંધ ટેબ (Diary Notes)',
+      details: `તારીખ: ${date} | કેટેગરી: અંગત`,
+      confirmationMessage: `તમારી ડાયરીમાં આ નોંધ સાચવવા માટે તૈયાર છે! 📝`,
     };
   },
 
@@ -394,24 +491,19 @@ export const aiAssistantService = {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     try {
-      window.speechSynthesis.cancel(); // Stop any pending speech
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(message);
-      
+
       const langVoiceMap = {
         gu: 'gu-IN',
         hi: 'hi-IN',
         en: 'en-IN',
-        es: 'es-ES',
-        fr: 'fr-FR',
-        de: 'de-DE',
-        ar: 'ar-SA',
       };
 
       utterance.lang = langVoiceMap[lang] || 'gu-IN';
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
 
-      // Select matching voice if available
       const voices = window.speechSynthesis.getVoices();
       const voice = voices.find((v) => v.lang.startsWith(utterance.lang) || v.lang.startsWith(lang));
       if (voice) utterance.voice = voice;

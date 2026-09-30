@@ -12,6 +12,7 @@ import BankSmsParserModal from './components/BankSmsParserModal';
 import UpiPaymentModal from './components/UpiPaymentModal';
 import AppVideoGuideModal from './components/AppVideoGuideModal';
 import SignupModal from './components/SignupModal';
+import MobilePermissionsModal from './components/MobilePermissionsModal';
 
 // Tabs
 import HomeTab from './components/tabs/HomeTab';
@@ -57,6 +58,7 @@ export default function App() {
   const [activeAlarm, setActiveAlarm] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(!user?.isRegistered);
+  const [isMobilePermissionsOpen, setIsMobilePermissionsOpen] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [assistantAutoStart, setAssistantAutoStart] = useState(false);
   const [isVideoGuideOpen, setIsVideoGuideOpen] = useState(false);
@@ -672,6 +674,7 @@ export default function App() {
         }}
         onTestAlarm={handleTestAlarm}
         onLockApp={() => setIsLocked(true)}
+        onOpenMobilePermissions={() => setIsMobilePermissionsOpen(true)}
         activeAlarmCount={
           reminders.filter((r) => !r.isCompleted && r.hasAlarm).length +
           medicines.filter((m) => m.active && m.hasAlarm).length
@@ -827,6 +830,7 @@ export default function App() {
             onUpdateUser={handleUpdateUser}
             onReloadAllData={handleReloadAllData}
             onOpenSignup={() => setIsSignupOpen(true)}
+            onOpenMobilePermissions={() => setIsMobilePermissionsOpen(true)}
             lang={lang}
           />
         )}
@@ -915,6 +919,7 @@ export default function App() {
         onAddMedicine={handleAddParsedMedicine}
         onAddShopping={handleAddParsedShopping}
         onAddEvent={handleAddParsedEvent}
+        onOpenMobilePermissions={() => setIsMobilePermissionsOpen(true)}
       />
 
       {/* Bank SMS Auto-Expense Parser Modal */}
@@ -939,6 +944,13 @@ export default function App() {
       <AppVideoGuideModal
         isOpen={isVideoGuideOpen}
         onClose={() => setIsVideoGuideOpen(false)}
+      />
+
+      {/* Mobile Permissions & Access Setup Modal */}
+      <MobilePermissionsModal
+        isOpen={isMobilePermissionsOpen}
+        onClose={() => setIsMobilePermissionsOpen(false)}
+        lang={lang}
       />
     </div>
   );

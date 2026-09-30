@@ -20,6 +20,10 @@ import {
   Pill,
   ShoppingBag,
   Zap,
+  Smartphone,
+  ShieldCheck,
+  Check,
+  Edit3,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { aiAssistantService } from '../services/aiAssistantService';
@@ -39,6 +43,7 @@ export default function SmartAssistantModal({
   onAddMedicine,
   onAddShopping,
   onAddEvent,
+  onOpenMobilePermissions,
 }) {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -47,7 +52,6 @@ export default function SmartAssistantModal({
   const [speechSupported, setSpeechSupported] = useState(false);
   const [voiceError, setVoiceError] = useState('');
   const [interimText, setInterimText] = useState('');
-  const [autoDirectEntry, setAutoDirectEntry] = useState(true); // Default true for direct entry!
   
   // Voice language selection
   const defaultVoiceLang = lang === 'hi' ? 'hi-IN' : lang === 'en' ? 'en-IN' : 'gu-IN';
@@ -59,33 +63,33 @@ export default function SmartAssistantModal({
   // Suggested quick prompts in current language across all tabs
   const PROMPTS = {
     gu: [
-      'આજે શાકભાજી માટે ૨૫૦ રૂપિયા ખર્ચ્યા',
-      'બેંક ઓફ બરોડામાં ૫૦૦૦ જમા કરાવ્યા',
-      'કાલે સવારે ૧૧ વાગ્યે ડોક્ટર સાથે મીટિંગ છે',
-      'સવારે ૮ વાગ્યે બીપીની દવા ૧ ગોળી લેવાની છે',
       '૨ કિલો બટાકા અને તેલ લાવવાના છે',
+      'આજે મીટિંગ છે ૧૧ વાગે',
+      'સવારે ૮ વાગ્યે બીપીની દવા ૧ ગોળી લેવાની છે',
+      'આજે શાકભાજી માટે ૨૫૦ રૂપિયા ખર્ચ્યા',
+      'બેંકમાં ૫૦૦૦ જમા કરાવ્યા',
       'કાલે રમેશભાઈનો જન્મદિવસ છે',
       'રમેશભાઈ પાસેથી ૨૦૦૦ લેવાના છે',
       '૨ ગ્લાસ પાણી પીધું',
       'આજે પરિવાર સાથે ખૂબ સુંદર સમય વિતાવ્યો',
     ],
     hi: [
+      '2 किलो आलू और तेल लाना है',
+      'आज 11 बजे मीटिंग है',
+      'सुबह 8 बजे बीपी की 1 गोली लेनी है',
       'आज सब्जी के लिए 250 रुपये खर्च किए',
       'बैंक में 5000 जमा किए',
-      'कल सुबह 11 बजे डॉक्टर के साथ मीटिंग है',
-      'सुबह 8 बजे बीपी की 1 गोली लेनी है',
-      '2 किलो आलू और तेल लाना है',
       'कल राहुल का जन्मदिन है',
       'रमेश भाई से 2000 लेने हैं',
       '2 ग्लास पानी पिया',
-      'आज का दिन बहुत अच्छा और सुखद रहा',
+      'आज का दिन बहुत अच्छा रहा',
     ],
     en: [
+      'Need to buy 2 kg potatoes and cooking oil',
+      'Meeting today at 11 am',
+      'Take BP medicine 1 tablet at 8 am',
       'Spent 250 rupees on vegetables',
       'Deposited 5000 in Bank',
-      'Meeting with doctor tomorrow at 11 am',
-      'Take BP medicine 1 tablet at 8 am',
-      'Need to buy 2 kg potatoes and cooking oil',
       'Tomorrow is Rahul birthday celebration',
       'Ramesh owes me 2000 rupees',
       'Drank 2 glasses of water',
@@ -105,108 +109,135 @@ export default function SmartAssistantModal({
     setInterimText('');
   };
 
-  // Direct Save Entry into whichever tab it belongs to!
+  // Execute Save into whichever tab it belongs to (Called after user confirms!)
   const executeSaveEntry = (result) => {
     if (!result) return;
 
-    if (result.intent === 'finance') {
-      onAddFinance?.({
-        id: 'f-' + Date.now(),
-        type: result.type,
-        amount: result.amount,
-        category: result.category,
-        description: result.description,
-        paymentMode: result.paymentMode,
-        date: result.date,
+    if (result.intent === 'shopping') {
+      onAddShopping?.({
+        name: result.name || result.title,
+        quantity: result.quantity || '૧',
+        category: result.category || 'કરિયાણું / શાકભાજી',
       });
     } else if (result.intent === 'reminder') {
       onAddReminder?.({
         id: 'rem-' + Date.now(),
         title: result.title,
-        description: result.description,
-        type: result.type,
-        time: result.time,
-        date: result.date,
+        description: result.description || result.title,
+        type: result.type || 'task',
+        time: result.time || '10:00',
+        date: result.date || new Date().toISOString().split('T')[0],
         hasAlarm: true,
         isCompleted: false,
         priority: 'high',
       });
+    } else if (result.intent === 'finance') {
+      onAddFinance?.({
+        id: 'f-' + Date.now(),
+        type: result.type || 'expense',
+        amount: Number(result.amount || 0),
+        category: result.category || 'સામાન્ય',
+        description: result.description || result.title,
+        paymentMode: result.paymentMode || 'UPI (GPay/PhonePe)',
+        date: result.date || new Date().toISOString().split('T')[0],
+      });
+    } else if (result.intent === 'medicine') {
+      onAddMedicine?.({
+        name: result.name || result.title,
+        dosage: result.dosage || '૧ ગોળી',
+        timeSlot: result.timeSlot || 'morning',
+        mealRelation: result.mealRelation || 'after_food',
+        time: result.time || '08:30',
+        notes: result.notes || result.title,
+      });
     } else if (result.intent === 'khata') {
       onAddKhata?.({
         id: 'kh-' + Date.now(),
-        partyName: result.partyName,
+        partyName: result.partyName || 'ગ્રાહક',
         phone: '',
-        type: result.type,
-        amount: result.amount,
+        type: result.type || 'to_receive',
+        amount: Number(result.amount || 0),
         date: new Date().toISOString().split('T')[0],
-        dueDate: result.dueDate,
-        description: result.description,
+        dueDate: result.dueDate || result.date,
+        description: result.description || '',
         isSettled: false,
       });
     } else if (result.intent === 'water') {
-      onAddWater?.(result.glasses);
-    } else if (result.intent === 'medicine') {
-      onAddMedicine?.({
-        name: result.name,
-        dosage: result.dosage,
-        timeSlot: result.timeSlot,
-        mealRelation: result.mealRelation,
-        time: result.time,
-        notes: result.notes,
-      });
-    } else if (result.intent === 'shopping') {
-      onAddShopping?.({
-        name: result.name,
-        quantity: result.quantity,
-        category: result.category,
-      });
+      onAddWater?.(result.glasses || 1);
     } else if (result.intent === 'event') {
       onAddEvent?.({
         title: result.title,
-        personName: result.personName,
-        date: result.date,
-        type: result.type,
-        notes: result.notes,
+        personName: result.personName || result.title,
+        date: result.date || new Date().toISOString().split('T')[0],
+        type: result.type || 'birthday',
+        notes: result.notes || '',
       });
     } else {
       // Note
       onAddNote?.({
         id: 'n-' + Date.now(),
         title: result.title,
-        content: result.content,
+        content: result.content || result.title,
         category: 'અંગત',
-        date: result.date,
+        date: result.date || new Date().toISOString().split('T')[0],
         isPinned: false,
         color: '#eff6ff',
       });
     }
 
     try {
-      confetti({ particleCount: 70, spread: 65, origin: { y: 0.65 } });
+      confetti({ particleCount: 75, spread: 70, origin: { y: 0.65 } });
     } catch {}
 
     try {
       if (audioService?.playSuccess) audioService.playSuccess();
     } catch {}
 
+    // Speak voice success confirmation
+    aiAssistantService.speak(
+      lang === 'gu'
+        ? `${result.title} સફળતાપૂર્વક સાચવી લીધું છે!`
+        : `${result.title} saved successfully!`,
+      lang
+    );
+
     setIsSaved(true);
   };
 
+  // Analyze text and present confirmation card (PREVENTS false auto-save)
   const handleAnalyze = (text) => {
     if (!text || !text.trim()) return;
     const result = aiAssistantService.parseInput(text, lang);
     setParsedResult(result);
+    setIsSaved(false);
 
     if (result) {
-      if (autoDirectEntry) {
-        executeSaveEntry(result);
-      } else {
-        setIsSaved(false);
-      }
-
-      // Voice output response
+      // Speak confirmation question: "Are you ready to save to [tab]?"
       aiAssistantService.speak(result.confirmationMessage, lang);
     }
+  };
+
+  // Manual Intent Switcher if user wants to override
+  const handleSwitchIntent = (newIntent) => {
+    if (!parsedResult) return;
+    let updated = { ...parsedResult, intent: newIntent };
+    if (newIntent === 'shopping') {
+      updated.targetTab = 'ખરીદી યાદી (Shopping List)';
+      updated.quantity = updated.quantity || '૧';
+    } else if (newIntent === 'reminder') {
+      updated.targetTab = 'કામો અને મીટિંગ ટેબ (Reminders Tab)';
+      updated.hasAlarm = true;
+    } else if (newIntent === 'finance') {
+      updated.targetTab = 'હિસાબ ટેબ (Finance Tab)';
+      updated.type = updated.type === 'income' ? 'income' : 'expense';
+    } else if (newIntent === 'medicine') {
+      updated.targetTab = 'હેલ્થ હબ ટેબ (Health Hub)';
+    } else if (newIntent === 'khata') {
+      updated.targetTab = 'ખાતાવહી ટેબ (Khata Tab)';
+    } else if (newIntent === 'note') {
+      updated.targetTab = 'ડાયરી નોંધ ટેબ (Diary Notes)';
+    }
+    setParsedResult(updated);
   };
 
   const startListening = async () => {
@@ -280,7 +311,7 @@ export default function SmartAssistantModal({
       setSpeechSupported(true);
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
-      recognition.interimResults = true; // Enables live real-time voice feedback!
+      recognition.interimResults = true;
       recognition.lang = voiceLang;
 
       recognition.onstart = () => {
@@ -323,31 +354,25 @@ export default function SmartAssistantModal({
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
           setVoiceError(
             lang === 'gu'
-              ? 'માઇક્રોફોનની પરમિશન બ્લોક કરેલ છે. કૃપા કરીને બ્રાઉઝર/એપ સેટિંગ્સમાં માઇક્રોફોન Allow કરો.'
-              : lang === 'hi'
-              ? 'माइक्रोफ़ोन अनुमति बंद है। कृपया सेटिंग्स में माइक्रोफ़ोन चालू करें।'
+              ? 'માઇક્રોફોનની પરમિશન બ્લોક છે. ઉપર લૉક આઇકન પર ક્લિક કરી Allow કરો.'
               : 'Microphone permission blocked. Please allow microphone in settings.'
           );
         } else if (event.error === 'no-speech') {
           setVoiceError(
             lang === 'gu'
               ? 'કોઈ અવાજ સંભળાયો નથી. ફરી માઇક બટન દબાવીને બોલો.'
-              : lang === 'hi'
-              ? 'कोई आवाज़ सुनाई नहीं दी। कृपया फिर से बोलें।'
               : 'No speech detected. Please tap mic and speak again.'
           );
         } else if (event.error === 'network') {
           setVoiceError(
             lang === 'gu'
-              ? 'ઇન્ટરનેટ નબળું છે જેથી વોઇસ પ્રોસેસ થઈ શક્યો નહીં. તમે નીચે લખીને પણ વિશ્લેષણ કરી શકો છો.'
-              : lang === 'hi'
-              ? 'नेटवर्क समस्या के कारण आवाज़ नहीं पहचानी गई। आप नीचे लिख सकते हैं।'
+              ? 'ઇન્ટરનેટ નબળું છે. તમે નીચે લખીને પણ ચકાસી શકો છો.'
               : 'Network issue. You can type below to analyze.'
           );
         } else {
           setVoiceError(
             lang === 'gu'
-              ? `વોઇસ એરર (${event.error}). કૃપા કરીને ફરી પ્રયત્ન કરો.`
+              ? `વોઇસ એરર (${event.error}). ફરી પ્રયત્ન કરો.`
               : `Voice error (${event.error}). Please try again.`
           );
         }
@@ -362,7 +387,7 @@ export default function SmartAssistantModal({
     } else {
       setSpeechSupported(false);
     }
-  }, [voiceLang, lang, autoDirectEntry]);
+  }, [voiceLang, lang]);
 
   // Handle auto-start when opened via "✨ બોલો"
   useEffect(() => {
@@ -381,61 +406,78 @@ export default function SmartAssistantModal({
 
   const getIntentBadge = (intent) => {
     switch (intent) {
-      case 'finance':
-        return { label: '💰 હિસાબ (Finance)', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', icon: IndianRupee };
-      case 'reminder':
-        return { label: '⏰ કામ / મીટિંગ (Task)', color: 'bg-blue-500/20 text-blue-300 border-blue-500/30', icon: Clock };
-      case 'khata':
-        return { label: '🤝 ખાતાવહી (Khata)', color: 'bg-amber-500/20 text-amber-300 border-amber-500/30', icon: Users };
-      case 'water':
-        return { label: '💧 વોટર ટ્રેકર (Water)', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30', icon: Droplet };
-      case 'medicine':
-        return { label: '💊 દવા શેડ્યૂલ (Medicine)', color: 'bg-rose-500/20 text-rose-300 border-rose-500/30', icon: Pill };
       case 'shopping':
-        return { label: '🛒 ખરીદી યાદી (Shopping)', color: 'bg-teal-500/20 text-teal-300 border-teal-500/30', icon: ShoppingBag };
+        return { label: '🛒 ખરીદી યાદી (Shopping)', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', icon: ShoppingBag };
+      case 'reminder':
+        return { label: '⏰ કામ / મીટિંગ (Tasks & Reminders)', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40', icon: Clock };
+      case 'finance':
+        return { label: '💰 હિસાબ / ખર્ચ (Finance)', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40', icon: IndianRupee };
+      case 'medicine':
+        return { label: '💊 દવા શેડ્યૂલ (Medicine)', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40', icon: Pill };
+      case 'khata':
+        return { label: '🤝 ખાતાવહી ઉધાર-જમા (Khata)', color: 'bg-orange-500/20 text-orange-300 border-orange-500/40', icon: Users };
       case 'event':
-        return { label: '🎉 ઉત્સવ / ઇવેન્ટ (Event)', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', icon: Calendar };
+        return { label: '🎉 ઉત્સવ / ઇવેન્ટ (Events)', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40', icon: Calendar };
+      case 'water':
+        return { label: '💧 વોટર ટ્રેકર (Water)', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40', icon: Droplet };
       default:
-        return { label: '📝 ડાયરી નોંધ (Diary Note)', color: 'bg-purple-500/20 text-purple-300 border-purple-500/30', icon: BookOpen };
+        return { label: '📝 ડાયરી નોંધ (Diary Note)', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40', icon: BookOpen };
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="w-full sm:max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-700/80 flex flex-col max-h-[92vh]">
         
         {/* Top Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-900/80">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-900/90">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
               <Sparkles size={18} className="text-white animate-spin-slow" />
             </div>
             <div>
-              <h3 className="font-bold text-base leading-tight flex items-center gap-1.5">
-                રોજિંદો AI આસિસ્ટન્ટ
-                <span className="text-[9px] bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 px-2 py-0.5 rounded-full uppercase tracking-wider font-black flex items-center gap-1">
-                  <Zap size={10} /> ડાયરેક્ટ એન્ટ્રી
+              <h3 className="font-extrabold text-base leading-tight flex items-center gap-1.5">
+                સ્માર્ટ AI આસિસ્ટન્ટ
+                <span className="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full uppercase tracking-wider font-black flex items-center gap-1">
+                  <ShieldCheck size={10} /> સેવ પહેલાં કન્ફર્મેશન
                 </span>
               </h3>
               <p className="text-[11px] text-slate-400">
-                તમે બોલશો એટલે તમામ ટેબમાં સીધી એન્ટ્રી થઈ જશે!
+                તમે બોલશો તે ચકાસીને કન્ફર્મ કર્યા પછી જ સેવ થશે!
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {onOpenMobilePermissions && (
+              <button
+                type="button"
+                onClick={onOpenMobilePermissions}
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-blue-300 hover:text-white border border-slate-700 transition"
+                title="મોબાઇલ પરવાનગી સેટિંગ્સ"
+              >
+                <Smartphone size={16} />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
         <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1">
-          {/* Controls: Voice Language & Auto-Save Toggle */}
+          
+          {/* Controls: Voice Language Selection */}
           <div className="flex items-center justify-between bg-slate-800/80 p-2 rounded-2xl border border-slate-700/60">
+            <span className="text-[10px] text-slate-400 font-bold px-1.5 flex items-center gap-1">
+              <Globe size={11} className="text-blue-400" />
+              બોલવાની ભાષા:
+            </span>
             <div className="flex items-center gap-1">
               {[
                 { code: 'gu-IN', label: 'ગુજરાતી' },
@@ -458,20 +500,6 @@ export default function SmartAssistantModal({
                 </button>
               ))}
             </div>
-
-            {/* Direct Auto-Save Toggle */}
-            <button
-              onClick={() => setAutoDirectEntry(!autoDirectEntry)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-bold border transition ${
-                autoDirectEntry
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                  : 'bg-slate-700/50 text-slate-400 border-slate-600/50'
-              }`}
-              title="ઓટોમેટિક સેવ કરો"
-            >
-              <Zap size={11} className={autoDirectEntry ? 'text-amber-400 fill-amber-400' : ''} />
-              <span>{autoDirectEntry ? 'ઓટો-સેવ ચાલુ' : 'મેન્યુઅલ સેવ'}</span>
-            </button>
           </div>
 
           {/* Voice Error Notification Banner */}
@@ -480,13 +508,24 @@ export default function SmartAssistantModal({
               <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="font-semibold leading-relaxed">{voiceError}</p>
-                <button
-                  onClick={startListening}
-                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-white bg-red-600/80 hover:bg-red-600 px-2.5 py-1 rounded-lg transition"
-                >
-                  <RefreshCw size={11} />
-                  ફરી પ્રયત્ન કરો
-                </button>
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={startListening}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-red-600 hover:bg-red-500 px-2.5 py-1 rounded-lg transition"
+                  >
+                    <RefreshCw size={11} />
+                    ફરી બોલો
+                  </button>
+                  {onOpenMobilePermissions && (
+                    <button
+                      onClick={onOpenMobilePermissions}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-200 bg-blue-900/60 hover:bg-blue-800 px-2.5 py-1 rounded-lg transition border border-blue-500/40"
+                    >
+                      <Smartphone size={11} />
+                      પરવાનગી સેટિંગ્સ
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -537,56 +576,6 @@ export default function SmartAssistantModal({
             </span>
           </div>
 
-          {/* Direct Auto-Save Status Banner */}
-          {isSaved && parsedResult && (
-            <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-900/60 to-teal-900/60 border border-emerald-500/50 flex items-center justify-between text-xs text-emerald-200 animate-fade-in shadow-md">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
-                <div>
-                  <div className="font-extrabold text-white text-[12px]">
-                    ⚡ ડાયરેક્ટ એન્ટ્રી સાચવી લીધી!
-                  </div>
-                  <div className="text-[10px] text-emerald-300/90">
-                    {parsedResult.confirmationMessage}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setInputText('');
-                  setParsedResult(null);
-                  setIsSaved(false);
-                  startListening();
-                }}
-                className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shrink-0 active:scale-95 transition"
-              >
-                🎙️ બીજી બોલો
-              </button>
-            </div>
-          )}
-
-          {/* Quick Voice Prompt Chips across all tabs */}
-          <div className="space-y-1.5">
-            <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
-              <HelpCircle size={12} className="text-blue-400" />
-              તમામ ટેબના ઉદાહરણો (ક્લિક કરી સીધી એન્ટ્રી કરો):
-            </span>
-            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
-              {currentPrompts.map((p, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setInputText(p);
-                    handleAnalyze(p);
-                  }}
-                  className="text-[11px] bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-300 px-2.5 py-1.5 rounded-xl transition text-left active:scale-95"
-                >
-                  "{p}"
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Input Bar */}
           <form
             onSubmit={(e) => {
@@ -599,7 +588,7 @@ export default function SmartAssistantModal({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="અથવા અહીં લખો (દા.ત. આજે ૨૦૦ શાકભાજી ખર્ચ્યા)..."
+              placeholder="અથવા અહીં લખો (e.g. ૨ કિલો બટાકા લાવવાના છે)..."
               className="flex-1 bg-transparent text-xs text-white focus:outline-none placeholder:text-slate-500"
             />
             <button
@@ -611,11 +600,15 @@ export default function SmartAssistantModal({
             </button>
           </form>
 
-          {/* AI Decision Card */}
+          {/* AI Decision / Accurate Confirmation Card (Must Confirm Before Save!) */}
           {parsedResult && !isSaved && (
-            <div className="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-3 animate-in fade-in slide-in-from-bottom duration-200">
+            <div className="bg-slate-800/95 border border-indigo-500/50 rounded-2xl p-4 space-y-3.5 animate-in fade-in slide-in-from-bottom duration-200 shadow-xl">
+              
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400 font-medium">આસિસ્ટન્ટ નિર્ણય:</span>
+                <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+                  <ShieldCheck size={14} className="text-amber-400" />
+                  સેવ કરતાં પહેલાં ચકાસણી:
+                </span>
                 {(() => {
                   const badge = getIntentBadge(parsedResult.intent);
                   const Icon = badge.icon;
@@ -630,41 +623,155 @@ export default function SmartAssistantModal({
                 })()}
               </div>
 
-              <div className="bg-slate-900/90 rounded-xl p-3 border border-slate-700/50 space-y-1.5">
-                <p className="text-xs font-bold text-white leading-snug">
+              {/* Target Tab Destination Info Box */}
+              <div className="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-700 space-y-2">
+                <div className="text-[11px] font-bold text-indigo-300 flex items-center justify-between">
+                  <span>🎯 લક્ષ્ય ટેબ: {parsedResult.targetTab}</span>
+                  {parsedResult.hasAlarm && (
+                    <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Clock size={10} /> અલાર્મ ઓન
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-sm font-black text-white leading-snug">
                   {parsedResult.title}
                 </p>
+
                 {parsedResult.details && (
-                  <p className="text-[11px] text-slate-400">{parsedResult.details}</p>
+                  <p className="text-[11px] text-slate-300 font-medium bg-slate-800/60 p-2 rounded-xl border border-slate-700/60">
+                    {parsedResult.details}
+                  </p>
                 )}
+
                 {parsedResult.amount && (
-                  <div className="flex items-center gap-2 text-xs pt-1">
-                    <span className="text-slate-400">રકમ:</span>
-                    <span className="font-extrabold text-emerald-400">
+                  <div className="flex items-center gap-2 text-xs pt-0.5">
+                    <span className="text-slate-400 font-semibold">રકમ:</span>
+                    <span className="font-black text-emerald-400 text-sm">
                       ₹{parsedResult.amount.toLocaleString()}
-                    </span>
-                  </div>
-                )}
-                {parsedResult.time && (
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-slate-400">સમય:</span>
-                    <span className="font-semibold text-blue-300">
-                      {parsedResult.time} ({parsedResult.date})
                     </span>
                   </div>
                 )}
               </div>
 
-              {/* Confirm / Save Button (for manual mode) */}
-              <button
-                onClick={() => executeSaveEntry(parsedResult)}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold shadow-md transition active:scale-98 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white shadow-blue-500/25"
-              >
-                <CheckCircle2 size={16} />
-                <span>આ એન્ટ્રી એપમાં કન્ફર્મ કરો</span>
-              </button>
+              {/* Quick Tab Category Override (In case user wants to change tab) */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] text-slate-400 font-semibold block">
+                  જો કેટેગરી બદલવી હોય તો ૧-ક્લિક કરો:
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {[
+                    { id: 'shopping', label: '🛒 ખરીદી' },
+                    { id: 'reminder', label: '⏰ મીટિંગ/કામ' },
+                    { id: 'finance', label: '💰 ખર્ચ/આવક' },
+                    { id: 'medicine', label: '💊 દવા' },
+                    { id: 'khata', label: '🤝 ખાતાવહી' },
+                    { id: 'event', label: '🎉 ઉત્સવ' },
+                    { id: 'note', label: '📝 નોંધ' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => handleSwitchIntent(cat.id)}
+                      className={`text-[10px] px-2 py-1 rounded-lg border font-bold transition active:scale-95 ${
+                        parsedResult.intent === cat.id
+                          ? 'bg-blue-600 text-white border-blue-400'
+                          : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Two Clear Buttons: Confirm & Save vs Cancel */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => executeSaveEntry(parsedResult)}
+                  className="py-3 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <CheckCircle2 size={16} />
+                  <span>✅ હા, સેવ કરો</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setParsedResult(null);
+                    setInputText('');
+                  }}
+                  className="py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <X size={15} />
+                  <span>❌ રદ કરો</span>
+                </button>
+              </div>
+
             </div>
           )}
+
+          {/* Success Banner when entry is confirmed & saved */}
+          {isSaved && parsedResult && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/80 to-teal-950/80 border border-emerald-500/60 space-y-2.5 text-xs text-emerald-200 animate-fade-in shadow-xl">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 size={22} className="text-emerald-400 shrink-0" />
+                <div>
+                  <div className="font-extrabold text-white text-sm">
+                    ✓ સફળતાપૂર્વક સાચવી લીધું!
+                  </div>
+                  <div className="text-[11px] text-emerald-300 font-medium">
+                    {parsedResult.title} ➔ {parsedResult.targetTab}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={() => {
+                    setInputText('');
+                    setParsedResult(null);
+                    setIsSaved(false);
+                    startListening();
+                  }}
+                  className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] active:scale-95 transition flex items-center justify-center gap-1"
+                >
+                  <Mic size={13} />
+                  <span>🎙️ બીજી એન્ટ્રી બોલો</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] active:scale-95 transition"
+                >
+                  વિન્ડો બંધ કરો ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Voice Prompt Chips across all tabs */}
+          <div className="space-y-1.5 pt-1">
+            <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
+              <HelpCircle size={12} className="text-blue-400" />
+              તમામ ટેબના સચોટ ઉદાહરણો (ક્લિક કરી ચકાસો):
+            </span>
+            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
+              {currentPrompts.map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setInputText(p);
+                    handleAnalyze(p);
+                  }}
+                  className="text-[11px] bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-300 px-2.5 py-1.5 rounded-xl transition text-left active:scale-95 hover:border-slate-500"
+                >
+                  "{p}"
+                </button>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
