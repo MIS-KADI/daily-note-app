@@ -395,8 +395,23 @@ export default function App() {
       type: rem.type || 'task',
       hasAlarm: true,
       isCompleted: false,
+      priority: 'high',
     };
     handleSaveReminders([newRem, ...reminders]);
+
+    if (rem.type === 'shopping') {
+      const cleanName = (rem.title || 'ખરીદી').replace(/^ખરીદી:\s*/, '').trim();
+      const newShop = {
+        id: 'shop-' + Date.now(),
+        name: cleanName,
+        quantity: '૧',
+        category: 'કરિયાણું / શાકભાજી',
+        completed: false,
+        date: new Date().toISOString().split('T')[0],
+      };
+      handleSaveShopping([newShop, ...shoppingList]);
+    }
+
     streakService.recordActivityToday();
   };
 
@@ -460,15 +475,38 @@ export default function App() {
   };
 
   const handleAddParsedShopping = (item) => {
+    setActiveTab('reminders');
+    const rawName = item.name || item.title || 'નવી વસ્તુ';
+    const cleanName = rawName.replace(/^ખરીદી:\s*/, '').trim();
+    const quantity = item.quantity || '૧';
+    const category = item.category || 'કરિયાણું / શાકભાજી';
+    const today = new Date().toISOString().split('T')[0];
+
+    // 1. Save to shoppingList
     const newItem = {
       id: 'shop-' + Date.now(),
-      name: item.name || 'નવી વસ્તુ',
-      quantity: item.quantity || '૧',
-      category: item.category || 'સામાન્ય',
+      name: cleanName,
+      quantity,
+      category,
       completed: false,
-      date: new Date().toISOString().split('T')[0],
+      date: today,
     };
     handleSaveShopping([newItem, ...shoppingList]);
+
+    // 2. Also save to reminders so it appears immediately under 'ખરીદી' filter in RemindersTab!
+    const newRem = {
+      id: 'rem-' + Date.now(),
+      title: `ખરીદી: ${cleanName}`,
+      description: `☐ ${cleanName} (${quantity})\nકેટેગરી: ${category}`,
+      date: today,
+      time: '11:00',
+      type: 'shopping',
+      hasAlarm: false,
+      isCompleted: false,
+      priority: 'high',
+    };
+    handleSaveReminders([newRem, ...reminders]);
+
     streakService.recordActivityToday();
   };
 

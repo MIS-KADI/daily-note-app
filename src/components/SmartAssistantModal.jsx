@@ -52,6 +52,7 @@ export default function SmartAssistantModal({
   const [speechSupported, setSpeechSupported] = useState(false);
   const [voiceError, setVoiceError] = useState('');
   const [interimText, setInterimText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('auto'); // 'auto', 'shopping', 'reminder', 'finance', 'medicine', 'khata', 'event', 'note'
   
   // Voice language selection
   const defaultVoiceLang = lang === 'hi' ? 'hi-IN' : lang === 'en' ? 'en-IN' : 'gu-IN';
@@ -205,9 +206,13 @@ export default function SmartAssistantModal({
   };
 
   // Analyze text and present confirmation card (PREVENTS false auto-save)
-  const handleAnalyze = (text) => {
+  const handleAnalyze = (text, overrideIntent = undefined) => {
     if (!text || !text.trim()) return;
-    const result = aiAssistantService.parseInput(text, lang);
+    const targetIntent =
+      overrideIntent !== undefined
+        ? (overrideIntent === 'auto' ? null : overrideIntent)
+        : (selectedCategory !== 'auto' ? selectedCategory : null);
+    const result = aiAssistantService.parseInput(text, lang, targetIntent);
     setParsedResult(result);
     setIsSaved(false);
 
@@ -223,21 +228,105 @@ export default function SmartAssistantModal({
     let updated = { ...parsedResult, intent: newIntent };
     if (newIntent === 'shopping') {
       updated.targetTab = 'ખરીદી યાદી (Shopping List)';
+      const rawTitle = updated.title || inputText || 'નવી વસ્તુ';
+      const cleanName = rawTitle.replace(/^ખરીદી:\s*/, '').trim();
+      updated.title = `ખરીદી: ${cleanName}`;
+      updated.name = cleanName;
       updated.quantity = updated.quantity || '૧';
+      updated.category = updated.category || 'કરિયાણું / શાકભાજી';
+      updated.details = `જથ્થો: ${updated.quantity} | કેટેગરી: ${updated.category}`;
+      updated.confirmationMessage = `ખરીદીની યાદીમાં '${cleanName}' (${updated.quantity}) ઉમેરવા માટે તૈયાર છે! 🛒`;
     } else if (newIntent === 'reminder') {
       updated.targetTab = 'કામો અને મીટિંગ ટેબ (Reminders Tab)';
+      updated.title = (updated.title || inputText || 'કામ').replace(/^ખરીદી:\s*/, '').trim();
       updated.hasAlarm = true;
+      updated.time = updated.time || '11:00';
+      updated.date = updated.date || new Date().toISOString().split('T')[0];
+      updated.details = `સમય: ${updated.time} | તારીખ: ${updated.date} | ⏰ અલાર્મ સક્રિય`;
+      updated.confirmationMessage = `કામ/મીટિંગ '${updated.title}' સમય ${updated.time} વાગ્યે રીમાઇન્ડર તરીકે સેવ કરવા તૈયાર છે! ⏰`;
     } else if (newIntent === 'finance') {
       updated.targetTab = 'હિસાબ ટેબ (Finance Tab)';
       updated.type = updated.type === 'income' ? 'income' : 'expense';
+      updated.amount = updated.amount || 100;
+      updated.category = updated.category || 'સામાન્ય ખર્ચ';
+      updated.details = `રકમ: ₹${updated.amount} | પ્રકાર: ${updated.type === 'income' ? 'આવક' : 'ખર્ચ'}`;
+      updated.confirmationMessage = `હિસાબમાં ₹${updated.amount} ની એન્ટ્રી કરવા તૈયાર છે! 💰`;
     } else if (newIntent === 'medicine') {
       updated.targetTab = 'હેલ્થ હબ ટેબ (Health Hub)';
+      updated.title = (updated.title || inputText || 'દવા').replace(/^ખરીદી:\s*/, '').trim();
+      updated.name = updated.name || updated.title;
+      updated.dosage = updated.dosage || '૧ ગોળી';
+      updated.time = updated.time || '08:30';
+      updated.mealRelation = updated.mealRelation || 'after_food';
+      updated.details = `સમય: ${updated.time} | ડોઝ: ${updated.dosage}`;
+      updated.confirmationMessage = `દવા '${updated.name}' (${updated.dosage}) શેડ્યુલ કરવા તૈયાર છે! 💊`;
     } else if (newIntent === 'khata') {
       updated.targetTab = 'ખાતાવહી ટેબ (Khata Tab)';
+      updated.partyName = updated.partyName || updated.title || 'ગ્રાહક';
+      updated.amount = updated.amount || 500;
+      updated.type = updated.type || 'to_receive';
+      updated.details = `પાર્ટી: ${updated.partyName} | રકમ: ₹${updated.amount}`;
+      updated.confirmationMessage = `ખાતાવહીમાં ₹${updated.amount} ની એન્ટ્રી કરવા તૈયાર છે! 🤝`;
+    } else if (newIntent === 'event') {
+      updated.targetTab = 'ઉત્સવ અને દિવસો (Events Tab)';
+      updated.title = updated.title || inputText || 'ઉત્સવ';
+      updated.date = updated.date || new Date().toISOString().split('T')[0];
+      updated.details = `તારીખ: ${updated.date}`;
+      updated.confirmationMessage = `ઇવેન્ટ '${updated.title}' સાચવવા માટે તૈયાર છે! 🎉`;
     } else if (newIntent === 'note') {
       updated.targetTab = 'ડાયરી નોંધ ટેબ (Diary Notes)';
+      updated.title = updated.title || inputText || 'દૈનિક અંગત નોંધ';
+      updated.details = `તારીખ: ${new Date().toISOString().split('T')[0]}`;
+      updated.confirmationMessage = `ડાયરી નોંધમાં સાચવવા માટે તૈયાર છે! 📝`;
     }
     setParsedResult(updated);
+  };
+
+  // Direct Category selection / Intent override (Synced across top bar and confirmation card)
+  const handleSelectCategoryDirectly = (catId) => {
+    setSelectedCategory(catId);
+    if (parsedResult) {
+      handleSwitchIntent(catId);
+    } else if (inputText && inputText.trim()) {
+      handleAnalyze(inputText, catId);
+    }
+  };
+
+  const getInputPlaceholder = () => {
+    switch (selectedCategory) {
+      case 'shopping':
+        return lang === 'gu'
+          ? 'ખરીદીની વસ્તુઓ બોલો કે લખો (દા.ત. ૨ કિલો બટાકા અને તેલ)...'
+          : 'Speak or type shopping items (e.g. 2 kg potatoes)...';
+      case 'reminder':
+        return lang === 'gu'
+          ? 'કામ કે મીટિંગ બોલો કે લખો (દા.ત. આજે મીટિંગ છે ૧૧ વાગે)...'
+          : 'Speak or type task/meeting (e.g. Meeting today at 11 am)...';
+      case 'finance':
+        return lang === 'gu'
+          ? 'ખર્ચ કે આવક બોલો કે લખો (દા.ત. ૨૫૦ રૂપિયા શાકભાજી માટે ખર્ચ્યા)...'
+          : 'Speak or type expense/income (e.g. Spent 250 rs)...';
+      case 'medicine':
+        return lang === 'gu'
+          ? 'દવા શેડ્યૂલ બોલો કે લખો (દા.ત. સવારે ૮ વાગ્યે બીપીની દવા ૧ ગોળી)...'
+          : 'Speak or type medicine (e.g. Take BP medicine 1 tablet at 8 am)...';
+      case 'khata':
+        return lang === 'gu'
+          ? 'ખાતાવહી બોલો કે લખો (દા.ત. રમેશભાઈ પાસેથી ૨૦૦૦ લેવાના છે)...'
+          : 'Speak or type khata (e.g. Ramesh owes 2000 rs)...';
+      case 'event':
+        return lang === 'gu'
+          ? 'જન્મદિવસ કે ઉત્સવ બોલો (દા.ત. કાલે રમેશભાઈનો જન્મદિવસ છે)...'
+          : 'Speak or type celebration (e.g. Tomorrow is Ramesh birthday)...';
+      case 'note':
+        return lang === 'gu'
+          ? 'ડાયરી નોંધ બોલો કે લખો...'
+          : 'Speak or type diary note...';
+      default:
+        return lang === 'gu'
+          ? 'અથવા અહીં લખો (દા.ત. ૨ કિલો બટાકા લાવવાના છે)...'
+          : 'Or type here (e.g. Buy 2 kg potatoes)...';
+    }
   };
 
   const startListening = async () => {
@@ -502,6 +591,60 @@ export default function SmartAssistantModal({
             </div>
           </div>
 
+          {/* Direct Category Selection Bar (Exactly as shown in user's Image 2) */}
+          <div className="bg-slate-800/85 p-2.5 rounded-2xl border border-slate-700/70 space-y-2 shadow-sm">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[11px] text-slate-300 font-black flex items-center gap-1">
+                <Zap size={13} className="text-amber-400" />
+                {lang === 'gu' ? 'જો કેટેગરી બદલવી હોય તો ૧-ક્લિક કરો:' : 'Select Category (1-Click):'}
+              </span>
+              {selectedCategory !== 'auto' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory('auto');
+                    if (inputText && inputText.trim()) {
+                      handleAnalyze(inputText, 'auto');
+                    }
+                  }}
+                  className="text-[10px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer"
+                >
+                  {lang === 'gu' ? 'ઑટો મોડ (Auto)' : 'Auto'}
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { id: 'shopping', label: '🛒 ખરીદી' },
+                { id: 'reminder', label: '⏰ મીટિંગ/કામ' },
+                { id: 'finance', label: '💰 ખર્ચ/આવક' },
+                { id: 'medicine', label: '💊 દવા' },
+                { id: 'khata', label: '🤝 ખાતાવહી' },
+                { id: 'event', label: '🎉 ઉત્સવ' },
+                { id: 'note', label: '📝 નોંધ' },
+              ].map((cat) => {
+                const isSelected =
+                  (parsedResult && parsedResult.intent === cat.id) ||
+                  (!parsedResult && selectedCategory === cat.id);
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleSelectCategoryDirectly(cat.id)}
+                    className={`text-xs px-3 py-1.5 rounded-xl border font-black transition active:scale-95 flex items-center gap-1.5 cursor-pointer ${
+                      isSelected
+                        ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-600/35 ring-1 ring-blue-300 scale-102'
+                        : 'bg-slate-800/90 text-slate-300 border-slate-700/80 hover:bg-slate-700/80 hover:text-white'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Voice Error Notification Banner */}
           {voiceError && (
             <div className="p-3 bg-red-950/70 border border-red-500/50 rounded-2xl text-xs text-red-200 flex items-start gap-2.5 animate-in fade-in">
@@ -588,7 +731,7 @@ export default function SmartAssistantModal({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="અથવા અહીં લખો (e.g. ૨ કિલો બટાકા લાવવાના છે)..."
+              placeholder={getInputPlaceholder()}
               className="flex-1 bg-transparent text-xs text-white focus:outline-none placeholder:text-slate-500"
             />
             <button
@@ -672,7 +815,7 @@ export default function SmartAssistantModal({
                     <button
                       key={cat.id}
                       type="button"
-                      onClick={() => handleSwitchIntent(cat.id)}
+                      onClick={() => handleSelectCategoryDirectly(cat.id)}
                       className={`text-[10px] px-2 py-1 rounded-lg border font-bold transition active:scale-95 ${
                         parsedResult.intent === cat.id
                           ? 'bg-blue-600 text-white border-blue-400'

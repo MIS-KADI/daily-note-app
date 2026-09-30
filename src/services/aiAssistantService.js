@@ -152,7 +152,7 @@ export const aiAssistantService = {
    * 7. finance (આવક અથવા ખર્ચ)
    * 8. note (ડાયરી નોંધ)
    */
-  parseInput(rawText = '', lang = 'gu') {
+  parseInput(rawText = '', lang = 'gu', forcedIntent = null) {
     const text = rawText.trim();
     if (!text) return null;
 
@@ -160,6 +160,143 @@ export const aiAssistantService = {
     const amount = extractAmount(text);
     const date = extractDate(text);
     const time = extractTime(text);
+
+    // Direct Forced Category Overrides (When user clicks a category beforehand)
+    if (forcedIntent && forcedIntent !== 'auto') {
+      if (forcedIntent === 'shopping') {
+        let quantity = '૧';
+        const weightMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:કિલો|કિ\.ગ્રા|kg|kilo|ગ્રામ|gram|gm|લિટર|લીટર|ltr|liter|નંગ|પેકેટ|ડબ્બો)/i);
+        if (weightMatch) {
+          quantity = weightMatch[0];
+        }
+        let itemName = text
+          .replace(/(લાવવાના|લાવવાનું|લાવવાની|લાવવાનો|લાવવા|લાવવું|છે|ખરીદવાના|ખરીદવાનું|ખરીદી|યાદી|કરિયાણું|બજારમાંથી|ઘરે|લઈ|જવાની|shopping|bring|buy)/gi, '')
+          .trim();
+        if (!itemName || itemName.length < 2) itemName = text;
+
+        let category = 'કરિયાણું / ઘરવખરી';
+        if (lower.includes('બટાકા') || lower.includes('ડુંગળી') || lower.includes('શાકભાજી') || lower.includes('ફળ')) {
+          category = 'શાકભાજી / ફળો';
+        } else if (lower.includes('દૂધ') || lower.includes('દહીં') || lower.includes('પનીર')) {
+          category = 'ડેરી / દૂધ';
+        } else if (lower.includes('તેલ') || lower.includes('ઘી')) {
+          category = 'તેલ / કરિયાણું';
+        }
+
+        return {
+          intent: 'shopping',
+          name: itemName,
+          quantity,
+          category,
+          title: `ખરીદી: ${itemName}`,
+          details: `જથ્થો: ${quantity} | કેટેગરી: ${category}`,
+          targetTab: 'ખરીદી યાદી (Shopping List)',
+          confirmationMessage: `ખરીદીની યાદીમાં '${itemName}' (${quantity}) ઉમેરવા માટે તૈયાર છે! 🛒`,
+        };
+      }
+
+      if (forcedIntent === 'reminder') {
+        let remType = 'task';
+        if (lower.includes('મીટિંગ') || lower.includes('meeting') || lower.includes('miting')) remType = 'meeting';
+        else if (lower.includes('બેંક') || lower.includes('bank')) remType = 'bank';
+        return {
+          intent: 'reminder',
+          type: remType,
+          title: text,
+          description: text,
+          date,
+          time,
+          hasAlarm: true,
+          targetTab: 'કામો અને મીટિંગ ટેબ (Reminders Tab)',
+          details: `સમય: ${time} વાગ્યે | તારીખ: ${date} | ⏰ અલાર્મ સક્રિય`,
+          confirmationMessage: `કામ/મીટિંગ '${text}' સમય ${time} વાગ્યે રીમાઇન્ડર તરીકે સેવ કરવા તૈયાર છે! ⏰`,
+        };
+      }
+
+      if (forcedIntent === 'finance') {
+        const isInc = lower.includes('જમા') || lower.includes('આવક') || lower.includes('પગાર') || lower.includes('મળ્યા') || lower.includes('salary');
+        const finAmount = amount || 100;
+        return {
+          intent: 'finance',
+          type: isInc ? 'income' : 'expense',
+          amount: finAmount,
+          category: isInc ? 'પગાર / આવક' : 'સામાન્ય ખર્ચ',
+          description: text,
+          date,
+          paymentMode: 'UPI (GPay/PhonePe)',
+          title: `${isInc ? 'આવક' : 'ખર્ચ'}: ₹${finAmount.toLocaleString()}`,
+          details: `રકમ: ₹${finAmount.toLocaleString()} | તારીખ: ${date}`,
+          targetTab: 'હિસાબ ટેબ (Finance Tab)',
+          confirmationMessage: `હિસાબમાં ₹${finAmount.toLocaleString()} નોંધવા માટે તૈયાર છે! 💰`,
+        };
+      }
+
+      if (forcedIntent === 'medicine') {
+        const dosageMatch = text.match(/(\d+)\s*(?:ગોળી|ટેબ્લેટ|tablet|pill|चम्मच)/i);
+        const dosage = dosageMatch ? `${dosageMatch[1]} ગોળી` : '૧ ગોળી';
+        let medName = text.replace(/(સવારે|બપોરે|સાંજે|રાત્રે|દરરોજ|ગોળી|ટેબ્લેટ|દવા|લેવાની|છે|પીવાની|ખાવાની|\d+)/gi, '').trim() || text;
+        return {
+          intent: 'medicine',
+          name: medName,
+          dosage,
+          timeSlot: 'morning',
+          mealRelation: 'after_food',
+          time: time !== '10:00' ? time : '08:30',
+          notes: text,
+          title: `દવા: ${medName} (${dosage})`,
+          details: `સમય: ${time !== '10:00' ? time : '08:30'} | જમ્યા પછી`,
+          targetTab: 'હેલ્થ હબ ટેબ (Health Hub)',
+          confirmationMessage: `દવા '${medName}' (${dosage}) શેડ્યુલ કરવા તૈયાર છે! 💊`,
+        };
+      }
+
+      if (forcedIntent === 'khata') {
+        const isToReceive = !lower.includes('આપવાના');
+        let partyName = text.replace(/(પાસેથી|ને|ભાઈ|બેન|પાસે|થી|લેવાના|આપવાના|છે|રૂપિયા|rs|₹|\d+)/gi, '').trim() || 'પાર્ટી';
+        const khataAmount = amount || 500;
+        return {
+          intent: 'khata',
+          type: isToReceive ? 'to_receive' : 'to_pay',
+          partyName,
+          amount: khataAmount,
+          dueDate: date,
+          description: text,
+          title: `${isToReceive ? 'લેવાના' : 'આપવાના'}: ₹${khataAmount.toLocaleString()} (${partyName})`,
+          details: `પાર્ટી: ${partyName} | રકમ: ₹${khataAmount.toLocaleString()}`,
+          targetTab: 'ખાતાવહી ટેબ (Khata Tab)',
+          confirmationMessage: `ખાતાવહીમાં ₹${khataAmount.toLocaleString()} નોંધવા તૈયાર છે! 🤝`,
+        };
+      }
+
+      if (forcedIntent === 'event') {
+        return {
+          intent: 'event',
+          title: text,
+          personName: text,
+          date,
+          type: lower.includes('એનિવર્સરી') || lower.includes('લગ્ન') ? 'anniversary' : 'birthday',
+          notes: text,
+          targetTab: 'ઇવેન્ટ્સ અને ઉત્સવ યાદી (Events Tab)',
+          details: `તારીખ: ${date}`,
+          confirmationMessage: `ઇવેન્ટ '${text}' સાચવવા માટે તૈયાર છે! 🎉`,
+        };
+      }
+
+      if (forcedIntent === 'note') {
+        return {
+          intent: 'note',
+          type: 'note',
+          title: text.substring(0, 40) || 'દૈનિક અંગત નોંધ',
+          content: text,
+          category: 'અંગત',
+          date,
+          isPinned: false,
+          targetTab: 'ડાયરી નોંધ ટેબ (Diary Notes)',
+          details: `તારીખ: ${date}`,
+          confirmationMessage: `ડાયરી નોંધ સાચવવા માટે તૈયાર છે! 📝`,
+        };
+      }
+    }
 
     // 1. Water Intake Check
     if (
