@@ -550,51 +550,6 @@ export default function ProfileTab({
         </div>
       </div>
 
-      {/* Demo Mode / Sample Data Controls */}
-      <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="p-2 bg-amber-100 text-amber-700 rounded-xl">
-              <Sparkles size={16} />
-            </span>
-            <div>
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                {lang === 'gu' ? 'ડેમો મોડ અને નમૂનાનો ડેટા' : lang === 'hi' ? 'डेमो मोड और नमूना डेटा' : 'Demo Mode & Sample Data'}
-              </h3>
-              <p className="text-[10px] text-slate-500">
-                {isDemoMode
-                  ? (lang === 'gu' ? 'હાલમાં નમૂનાનો ડેમો ડેટા સક્રિય છે' : 'Demo sample data is currently active')
-                  : (lang === 'gu' ? 'તમારો પોતાનો અંગત ડેટા સક્રિય છે' : 'Your personal diary data is active')}
-              </p>
-            </div>
-          </div>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-            isDemoMode ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-          }`}>
-            {isDemoMode ? (lang === 'gu' ? 'ડેમો સક્રિય 🔶' : 'DEMO') : (lang === 'gu' ? 'સામાન્ય મોડ 🟢' : 'NORMAL')}
-          </span>
-        </div>
-
-        {isDemoMode ? (
-          <button
-            type="button"
-            onClick={onClearDemo}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-orange-500 to-rose-600 hover:opacity-95 text-white rounded-2xl text-xs font-black shadow-md shadow-orange-500/20 active:scale-98 transition ring-4 ring-orange-200"
-          >
-            <Sparkles size={15} />
-            <span>{t('clear_demo_and_start_btn', lang)}</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onRestoreDemo}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-2xl text-xs font-bold transition active:scale-98"
-          >
-            <span>🔄</span>
-            <span>{t('restore_demo_data_btn', lang)}</span>
-          </button>
-        )}
-      </div>
 
       {/* Cartoon Animation Video Guide Showcase (At bottom of Profile Tab) */}
       <div className="space-y-2 pt-1">

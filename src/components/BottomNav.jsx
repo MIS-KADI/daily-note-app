@@ -14,7 +14,7 @@ export default function BottomNav({ activeTab, onTabChange, lang = 'gu' }) {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 py-2 px-2 shadow-lg">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-2 px-2 shadow-lg transition-colors">
       <div className="max-w-md mx-auto grid grid-cols-7 gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -25,13 +25,13 @@ export default function BottomNav({ activeTab, onTabChange, lang = 'gu' }) {
               onClick={() => onTabChange(tab.id)}
               className={`flex flex-col items-center justify-center py-1 rounded-xl transition-all ${
                 isActive
-                  ? 'text-blue-600 font-bold scale-105'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'text-blue-600 dark:text-blue-400 font-bold scale-105'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
               <div
                 className={`p-1 rounded-xl transition-all ${
-                  isActive ? 'bg-blue-100 text-blue-600 shadow-xs' : ''
+                  isActive ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 shadow-xs' : ''
                 }`}
               >
                 <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />

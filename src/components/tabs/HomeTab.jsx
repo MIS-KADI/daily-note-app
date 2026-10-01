@@ -472,22 +472,22 @@ export default function HomeTab({
       </div>
 
       {/* Fitness & Cardio Live Daily Card */}
-      <div className="bg-gradient-to-br from-white to-teal-50/40 rounded-3xl p-4 border border-teal-200/80 shadow-xs space-y-3">
+      <div className="bg-gradient-to-br from-white to-teal-50/40 dark:from-slate-900 dark:to-slate-900/90 rounded-3xl p-4 border border-teal-200/80 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl bg-teal-600 text-white shadow-xs">
               <Activity size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-800">{t('fitness_card_title', lang)}</h3>
-              <p className="text-[11px] text-slate-500">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t('fitness_card_title', lang)}</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {fitnessSteps.toLocaleString()} / {fitnessTarget.toLocaleString()} {t('steps', lang)} ({stepPct}%)
               </p>
             </div>
           </div>
           <button
             onClick={() => onNavigate('health')}
-            className="flex items-center gap-0.5 text-xs text-teal-600 font-bold hover:underline"
+            className="flex items-center gap-0.5 text-xs text-teal-600 dark:text-teal-400 font-bold hover:underline"
           >
             <span>{t('view_details', lang)}</span>
             <ChevronRight size={14} />
@@ -495,7 +495,7 @@ export default function HomeTab({
         </div>
 
         {/* Step Progress Bar */}
-        <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
           <div
             className="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full transition-all duration-500"
             style={{ width: `${stepPct}%` }}
@@ -504,28 +504,28 @@ export default function HomeTab({
 
         {/* 4 Stats Chips - High Contrast in Light & Dark Mode */}
         <div className="grid grid-cols-4 gap-2 pt-1 text-center">
-          <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs">
-            <Footprints size={16} className="mx-auto text-teal-600 mb-0.5" />
-            <span className="text-xs font-black text-teal-800 block">{fitnessSteps.toLocaleString()}</span>
-            <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{t('steps_today', lang)}</span>
+          <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-700 shadow-xs">
+            <Footprints size={16} className="mx-auto text-teal-600 dark:text-teal-400 mb-0.5" />
+            <span className="text-xs font-black text-teal-800 dark:text-teal-300 block">{fitnessSteps.toLocaleString()}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mt-0.5">{t('steps_today', lang)}</span>
           </div>
 
-          <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs">
-            <Flame size={16} className="mx-auto text-orange-500 mb-0.5" />
-            <span className="text-xs font-black text-orange-600 block">{fitnessCalories}</span>
-            <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{t('kcal_burned', lang)}</span>
+          <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-700 shadow-xs">
+            <Flame size={16} className="mx-auto text-orange-500 dark:text-orange-400 mb-0.5" />
+            <span className="text-xs font-black text-orange-600 dark:text-orange-400 block">{fitnessCalories}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mt-0.5">{t('kcal_burned', lang)}</span>
           </div>
 
-          <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs">
-            <Heart size={16} className="mx-auto text-red-500 mb-0.5" />
-            <span className="text-xs font-black text-red-600 block">{fitnessHeartRate}</span>
-            <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{t('bpm_pulse', lang)}</span>
+          <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-700 shadow-xs">
+            <Heart size={16} className="mx-auto text-red-500 dark:text-rose-400 mb-0.5" />
+            <span className="text-xs font-black text-red-600 dark:text-rose-400 block">{fitnessHeartRate}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mt-0.5">{t('bpm_pulse', lang)}</span>
           </div>
 
-          <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs">
+          <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-700 shadow-xs">
             <span className="text-base block mb-0.5">📏</span>
-            <span className="text-xs font-black text-slate-800 block">{fitnessDistance} km</span>
-            <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{t('distance_walked', lang)}</span>
+            <span className="text-xs font-black text-slate-800 dark:text-slate-100 block">{fitnessDistance} km</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mt-0.5">{t('distance_walked', lang)}</span>
           </div>
         </div>
 
@@ -558,7 +558,7 @@ export default function HomeTab({
 
             <button
               onClick={() => setIsSyncModalOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-200 transition active:scale-95 text-[11px]"
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/70 text-blue-700 dark:text-blue-300 font-bold rounded-xl border border-blue-200 dark:border-blue-800 transition active:scale-95 text-[11px]"
             >
               <Smartphone size={12} />
               <span>{t('sync_health_app', lang)}</span>
@@ -567,7 +567,7 @@ export default function HomeTab({
 
           <button
             onClick={handleAddQuickSteps}
-            className="flex items-center gap-1 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold rounded-xl border border-teal-200 transition active:scale-95 text-[11px]"
+            className="flex items-center gap-1 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900/70 text-teal-800 dark:text-teal-300 font-bold rounded-xl border border-teal-200 dark:border-teal-800 transition active:scale-95 text-[11px]"
           >
             <Plus size={12} />
             <span>{t('add_500_steps', lang)}</span>
@@ -576,15 +576,15 @@ export default function HomeTab({
       </div>
 
       {/* Daily Water Tracker Card */}
-      <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-3xl p-4 border border-cyan-200/80 shadow-xs space-y-3">
+      <div className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-slate-900 dark:to-slate-900/90 rounded-3xl p-4 border border-cyan-200/80 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl bg-cyan-600 text-white shadow-xs">
               <Droplets size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-800">{t('water_title', lang)}</h3>
-              <p className="text-[11px] text-slate-500">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t('water_title', lang)}</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {t('water_target', lang)} • {t('water_drank', lang)}: {glasses} {t('glasses', lang)} ({waterPct}%)
               </p>
             </div>
@@ -594,7 +594,7 @@ export default function HomeTab({
             <button
               onClick={handleMinusWater}
               disabled={glasses === 0}
-              className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 active:scale-95 transition disabled:opacity-30"
+              className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition disabled:opacity-30"
               title="-1"
             >
               <Minus size={14} />
@@ -611,7 +611,7 @@ export default function HomeTab({
 
 
         {/* Progress Bar & Water Level */}
-        <div className="w-full bg-cyan-100/70 h-2.5 rounded-full overflow-hidden">
+        <div className="w-full bg-cyan-100/70 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
           <div
             className="bg-cyan-600 h-full rounded-full transition-all duration-500"
             style={{ width: `${waterPct}%` }}

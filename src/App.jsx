@@ -112,6 +112,17 @@ export default function App() {
     setIsStandalone(Boolean(isStandaloneMode));
   }, []);
 
+  // Sync dark theme class to html/documentElement for Tailwind dark: variants
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add('dark-theme');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove('dark-theme');
+    }
+  }, [theme]);
+
   // Sync background alarms with Android native AlarmManager (via Capacitor)
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -432,11 +443,6 @@ export default function App() {
   };
 
   const checkCanAdd = (actionCallback) => {
-    if (isDemoMode) {
-      setPendingDemoAction(() => actionCallback);
-      setIsDemoModalOpen(true);
-      return false;
-    }
     if (typeof actionCallback === 'function') {
       actionCallback();
     }
@@ -826,7 +832,7 @@ export default function App() {
   }, [medicines, reminders, medicineLogs, lang]);
 
   return (
-    <div className={`mobile-app-wrapper ${theme === 'dark' ? 'dark-theme' : ''}`}>
+    <div className={`mobile-app-wrapper ${theme === 'dark' ? 'dark-theme dark' : ''}`}>
       {/* Top Navbar */}
       <Navbar
         user={user}
@@ -891,11 +897,6 @@ export default function App() {
 
       {/* Main Tab View Container */}
       <main className="flex-1 p-3.5 overflow-y-auto">
-        {/* Highlighted Demo Mode Banner across the entire app */}
-        {isDemoMode && (
-          <DemoModeBanner lang={lang} onClearDemo={() => handleClearDemoData()} />
-        )}
-
         {activeTab === 'home' && (
           <HomeTab
             user={user}
@@ -1147,17 +1148,6 @@ export default function App() {
       <MobilePermissionsModal
         isOpen={isMobilePermissionsOpen}
         onClose={() => setIsMobilePermissionsOpen(false)}
-        lang={lang}
-      />
-
-      {/* Demo Mode Action Lock Modal */}
-      <DemoModeModal
-        isOpen={isDemoModalOpen}
-        onClose={() => {
-          setIsDemoModalOpen(false);
-          setPendingDemoAction(null);
-        }}
-        onConfirmClear={() => handleClearDemoData()}
         lang={lang}
       />
     </div>

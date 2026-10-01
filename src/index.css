@@ -61,71 +61,360 @@
   animation: pulse-subtle 1.2s infinite;
 }
 
-/* Dark Theme Overrides */
-.dark-theme {
+/* ========================================================= */
+/* DARK THEME SYSTEM-WIDE HIGH CONTRAST & LEGIBILITY OVERHAUL */
+/* ========================================================= */
+.dark-theme,
+.dark {
   background-color: #0b0f19 !important;
   color: #f1f5f9 !important;
 }
 
 .dark-theme header,
-.dark-theme nav {
+.dark-theme nav,
+.dark header,
+.dark nav {
   background-color: rgba(15, 23, 42, 0.95) !important;
   border-color: #1e293b !important;
 }
 
-.dark-theme [class*="bg-white"] {
+/* 1. All Base Cards with bg-white */
+.dark-theme .bg-white,
+.dark-theme [class*="bg-white/"],
+.dark-theme [class*="bg-white "],
+.dark .bg-white,
+.dark [class*="bg-white/"],
+.dark [class*="bg-white "] {
   background-color: #151e32 !important;
   color: #f8fafc !important;
 }
 
-.dark-theme .bg-slate-50,
-.dark-theme .bg-slate-100,
-.dark-theme [class*="bg-slate-50"],
-.dark-theme [class*="bg-slate-100"] {
-  background-color: #0b0f19 !important;
-  color: #e2e8f0 !important;
-}
-
-.dark-theme .border-slate-200,
-.dark-theme .border-slate-100,
-.dark-theme [class*="border-slate"] {
+/* 2. All Light Pastel Gradient Cards Override (Crucial Fix for Image 2 & 3) */
+.dark-theme [class*="from-white"],
+.dark-theme [class*="from-slate-50"],
+.dark-theme [class*="from-cyan-50"],
+.dark-theme [class*="from-teal-50"],
+.dark-theme [class*="from-blue-50"],
+.dark-theme [class*="from-indigo-50"],
+.dark-theme [class*="from-purple-50"],
+.dark-theme [class*="from-pink-50"],
+.dark-theme [class*="from-rose-50"],
+.dark-theme [class*="from-amber-50"],
+.dark-theme [class*="from-orange-50"],
+.dark-theme [class*="from-emerald-50"],
+.dark [class*="from-white"],
+.dark [class*="from-slate-50"],
+.dark [class*="from-cyan-50"],
+.dark [class*="from-teal-50"],
+.dark [class*="from-blue-50"],
+.dark [class*="from-indigo-50"],
+.dark [class*="from-purple-50"],
+.dark [class*="from-pink-50"],
+.dark [class*="from-rose-50"],
+.dark [class*="from-amber-50"],
+.dark [class*="from-orange-50"],
+.dark [class*="from-emerald-50"] {
+  background-image: none !important;
+  background-color: #151e32 !important;
   border-color: #24324d !important;
 }
 
-.dark-theme .text-slate-800,
+/* Specific nested gradient cards for distinct thematic contrast */
+/* BMI Display Meter (Image 2 Fix) */
+.dark-theme [class*="from-purple-50"][class*="to-indigo-50"],
+.dark [class*="from-purple-50"][class*="to-indigo-50"],
+.dark-theme .bmi-meter-card,
+.dark .bmi-meter-card {
+  background-image: none !important;
+  background-color: #1a1f36 !important;
+  border-color: #3730a3 !important;
+}
+
+/* Thought / Suvichar & Priority Cards (from-amber-50 to-orange-50) */
+.dark-theme [class*="from-amber-50"][class*="to-orange-50"],
+.dark [class*="from-amber-50"][class*="to-orange-50"] {
+  background-image: none !important;
+  background-color: #1c1917 !important;
+  border-color: #78350f !important;
+}
+
+/* 3. Nested Inner Elements & Sub-Cards */
+.dark-theme .bg-slate-50,
+.dark-theme .bg-slate-100,
+.dark-theme [class*="bg-slate-50"],
+.dark-theme [class*="bg-slate-100"],
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark [class*="bg-slate-50"],
+.dark [class*="bg-slate-100"] {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+
+/* Stat chips inside cards (Image 3 Fix) */
+.dark-theme .grid [class*="bg-white"],
+.dark .grid [class*="bg-white"] {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+/* 4. Text Contrast Overhaul (Fix for all white-on-white and dark-on-dark text) */
 .dark-theme .text-slate-900,
-.dark-theme .text-slate-700 {
+.dark-theme .text-slate-800,
+.dark-theme .text-slate-700,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700 {
   color: #f8fafc !important;
 }
 
 .dark-theme .text-slate-600,
-.dark-theme .text-slate-500 {
+.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.dark-theme .text-slate-500,
+.dark-theme .text-slate-400,
+.dark .text-slate-500,
+.dark .text-slate-400 {
   color: #94a3b8 !important;
 }
 
-.dark-theme input,
+/* Vibrant colored texts on dark backgrounds (Fix for Image 3 +500 steps, Health sync, BMI value) */
+.dark-theme .text-teal-900,
+.dark-theme .text-teal-800,
+.dark-theme .text-teal-700,
+.dark-theme .text-teal-600,
+.dark .text-teal-900,
+.dark .text-teal-800,
+.dark .text-teal-700,
+.dark .text-teal-600 {
+  color: #2dd4bf !important;
+}
+
+.dark-theme .text-emerald-950,
+.dark-theme .text-emerald-900,
+.dark-theme .text-emerald-800,
+.dark-theme .text-emerald-700,
+.dark-theme .text-emerald-600,
+.dark .text-emerald-950,
+.dark .text-emerald-900,
+.dark .text-emerald-800,
+.dark .text-emerald-700,
+.dark .text-emerald-600 {
+  color: #34d399 !important;
+}
+
+.dark-theme .text-cyan-900,
+.dark-theme .text-cyan-800,
+.dark-theme .text-cyan-700,
+.dark-theme .text-cyan-600,
+.dark .text-cyan-900,
+.dark .text-cyan-800,
+.dark .text-cyan-700,
+.dark .text-cyan-600 {
+  color: #38bdf8 !important;
+}
+
+.dark-theme .text-blue-900,
+.dark-theme .text-blue-800,
+.dark-theme .text-blue-700,
+.dark-theme .text-blue-600,
+.dark .text-blue-900,
+.dark .text-blue-800,
+.dark .text-blue-700,
+.dark .text-blue-600 {
+  color: #60a5fa !important;
+}
+
+.dark-theme .text-purple-900,
+.dark-theme .text-purple-800,
+.dark-theme .text-purple-700,
+.dark-theme .text-purple-600,
+.dark .text-purple-900,
+.dark .text-purple-800,
+.dark .text-purple-700,
+.dark .text-purple-600 {
+  color: #c084fc !important;
+}
+
+.dark-theme .text-indigo-900,
+.dark-theme .text-indigo-800,
+.dark-theme .text-indigo-700,
+.dark-theme .text-indigo-600,
+.dark .text-indigo-900,
+.dark .text-indigo-800,
+.dark .text-indigo-700,
+.dark .text-indigo-600 {
+  color: #a5b4fc !important;
+}
+
+.dark-theme .text-amber-950,
+.dark-theme .text-amber-900,
+.dark-theme .text-amber-800,
+.dark-theme .text-amber-700,
+.dark-theme .text-amber-600,
+.dark .text-amber-950,
+.dark .text-amber-900,
+.dark .text-amber-800,
+.dark .text-amber-700,
+.dark .text-amber-600 {
+  color: #fde047 !important;
+}
+
+.dark-theme .text-orange-950,
+.dark-theme .text-orange-900,
+.dark-theme .text-orange-800,
+.dark-theme .text-orange-700,
+.dark-theme .text-orange-600,
+.dark .text-orange-950,
+.dark .text-orange-900,
+.dark .text-orange-800,
+.dark .text-orange-700,
+.dark .text-orange-600 {
+  color: #fb923c !important;
+}
+
+.dark-theme .text-red-900,
+.dark-theme .text-red-800,
+.dark-theme .text-red-700,
+.dark-theme .text-red-600,
+.dark .text-red-900,
+.dark .text-red-800,
+.dark .text-red-700,
+.dark .text-red-600 {
+  color: #f87171 !important;
+}
+
+.dark-theme .text-rose-900,
+.dark-theme .text-rose-800,
+.dark-theme .text-rose-700,
+.dark .text-rose-900,
+.dark .text-rose-800,
+.dark .text-rose-700 {
+  color: #fb7185 !important;
+}
+
+/* 5. Colored Badges & Quick Action Chips in Dark Mode */
+.dark-theme .bg-teal-50,
+.dark .bg-teal-50 {
+  background-color: #042f2e !important;
+  color: #2dd4bf !important;
+  border-color: #0f766e !important;
+}
+
+.dark-theme .bg-emerald-50,
+.dark .bg-emerald-50 {
+  background-color: #022c22 !important;
+  color: #34d399 !important;
+  border-color: #065f46 !important;
+}
+
+.dark-theme .bg-cyan-50,
+.dark .bg-cyan-50 {
+  background-color: #083344 !important;
+  color: #38bdf8 !important;
+  border-color: #0e7490 !important;
+}
+
+.dark-theme .bg-blue-50,
+.dark .bg-blue-50 {
+  background-color: #172554 !important;
+  color: #60a5fa !important;
+  border-color: #1e40af !important;
+}
+
+.dark-theme .bg-purple-50,
+.dark-theme .bg-indigo-50,
+.dark .bg-purple-50,
+.dark .bg-indigo-50 {
+  background-color: #1e1b4b !important;
+  color: #c084fc !important;
+  border-color: #3730a3 !important;
+}
+
+.dark-theme .bg-amber-50,
+.dark-theme .bg-orange-50,
+.dark .bg-amber-50,
+.dark .bg-orange-50 {
+  background-color: #451a03 !important;
+  color: #fde047 !important;
+  border-color: #78350f !important;
+}
+
+.dark-theme .bg-red-50,
+.dark-theme .bg-rose-50,
+.dark .bg-red-50,
+.dark .bg-rose-50 {
+  background-color: #4c0519 !important;
+  color: #f87171 !important;
+  border-color: #9f1239 !important;
+}
+
+.dark-theme .bg-amber-100,
+.dark .bg-amber-100 {
+  background-color: #78350f !important;
+  color: #fde047 !important;
+}
+
+.dark-theme .bg-purple-100,
+.dark .bg-purple-100 {
+  background-color: #3730a3 !important;
+  color: #e9d5ff !important;
+}
+
+.dark-theme .bg-blue-100,
+.dark .bg-blue-100 {
+  background-color: #1e3a8a !important;
+  color: #dbeafe !important;
+}
+
+/* 6. Borders */
+.dark-theme .border-slate-300,
+.dark-theme .border-slate-200,
+.dark-theme .border-slate-100,
+.dark-theme [class*="border-slate"],
+.dark .border-slate-300,
+.dark .border-slate-200,
+.dark .border-slate-100,
+.dark [class*="border-slate"] {
+  border-color: #24324d !important;
+}
+
+/* 7. Inputs, Textareas, Selects & Sliders */
+.dark-theme input:not([type="checkbox"]):not([type="radio"]),
 .dark-theme select,
-.dark-theme textarea {
+.dark-theme textarea,
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark select,
+.dark textarea {
   background-color: #0b0f19 !important;
   color: #f8fafc !important;
   border-color: #24324d !important;
 }
 
-.dark-theme .bg-cyan-50,
-.dark-theme .bg-amber-50,
-.dark-theme .bg-emerald-50,
-.dark-theme .bg-red-50,
-.dark-theme .bg-teal-50,
-.dark-theme .bg-indigo-50,
-.dark-theme [class*="to-teal-50"],
-.dark-theme [class*="to-cyan-50"],
-.dark-theme [class*="to-blue-50"] {
-  background-color: #131c2e !important;
-  border-color: #24324d !important;
+.dark-theme input[type="range"],
+.dark input[type="range"] {
+  accent-color: #38bdf8 !important;
+  background: transparent !important;
 }
 
-.dark-theme .text-slate-400 {
-  color: #94a3b8 !important;
+/* 8. Progress Bars Tracks */
+.dark-theme [class*="bg-slate-100"][class*="rounded-full"],
+.dark-theme [class*="bg-slate-200"][class*="rounded-full"],
+.dark-theme [class*="bg-cyan-100"][class*="rounded-full"],
+.dark [class*="bg-slate-100"][class*="rounded-full"],
+.dark [class*="bg-slate-200"][class*="rounded-full"],
+.dark [class*="bg-cyan-100"][class*="rounded-full"] {
+  background-color: #1e293b !important;
+}
+
+/* 9. Preserve High Contrast for Scannable QR Codes */
+.dark-theme img[alt*="QR"],
+.dark-theme img[alt*="qr"],
+.dark img[alt*="QR"],
+.dark img[alt*="qr"] {
+  background-color: #ffffff !important;
 }
 
 /* Diary Typography Font Families */

@@ -1215,39 +1215,39 @@ export default function HealthHubTab({
       {/* ==================================================== */}
       {activeSubTab === 'bmi' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-purple-100 text-purple-700">
+                <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
                   <Scale size={20} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800">{t('bmi_calculator', lang)}</h3>
-                  <p className="text-[11px] text-slate-500">{t('bmi_sub', lang)}</p>
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t('bmi_calculator', lang)}</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('bmi_sub', lang)}</p>
                 </div>
               </div>
             </div>
 
             {/* BMI Display Meter */}
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-5 text-center border border-purple-200">
-              <span className="text-xs font-bold text-purple-700 block uppercase tracking-wider">
+            <div className="bmi-meter-card bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-slate-800/90 dark:to-indigo-950/70 rounded-2xl p-5 text-center border border-purple-200 dark:border-indigo-800/50">
+              <span className="text-xs font-bold text-purple-700 dark:text-purple-300 block uppercase tracking-wider">
                 {t('your_bmi_score', lang)}
               </span>
-              <span className="text-5xl font-black text-slate-800 tracking-tight my-1 block">
+              <span className="text-5xl font-black text-slate-800 dark:text-white tracking-tight my-1 block">
                 {bmiValue}
               </span>
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${bmiCat.color}`}>
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${bmiCat.color} dark:bg-slate-900/90 dark:border-current`}>
                 {bmiCat.label}
               </span>
 
               {/* Visual Category Meter */}
-              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden mt-4">
+              <div className="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden mt-4">
                 <div
                   className={`h-full ${bmiCat.barColor} transition-all duration-500`}
                   style={{ width: `${Math.min(100, Math.max(10, (bmiValue / 40) * 100))}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] text-slate-500 mt-1 font-semibold">
+              <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
                 <span>18.5 ({lang === 'gu' ? 'ઓછું' : (lang === 'hi' ? 'कम' : 'Under')})</span>
                 <span>25 ({lang === 'gu' ? 'સામાન્ય' : (lang === 'hi' ? 'सामान्य' : 'Normal')})</span>
                 <span>30 ({lang === 'gu' ? 'વધુ' : (lang === 'hi' ? 'अधिक' : 'Over')})</span>
@@ -1257,9 +1257,9 @@ export default function HealthHubTab({
             {/* Height & Weight Inputs */}
             <div className="space-y-3">
               <div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   <span>{t('weight_kg', lang)}:</span>
-                  <span className="text-purple-700 font-extrabold">{weightKg} kg</span>
+                  <span className="text-purple-700 dark:text-purple-300 font-extrabold">{weightKg} kg</span>
                 </div>
                 <input
                   type="range"
@@ -1268,14 +1268,14 @@ export default function HealthHubTab({
                   step="0.5"
                   value={weightKg}
                   onChange={(e) => setWeightKg(e.target.value)}
-                  className="w-full accent-purple-600"
+                  className="w-full accent-purple-600 dark:accent-purple-400 cursor-pointer"
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   <span>{t('height_cm', lang)}:</span>
-                  <span className="text-purple-700 font-extrabold">{heightCm} cm</span>
+                  <span className="text-purple-700 dark:text-purple-300 font-extrabold">{heightCm} cm</span>
                 </div>
                 <input
                   type="range"
@@ -1284,17 +1284,17 @@ export default function HealthHubTab({
                   step="1"
                   value={heightCm}
                   onChange={(e) => setHeightCm(e.target.value)}
-                  className="w-full accent-purple-600"
+                  className="w-full accent-purple-600 dark:accent-purple-400 cursor-pointer"
                 />
               </div>
             </div>
 
             {/* Ideal Weight Recommendation */}
-            <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs">
-              <span className="font-bold text-emerald-900 block mb-0.5">
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 text-xs">
+              <span className="font-bold text-emerald-900 dark:text-emerald-300 block mb-0.5">
                 💡 {t('ideal_weight', lang)}:
               </span>
-              <p className="text-emerald-800">
+              <p className="text-emerald-800 dark:text-emerald-200">
                 {lang === 'gu'
                   ? `તમારી ઊંચાઈ (${heightCm} cm) માટે તંદુરસ્ત વજન ${minHealthyWeight} kg થી ${maxHealthyWeight} kg વચ્ચે હોવું જોઈએ.`
                   : lang === 'hi'
@@ -1304,9 +1304,9 @@ export default function HealthHubTab({
             </div>
 
             {/* Advice box */}
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700">
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-200">
               <span className="font-bold block mb-0.5">{t('health_tip_label', lang)}</span>
-              <p className="leading-relaxed text-slate-600">{bmiCat.advice}</p>
+              <p className="leading-relaxed text-slate-600 dark:text-slate-300">{bmiCat.advice}</p>
             </div>
 
             <button
