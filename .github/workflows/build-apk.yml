@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.10.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.11.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.10.apk
+            daily-diary-v1.0.11.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,20 +68,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.10
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.10 Lightweight <8MB)"
+          tag_name: v1.0.11
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.11 Mobile Report Downloads & Instant Notification)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.10)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.11)
 
-            આ નવા વર્ઝનમાં કરવામાં આવેલા સુધારા:
-            - **સુપર લાઇટવેઇટ સાઈઝ ફિક્સ (માત્ર ~૭.૮ MB):** અગાઉ જૂની APK ફાઈલો પબ્લિક એસેટ્સમાં કોપી થવાને કારણે એપની સાઈઝ મોટી થઈ ગઈ હતી. હવે તે તમામ વધારાની ફાઈલો કાયમી માટે હટાવીને સાઈઝ પાછી **૭.૮ MB (૧૦ MB થી પણ ઓછી)** કરી દેવામાં આવી છે!
-            - **સંપૂર્ણ ડાર્ક મોડ કોન્ટ્રાસ્ટ:** તમામ ગ્રાફ, ચાર્ટ્સ, મોશન સેન્સર કાર્ડ અને દવાઓનું રૂટિન ડાર્ક મોડમાં સ્ફટિક સ્પષ્ટ અને હાઇ-કોન્ટ્રાસ્ટ સાથે વંચાય તેવું કરી દીધું છે.
-            - **શુદ્ધ ગુજરાતી ભાષાંતર:** "રોકડ સિલક" અને "બધું જુઓ" સહિતના તમામ લેબલ્સ ઉમેરી દીધા છે.
-            - **સુપરફાસ્ટ પર્ફોર્મન્સ અને સ્મૂધ યુઝર એક્સપિરિયન્સ.**
+            આ નવા વર્ઝનમાં કરવામાં આવેલા મહત્વપૂર્ણ સુધારા:
+            - **મોબાઈલ અને બ્રાઉઝરમાં રિપોર્ટ ડાઉનલોડ ફિક્સ:** હવે કમ્પ્યુટરની જેમ જ મોબાઈલ બ્રાઉઝર અને એન્ડ્રોઇડ એપમાં તમામ PDF તથા Excel/CSV રિપોર્ટ સીધા જ ડાઉનલોડ થાય છે.
+            - **તત્કાલ નોટિફિકેશન એલર્ટ:** રિપોર્ટ ડાઉનલોડ થતાં જ તુરંત સ્ટેટસ બારમાં 📄 "રિપોર્ટ ડાઉનલોડ થઈ ગયો છે!" નું નોટિફિકેશન આવી જાય છે.
+            - **ડાયરેક્ટ PDF અને Excel ઓપન/જુઓ:** રિપોર્ટ તૈયાર થતાં જ એક સુંદર શીટ ઓપન થાય છે જેમાં યુઝર એક જ ક્લિકમાં ડાયરેક્ટ PDF/એક્સેલ જોઈ શકે છે અથવા મોબાઈલ એપ્સ (WhatsApp, Google Drive PDF Viewer, Files) માં શેર કરી શકે છે.
+            - **સુપર લાઇટવેઇટ સાઈઝ (<8 MB):** એપની સાઈઝ હજુ પણ અતિ હળવી ~૭.૮ MB જળવાઈ રહી છે.
+            - **સંપૂર્ણ ડાર્ક મોડ અને શુદ્ધ ગુજરાતી ભાષા સપોર્ટ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.10.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.11.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.10.apk
+            daily-diary-v1.0.11.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

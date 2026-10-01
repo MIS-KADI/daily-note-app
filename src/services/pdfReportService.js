@@ -899,6 +899,7 @@ export const generateMonthlyReportPDF = async ({
   reportCategory = 'all', // 'all', 'finance', 'health', 'reminders', 'notes'
   pdfPassword = '',
   lang = 'gu',
+  autoSave = false,
 }) => {
   // 1. Create a hidden rendering container in the DOM
   const container = document.createElement('div');
@@ -971,11 +972,27 @@ export const generateMonthlyReportPDF = async ({
       }
     }
 
-    // 4. Download file
+    // 4. Output PDF details and blob
     const langSuffix = lang.toUpperCase();
     const sanitizedMonth = monthYear.replace(/\s+/g, '_');
     const categoryTag = reportCategory === 'all' ? 'Full' : reportCategory.charAt(0).toUpperCase() + reportCategory.slice(1);
-    pdf.save(`DailyDiary_${categoryTag}_${langSuffix}_${sanitizedMonth}.pdf`);
+    const filename = `DailyDiary_${categoryTag}_${langSuffix}_${sanitizedMonth}.pdf`;
+
+    const blob = pdf.output('blob');
+    const arrayBuffer = pdf.output('arraybuffer');
+    const dataUri = pdf.output('datauristring');
+
+    if (autoSave) {
+      pdf.save(filename);
+    }
+
+    return {
+      pdf,
+      filename,
+      blob,
+      arrayBuffer,
+      dataUri,
+    };
   } finally {
     // Clean up
     document.body.removeChild(container);

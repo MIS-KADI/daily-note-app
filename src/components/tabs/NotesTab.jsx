@@ -45,6 +45,7 @@ import { streakService, MOODS } from '../../services/streakService';
 import { storageService } from '../../services/storageService';
 import { generateMonthlyReportPDF } from '../../services/pdfReportService';
 import { notificationService } from '../../services/notificationService';
+import { downloadOrSharePDF } from '../../services/fileDownloadService';
 
 export default function NotesTab({
   notes = [],
@@ -737,7 +738,7 @@ export default function NotesTab({
         ? notes
         : notes.filter((n) => n.date && n.date.startsWith(exportMonth));
 
-      await generateMonthlyReportPDF({
+      const pdfResult = await generateMonthlyReportPDF({
         user,
         monthYear: exportMonth === 'all' ? 'All Diary Notes' : exportMonth,
         notesList: notesToExport,
@@ -745,6 +746,15 @@ export default function NotesTab({
         pdfPassword: usePdfPassword ? pdfPassword : '',
         lang,
       });
+
+      if (pdfResult && pdfResult.blob) {
+        await downloadOrSharePDF({
+          pdfBlob: pdfResult.blob,
+          filename: pdfResult.filename,
+          title: lang === 'gu' ? 'ડાયરી નોંધો રિપોર્ટ' : 'Diary Notes Report',
+          lang,
+        });
+      }
 
       confetti({ particleCount: 70, spread: 60 });
       setIsPdfExportOpen(false);

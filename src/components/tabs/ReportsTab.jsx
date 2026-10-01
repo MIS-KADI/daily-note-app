@@ -15,9 +15,19 @@ import {
   ArrowUpRight,
   Filter,
   Check,
+  Share2,
+  ExternalLink,
+  Eye,
+  X,
+  Bell,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { generateMonthlyReportPDF, buildReportHtml } from '../../services/pdfReportService';
+import {
+  downloadOrSharePDF,
+  downloadOrShareCSV,
+  directOpenFile,
+} from '../../services/fileDownloadService';
 import { t } from '../../services/i18n';
 
 export default function ReportsTab({
@@ -41,6 +51,7 @@ export default function ReportsTab({
   const [downloading, setDownloading] = useState(false);
   const [usePdfPassword, setUsePdfPassword] = useState(false);
   const [pdfPassword, setPdfPassword] = useState('');
+  const [readyFile, setReadyFile] = useState(null);
 
   // Month options for selector
   const monthOptions = [
@@ -103,11 +114,11 @@ export default function ReportsTab({
       categoryTotals[f.category] = (categoryTotals[f.category] || 0) + Number(f.amount);
     });
 
-  // Handler for High-Resolution Unicode PDF download
+  // Handler for High-Resolution Unicode PDF download with mobile support and notification
   const handleDownloadPDF = async () => {
     setDownloading(true);
     try {
-      await generateMonthlyReportPDF({
+      const pdfResult = await generateMonthlyReportPDF({
         user,
         monthYear: selectedMonth,
         financeList: finance,
@@ -122,6 +133,16 @@ export default function ReportsTab({
         pdfPassword: usePdfPassword ? pdfPassword : '',
         lang,
       });
+
+      const result = await downloadOrSharePDF({
+        pdfBlob: pdfResult.blob,
+        filename: pdfResult.filename,
+        title: `${t('reports_title', lang)} - ${selectedMonth}`,
+        lang,
+        autoShare: true,
+      });
+
+      setReadyFile(result);
 
       confetti({
         particleCount: 80,
@@ -201,29 +222,44 @@ export default function ReportsTab({
     printWin.document.close();
   };
 
-  // Handler for CSV Export
-  const handleDownloadCSV = () => {
-    const headers = ['Date', 'Type', 'Category', 'Description', 'PaymentMode', 'Amount'];
-    const rows = finance.map((f) => [
-      f.date,
-      f.type,
-      `"${f.category}"`,
-      `"${f.description || ''}"`,
-      `"${f.paymentMode || ''}"`,
-      f.amount,
-    ]);
+  // Handler for CSV / Excel Export with Unicode UTF-8 BOM, mobile support and notification
+  const handleDownloadCSV = async () => {
+    setDownloading(true);
+    try {
+      const headers = ['Date', 'Type', 'Category', 'Description', 'PaymentMode', 'Amount'];
+      const rows = finance.map((f) => [
+        f.date,
+        f.type,
+        `"${f.category}"`,
+        `"${(f.description || '').replace(/"/g, '""')}"`,
+        `"${(f.paymentMode || '').replace(/"/g, '""')}"`,
+        f.amount,
+      ]);
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+      const csvString = [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+      const filename = `Finance_Report_${selectedMonth.replace(/\s+/g, '_')}.csv`;
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Finance_Report_${selectedMonth.replace(/\s+/g, '_')}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const result = await downloadOrShareCSV({
+        filename,
+        csvString,
+        title: `${t('finance', lang)} - ${selectedMonth}`,
+        lang,
+        autoShare: true,
+      });
+
+      setReadyFile(result);
+
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+    } catch (e) {
+      console.error('CSV export error:', e);
+      alert(lang === 'gu' ? 'એક્સેલ / CSV ડાઉનલોડ કરવામાં અડચણ આવી.' : 'Error downloading CSV.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -494,12 +530,161 @@ export default function ReportsTab({
       </div>
 
       {/* Data Privacy & Security Badge */}
-      <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center gap-2.5 text-xs text-slate-500">
-        <ShieldCheck className="text-emerald-600 shrink-0" size={18} />
+      <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 text-xs text-slate-500 dark:text-slate-400">
+        <ShieldCheck className="text-emerald-600 dark:text-emerald-400 shrink-0" size={18} />
         <span>
           {t('report_encrypted_note', lang)}
         </span>
       </div>
+
+      {/* Ready File Modal: Direct View, Open, and Share Sheet */}
+      {readyFile && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 rounded-2xl">
+                  <CheckCircle2 size={24} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    {lang === 'gu'
+                      ? 'રિપોર્ટ તૈયાર છે!'
+                      : lang === 'hi'
+                      ? 'रिपोर्ट तैयार है!'
+                      : 'Report Ready!'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {readyFile.type === 'pdf' ? 'PDF દસ્તાવેજ' : 'Excel / CSV સ્પ્રેડશીટ'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setReadyFile(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* File Info Card */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 flex items-center gap-3">
+              <div className="p-2.5 bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400 rounded-xl shrink-0">
+                {readyFile.type === 'pdf' ? <FileText size={22} /> : <FileSpreadsheet size={22} />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {readyFile.filename}
+                </p>
+                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium mt-0.5">
+                  <Check size={13} />
+                  {lang === 'gu' ? 'ડાઉનલોડ / સેવ થયેલ' : 'Downloaded / Saved'}
+                </p>
+              </div>
+            </div>
+
+            {/* Notification alert status */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl text-[11px] text-blue-700 dark:text-blue-300 font-medium">
+              <Bell size={14} className="shrink-0 text-blue-500" />
+              <span>
+                {lang === 'gu'
+                  ? 'નોટિફિકેશન મોકલાઈ ગયું છે 🔔'
+                  : lang === 'hi'
+                  ? 'सूचना भेज दी गई है 🔔'
+                  : 'Notification sent 🔔'}
+              </span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-1">
+              {/* Button 1: Direct Open / View */}
+              <button
+                type="button"
+                onClick={() =>
+                  directOpenFile({
+                    nativeUri: readyFile.nativeUri,
+                    blobUrl: readyFile.blobUrl,
+                    blob: readyFile.blob,
+                    filename: readyFile.filename,
+                    isNative: readyFile.isNative,
+                    lang,
+                  })
+                }
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition cursor-pointer"
+              >
+                <Eye size={18} />
+                <span>
+                  {readyFile.type === 'pdf'
+                    ? lang === 'gu'
+                      ? 'ડાયરેક્ટ PDF ખોલો / જુઓ'
+                      : lang === 'hi'
+                      ? 'सीधे PDF खोलें / देखें'
+                      : 'Direct Open / View PDF'
+                    : lang === 'gu'
+                    ? 'ડાયરેક્ટ એક્સેલ ખોલો / જુઓ'
+                    : lang === 'hi'
+                    ? 'सीधे एक्सेल खोलें / देखें'
+                    : 'Direct Open / View Excel'}
+                </span>
+                <ExternalLink size={15} className="opacity-75" />
+              </button>
+
+              {/* Button 2: Share / Open via Mobile App Chooser */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (readyFile.type === 'pdf') {
+                    downloadOrSharePDF({
+                      pdfBlob: readyFile.blob,
+                      filename: readyFile.filename,
+                      title: readyFile.filename,
+                      lang,
+                      autoShare: true,
+                    });
+                  } else {
+                    downloadOrShareCSV({
+                      filename: readyFile.filename,
+                      csvString: readyFile.csvString || '',
+                      title: readyFile.filename,
+                      lang,
+                      autoShare: true,
+                    });
+                  }
+                }}
+                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 transition cursor-pointer"
+              >
+                <Share2 size={18} />
+                <span>
+                  {lang === 'gu'
+                    ? 'મોબાઈલમાં ઓપન અથવા શેર કરો'
+                    : lang === 'hi'
+                    ? 'मोबाइल में खोलें या शेयर करें'
+                    : 'Open or Share in Mobile'}
+                </span>
+              </button>
+
+              {/* Button 3: Download Again */}
+              {readyFile.blobUrl && (
+                <a
+                  href={readyFile.blobUrl}
+                  download={readyFile.filename}
+                  className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-2xl flex items-center justify-center gap-2 transition text-xs text-center"
+                >
+                  <Download size={15} />
+                  <span>
+                    {lang === 'gu'
+                      ? 'ફરીથી ડાઉનલોડ કરો'
+                      : lang === 'hi'
+                      ? 'फिर से डाउनलोड करें'
+                      : 'Download Again'}
+                  </span>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
