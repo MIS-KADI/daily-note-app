@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.9.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.10.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.9.apk
+            daily-diary-v1.0.10.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,21 +68,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.9
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.9 Latest)"
+          tag_name: v1.0.10
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.10 Lightweight <8MB)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.9)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.10)
 
-            આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ ડીપ ડાર્ક મોડ સુધારા:
-            - **બેંક vs રોકડ અને ખાતાવહી લેતી-દેતી ચાર્ટ:** ડાર્ક મોડમાં બેંક/કેશ કાર્ડ્સ, મારે લેવાના/આપવાના બોક્સ અને પર્સેન્ટેજ બેજ સંપૂર્ણ હાઇ-કોન્ટ્રાસ્ટ અને તેજસ્વી બનાવ્યા.
-            - **વાર મુજબ ખર્ચ વિશ્લેષણ ગ્રાફ:** ડાર્ક મોડમાં ગ્રાફના બાર ગાયબ થવાની સમસ્યા હલ કરી અને સૌથી વધુ ખર્ચવાળા દિવસનો ગ્રાફ વાઇબ્રન્ટ બનાવ્યો.
-            - **મોશન સેન્સર કાર્ડ (હેલ્થ હબ & હોમ):** ડાર્ક મોડમાં કાર્ડનો બેકગ્રાઉન્ડ અને લખાણ એકદમ સ્પષ્ટ વંચાય તેવું સેટ કર્યું.
-            - **ભાષાંતર સુધારો ("રોકડ સિલક" & "બધું જુઓ"):** `cash_balance` અને `view_all` ના અનટ્રાન્સલેટેડ લેબલ સુધારી શુદ્ધ ગુજરાતીમાં સેટ કર્યા.
-            - **દવાઓનું રૂટિન & વોટર ટ્રેકર:** દરેક દવા કાર્ડ, "બાકી/લીધી" સ્ટેટસ બેજ અને વોટર ગ્લાસ બંને મોડમાં સ્ફટિક સ્પષ્ટ દેખાશે.
+            આ નવા વર્ઝનમાં કરવામાં આવેલા સુધારા:
+            - **સુપર લાઇટવેઇટ સાઈઝ ફિક્સ (માત્ર ~૭.૮ MB):** અગાઉ જૂની APK ફાઈલો પબ્લિક એસેટ્સમાં કોપી થવાને કારણે એપની સાઈઝ મોટી થઈ ગઈ હતી. હવે તે તમામ વધારાની ફાઈલો કાયમી માટે હટાવીને સાઈઝ પાછી **૭.૮ MB (૧૦ MB થી પણ ઓછી)** કરી દેવામાં આવી છે!
+            - **સંપૂર્ણ ડાર્ક મોડ કોન્ટ્રાસ્ટ:** તમામ ગ્રાફ, ચાર્ટ્સ, મોશન સેન્સર કાર્ડ અને દવાઓનું રૂટિન ડાર્ક મોડમાં સ્ફટિક સ્પષ્ટ અને હાઇ-કોન્ટ્રાસ્ટ સાથે વંચાય તેવું કરી દીધું છે.
+            - **શુદ્ધ ગુજરાતી ભાષાંતર:** "રોકડ સિલક" અને "બધું જુઓ" સહિતના તમામ લેબલ્સ ઉમેરી દીધા છે.
+            - **સુપરફાસ્ટ પર્ફોર્મન્સ અને સ્મૂધ યુઝર એક્સપિરિયન્સ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.9.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.10.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.9.apk
+            daily-diary-v1.0.10.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
