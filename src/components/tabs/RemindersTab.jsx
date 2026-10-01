@@ -909,14 +909,14 @@ export default function RemindersTab({
                     {/* Task Title & Description - Full Width Continuous (સળંગ) */}
                     <div className="pt-2">
                       <h4
-                        className={`text-sm font-bold leading-normal break-words ${
+                        className={`text-sm font-bold leading-normal break-normal ${
                           r.isCompleted ? 'line-through text-slate-400' : 'text-slate-800'
                         }`}
                       >
                         {(r.title || '').replace(/\r?\n+/g, ' ').trim()}
                       </h4>
 
-                      {/* Clean Description only if not duplicate of title and not raw checklist markup */}
+                      {/* Clean Description Note only if not duplicate of title and not raw checklist markup */}
                       {(() => {
                         if (!r.description) return null;
                         const lines = r.description
@@ -929,9 +929,10 @@ export default function RemindersTab({
                         const normTitle = (r.title || '').replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
                         if (normClean === normTitle) return null;
                         return (
-                          <p className="text-xs text-slate-500 mt-1 leading-relaxed break-words">
-                            {cleanText}
-                          </p>
+                          <div className="mt-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100/90 text-xs text-slate-600 leading-relaxed break-normal">
+                            <span className="font-semibold text-slate-800">📝 {lang === 'gu' ? 'નોંધ:' : 'Note:'} </span>
+                            <span>{cleanText}</span>
+                          </div>
                         );
                       })()}
                     </div>

@@ -194,7 +194,7 @@ const DEFAULT_EVENTS = [
     name: 'રમેશભાઈ શાહ (Ramesh Shah)',
     type: 'birthday',
     date: new Date().toISOString().split('T')[0], // Today
-    phone: '0000000001',
+    phone: '9825011223',
     relation: 'મિત્ર (Friend)',
     notes: 'સાંજે ૭ વાગે જન્મદિવસ પાર્ટી',
   },
@@ -203,7 +203,7 @@ const DEFAULT_EVENTS = [
     name: 'મુકેશભાઈ & રીતાબેન (Mukesh & Rita)',
     type: 'anniversary',
     date: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
-    phone: '0000000001',
+    phone: '9428044556',
     relation: 'કાકા-કાકી',
     notes: 'લગ્ન વર્ષગાંઠ (૨૫મી સિલ્વર જ્યુબિલી)',
   },
@@ -255,7 +255,21 @@ export const storageService = {
       localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(DEFAULT_REMINDERS));
       return DEFAULT_REMINDERS;
     }
-    return JSON.parse(data);
+    try {
+      const parsed = JSON.parse(data);
+      return parsed.map((r) => {
+        if (r.id === 'rem-1') {
+          return {
+            ...r,
+            title: 'બેંક ઓફ બરોડા - ચેક જમા કરાવવો',
+            description: 'નવી ચેકબુકની એન્ટ્રી કરાવવી અને ગ્રાન્ટનો ચેક ક્લિયરન્સમાં નાખવો.',
+          };
+        }
+        return r;
+      });
+    } catch {
+      return DEFAULT_REMINDERS;
+    }
   },
 
   saveReminders(reminders) {
@@ -444,7 +458,7 @@ export const storageService = {
         {
           id: 'kh-1',
           partyName: 'રમેશભાઈ શાહ (Ramesh Shah)',
-          phone: '0000000001',
+          phone: '9825011223',
           type: 'to_receive', // લેવાના છે (You'll Get)
           amount: 5000,
           date: new Date().toISOString().split('T')[0],
@@ -455,7 +469,7 @@ export const storageService = {
         {
           id: 'kh-2',
           partyName: 'કૃષ્ણ ટ્રેડર્સ (Krishna Traders)',
-          phone: '0000000001',
+          phone: '9428044556',
           type: 'to_pay', // આપવાના છે (You'll Give)
           amount: 3200,
           date: new Date().toISOString().split('T')[0],
@@ -470,14 +484,15 @@ export const storageService = {
     try {
       const parsed = JSON.parse(data);
       return parsed.map((k) => {
-        // Strip legacy dummy numbers or empty and provide clean default 0000000001
-        if (k.phone === '+91 98250 11223' || k.phone === '+91 94280 44556' || k.phone === '0' || !k.phone) {
-          return { ...k, phone: '0000000001' };
+        // Strip legacy dummy numbers or 0000000001 and restore previous numbers
+        let phone = k.phone;
+        if (!phone || phone === '0' || phone === '0000000001' || phone === '+91 98250 11223' || phone === '+91 94280 44556') {
+          phone = k.id === 'kh-2' ? '9428044556' : '9825011223';
         }
         // Enforce 10-digit mobile number
-        const digits = String(k.phone).replace(/\D/g, '');
+        const digits = String(phone).replace(/\D/g, '');
         const tenDigit = digits.length > 10 ? digits.slice(-10) : digits;
-        return { ...k, phone: tenDigit || '0000000001' };
+        return { ...k, phone: tenDigit || (k.id === 'kh-2' ? '9428044556' : '9825011223') };
       });
     } catch {
       return [];
@@ -497,12 +512,13 @@ export const storageService = {
     try {
       const parsed = JSON.parse(data);
       return parsed.map((ev) => {
-        if (ev.phone === '+91 98250 11223' || ev.phone === '+91 94280 44556' || ev.phone === '0' || !ev.phone) {
-          return { ...ev, phone: '0000000001' };
+        let phone = ev.phone;
+        if (!phone || phone === '0' || phone === '0000000001' || phone === '+91 98250 11223' || phone === '+91 94280 44556') {
+          phone = ev.type === 'anniversary' ? '9428044556' : '9825011223';
         }
-        const digits = String(ev.phone).replace(/\D/g, '');
+        const digits = String(phone).replace(/\D/g, '');
         const tenDigit = digits.length > 10 ? digits.slice(-10) : digits;
-        return { ...ev, phone: tenDigit || '0000000001' };
+        return { ...ev, phone: tenDigit || (ev.type === 'anniversary' ? '9428044556' : '9825011223') };
       });
     } catch {
       return [];

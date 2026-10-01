@@ -727,31 +727,36 @@ export default function HomeTab({
       {/* Priority 2: Next Meeting or Bank Work */}
       {nextMeetingOrBank && (
         <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-3xl p-4 border border-amber-200/80 shadow-xs">
-          <div className="flex items-start justify-between">
+          {/* Top Row: Icon & Tag on Left, Time badge on Right */}
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-amber-200/60">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-amber-500 text-white shadow-xs">
-                {nextMeetingOrBank.type === 'bank' ? <Building2 size={18} /> : <Users size={18} />}
+              <div className="p-1.5 rounded-xl bg-amber-500 text-white shadow-xs shrink-0">
+                {nextMeetingOrBank.type === 'bank' ? <Building2 size={16} /> : <Users size={16} />}
               </div>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-md">
-                  {nextMeetingOrBank.type === 'bank' ? t('bank_important_work', lang) : t('meeting_alert', lang)}
-                </span>
-                <h4 className="text-sm font-bold text-slate-800 mt-1">
-                  {nextMeetingOrBank.title}
-                </h4>
-              </div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 bg-amber-200/70 px-2.5 py-0.5 rounded-md">
+                {nextMeetingOrBank.type === 'bank' ? t('bank_important_work', lang) : t('meeting_alert', lang)}
+              </span>
             </div>
-            <span className="text-xs font-extrabold text-amber-900 bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-amber-200 flex items-center gap-1">
-              <Clock size={12} />
+            <span className="text-xs font-extrabold text-amber-900 bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-amber-200 flex items-center gap-1 shrink-0">
+              <Clock size={12} className="text-amber-600" />
               {nextMeetingOrBank.time}
             </span>
           </div>
 
-          {nextMeetingOrBank.description && (
-            <p className="text-xs text-slate-600 mt-2 pl-1 leading-relaxed">
-              {nextMeetingOrBank.description}
-            </p>
-          )}
+          {/* Full Width Continuous (સળંગ) Title */}
+          <div className="pt-2">
+            <h4 className="text-sm font-bold text-slate-800 leading-normal break-normal">
+              {nextMeetingOrBank.title}
+            </h4>
+
+            {/* Full Width Continuous (સળંગ) Note Description */}
+            {nextMeetingOrBank.description && (
+              <p className="text-xs text-slate-600 mt-2 leading-relaxed bg-white/70 p-2.5 rounded-xl border border-amber-100/90 break-normal">
+                <span className="font-bold text-amber-950">📝 {lang === 'gu' ? 'નોંધ:' : 'Note:'} </span>
+                <span>{nextMeetingOrBank.description}</span>
+              </p>
+            )}
+          </div>
 
           <div className="mt-3 pt-2 border-t border-amber-200/60 flex items-center justify-between">
             <button

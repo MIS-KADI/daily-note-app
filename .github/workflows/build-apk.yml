@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.5.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.6.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.5.apk
+            daily-diary-v1.0.6.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,20 +68,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.5
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.5 Latest)"
+          tag_name: v1.0.6
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.6 Latest)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.5)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.6)
 
             આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ સુધારા:
-            - **ડિફોલ્ટ મોબાઇલ નંબર (0000000001):** ખાતાવહી તેમજ બર્થડે/એનિવર્સરી વિશિઝમાં ડિફોલ્ટ નંબર 0000000001 સેટ કરવામાં આવ્યો છે અને સીધો કાર્ડ પર બટન તરીકે દેખાશે.
-            - **ખાતાવહી કાર્ડ સુંદર સિંગલ-લાઈન લેઆઉટ (Image 1):** ફોન નંબર, WhatsApp અને UPI QR હવે એક જ લાઈનમાં આવશે, અને નીચે તારીખ તથા પાકતી તારીખ પણ એક જ લાઈનમાં ગોઠવવામાં આવી છે.
-            - **કામો/રીમાઇન્ડર નોંધ સળંગ (Continuous) લેઆઉટ (Image 2 & 3):** રિમાઇન્ડર અને ખરીદીની નોંધ હવે બટનો વચ્ચે દબાયા વગર પૂરી પહોળાઈમાં સળંગ આવશે જેથી ૪ લાઈનમાં તૂટી ન જાય અને વાંચવામાં એકદમ સુંદર લાગે.
-            - **સુપરફાસ્ટ પર્ફોર્મન્સ અને સ્મૂધ કામગીરી.**
+            - **અગાઉના મોબાઈલ નંબર પુનઃસ્થાપિત:** ખાતાવહી અને બર્થડે/એનિવર્સરીમાં અગાઉના વ્યવસ્થિત ૧૦ અંકના મોબાઈલ નંબરો (૯૮૨૫૦૧૧૨૨૩ અને ૯૪૨૮૦૪૪૫૫૬) સેટ કરી દેવામાં આવ્યા છે.
+            - **કામની નોંધ સળંગ (Continuous) લેઆઉટ:** હોમ સ્ક્રીન તેમજ કામો/રિમાઇન્ડર ટેબ બંને જગ્યાએ **"બેંક ઓફ બરોડા - ચેક જમા કરાવવો"** ટાઇટલ અને નીચેની નોંધ **"નવી ચેકબુકની એન્ટ્રી કરાવવી અને ગ્રાન્ટનો ચેક ક્લિયરન્સમાં નાખવો."** પૂરી પહોળાઈ સાથે એકદમ સળંગ અને સુંદર દેખાશે.
+            - **ખાતાવહી એક જ લાઈનમાં:** ફોન નંબર, WhatsApp અને UPI QR એક લાઈનમાં અને નીચે તારીખો એક લાઈનમાં.
+            - **સુપરફાસ્ટ પર્ફોર્મન્સ અને સ્મૂધ યુઝર એક્સપિરિયન્સ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.5.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.6.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.5.apk
+            daily-diary-v1.0.6.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
