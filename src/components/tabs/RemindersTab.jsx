@@ -880,80 +880,31 @@ export default function RemindersTab({
 
                           {/* Task Title */}
                           <h4
-                            className={`text-sm font-bold mt-1.5 ${
+                            className={`text-sm font-bold mt-2 leading-snug ${
                               r.isCompleted ? 'line-through text-slate-400' : 'text-slate-800'
                             }`}
                           >
                             {r.title}
                           </h4>
 
-                          {/* Subtask checklist progress bar */}
-                          {subStats && (
-                            <div className="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-200/70 space-y-1">
-                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
-                                <span className="flex items-center gap-1">
-                                  <CheckSquareIcon size={12} className="text-indigo-600" />
-                                  {lang === 'gu' ? 'ચેકલિસ્ટ પ્રગતિ' : 'Checklist Progress'}
-                                </span>
-                                <span>
-                                  {subStats.completed}/{subStats.total} {lang === 'gu' ? 'પૂર્ણ' : 'done'} ({subStats.percent}%)
-                                </span>
-                              </div>
-                              <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full transition-all duration-300 ${
-                                    subStats.percent === 100 ? 'bg-emerald-500' : 'bg-indigo-600'
-                                  }`}
-                                  style={{ width: `${subStats.percent}%` }}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Checklist items in description */}
-                          {r.description && (
-                            <div className="mt-2 space-y-1">
-                              {r.description.split('\n').map((line, lIdx) => {
-                                const trimmed = line.trim();
-                                const isCheckItem =
-                                  trimmed.startsWith('☐') ||
-                                  trimmed.startsWith('☑️') ||
-                                  trimmed.startsWith('[ ]') ||
-                                  trimmed.startsWith('[x]');
-                                const isChecked =
-                                  trimmed.startsWith('☑️') || trimmed.startsWith('[x]');
-
-                                if (isCheckItem) {
-                                  const text = trimmed.replace(/^(☐|☑️|\[\s*\]|\[x\])\s*/, '');
-                                  return (
-                                    <button
-                                      key={lIdx}
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleToggleTaskSubItem(r.id, lIdx);
-                                      }}
-                                      className={`text-xs flex items-center gap-2 text-left py-0.5 px-1.5 rounded-lg transition ${
-                                        isChecked
-                                          ? 'line-through text-slate-400 hover:text-slate-500 bg-slate-50'
-                                          : 'text-slate-700 hover:bg-slate-100 font-medium'
-                                      }`}
-                                    >
-                                      <span className="text-sm leading-none select-none">
-                                        {isChecked ? '☑️' : '☐'}
-                                      </span>
-                                      <span>{text}</span>
-                                    </button>
-                                  );
-                                }
-                                return (
-                                  <p key={lIdx} className="text-xs text-slate-500 leading-relaxed pl-1">
-                                    {line}
-                                  </p>
-                                );
-                              })}
-                            </div>
-                          )}
+                          {/* Clean Description only if not duplicate of title and not raw checklist markup */}
+                          {(() => {
+                            if (!r.description) return null;
+                            const lines = r.description
+                              .split('\n')
+                              .map((l) => l.trim())
+                              .filter((l) => l && !l.startsWith('☐') && !l.startsWith('☑️') && !l.startsWith('[ ]') && !l.startsWith('[x]') && !l.startsWith('કેટેગરી:'));
+                            const cleanText = lines.join(' ').trim();
+                            if (!cleanText) return null;
+                            const normClean = cleanText.replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
+                            const normTitle = (r.title || '').replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
+                            if (normClean === normTitle) return null;
+                            return (
+                              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                                {cleanText}
+                              </p>
+                            );
+                          })()}
                         </div>
                       </div>
 

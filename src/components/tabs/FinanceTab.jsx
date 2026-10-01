@@ -72,6 +72,7 @@ export default function FinanceTab({
   const [khDate, setKhDate] = useState(new Date().toISOString().split('T')[0]);
   const [khDueDate, setKhDueDate] = useState(new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
   const [khDescription, setKhDescription] = useState('');
+  const [editingKhataId, setEditingKhataId] = useState(null);
 
   // Balance edit form
   const [tempBankBal, setTempBankBal] = useState(accounts?.bankBalance ?? 42500);
@@ -158,6 +159,7 @@ export default function FinanceTab({
 
   // Handlers for Khata
   const handleOpenAddKhata = (defaultType = 'to_receive') => {
+    setEditingKhataId(null);
     setKhType(defaultType);
     setKhPartyName('');
     setKhPhone('');
@@ -168,26 +170,57 @@ export default function FinanceTab({
     setIsKhataModalOpen(true);
   };
 
+  const handleOpenEditKhata = (k) => {
+    setEditingKhataId(k.id);
+    setKhType(k.type || 'to_receive');
+    setKhPartyName(k.partyName || '');
+    setKhPhone(k.phone || '');
+    setKhAmount(k.amount ? String(k.amount) : '');
+    setKhDate(k.date || new Date().toISOString().split('T')[0]);
+    setKhDueDate(k.dueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
+    setKhDescription(k.description || '');
+    setIsKhataModalOpen(true);
+  };
+
   const handleSaveKhata = (e) => {
     e.preventDefault();
     const num = parseFloat(khAmount);
     if (!khPartyName.trim() || isNaN(num) || num <= 0) return;
 
-    const newEntry = {
-      id: 'kh-' + Date.now(),
-      partyName: khPartyName.trim(),
-      phone: khPhone.trim(),
-      type: khType,
-      amount: num,
-      date: khDate,
-      dueDate: khDueDate,
-      description: khDescription.trim(),
-      isSettled: false,
-    };
+    if (editingKhataId) {
+      const updated = khata.map((k) =>
+        k.id === editingKhataId
+          ? {
+              ...k,
+              partyName: khPartyName.trim(),
+              phone: khPhone.trim(),
+              type: khType,
+              amount: num,
+              date: khDate,
+              dueDate: khDueDate,
+              description: khDescription.trim(),
+            }
+          : k
+      );
+      onSaveKhata(updated);
+    } else {
+      const newEntry = {
+        id: 'kh-' + Date.now(),
+        partyName: khPartyName.trim(),
+        phone: khPhone.trim(),
+        type: khType,
+        amount: num,
+        date: khDate,
+        dueDate: khDueDate,
+        description: khDescription.trim(),
+        isSettled: false,
+      };
+      onSaveKhata([newEntry, ...khata]);
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    }
 
-    onSaveKhata([newEntry, ...khata]);
     setIsKhataModalOpen(false);
-    confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    setEditingKhataId(null);
   };
 
   const handleToggleSettleKhata = (khEntry) => {
@@ -652,7 +685,7 @@ export default function FinanceTab({
                         )}
 
                         <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-slate-500 mt-2">
-                          {k.phone && (
+                          {k.phone ? (
                             <a
                               href={`tel:${k.phone}`}
                               className="flex items-center gap-1 text-blue-600 font-bold hover:underline"
@@ -660,9 +693,23 @@ export default function FinanceTab({
                               <Phone size={12} />
                               {k.phone}
                             </a>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditKhata(k)}
+                              className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-lg font-bold text-[11px] transition active:scale-95"
+                              title={lang === 'gu' ? 'મોબાઇલ નંબર ઉમેરો' : 'Add phone number'}
+                            >
+                              <Phone size={11} />
+                              <span>{lang === 'gu' ? '+ ફોન નંબર ઉમેરો' : '+ Add Mobile'}</span>
+                            </button>
                           )}
                           <button
-                            onClick={() =>
+                            onClick={() => {
+                              if (!k.phone) {
+                                handleOpenEditKhata(k);
+                                return;
+                              }
                               whatsappService.sendPaymentReminder({
                                 partyName: k.partyName,
                                 phone: k.phone,
@@ -671,8 +718,8 @@ export default function FinanceTab({
                                 dueDate: k.dueDate,
                                 senderName: user?.name,
                                 lang,
-                              })
-                            }
+                              });
+                            }}
                             className="flex items-center gap-1 text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-lg font-bold transition active:scale-95"
                             title="WhatsApp"
                           >
@@ -711,7 +758,15 @@ export default function FinanceTab({
                           {isReceive ? '+' : '-'}₹{Number(k.amount).toLocaleString()}
                         </span>
 
-                        <div className="flex items-center justify-end gap-1.5 mt-2">
+                        <div className="flex items-center justify-end gap-1 mt-2">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditKhata(k)}
+                            className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition active:scale-95"
+                            title={lang === 'gu' ? 'વિગત / નંબર એડિટ કરો' : 'Edit details'}
+                          >
+                            <Edit2 size={14} />
+                          </button>
                           <button
                             onClick={() => handleToggleSettleKhata(k)}
                             className={`px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 active:scale-95 ${
@@ -895,7 +950,9 @@ export default function FinanceTab({
           <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <h3 className="text-base font-bold text-slate-800">
-                {khType === 'to_receive' ? t('to_receive', lang) : t('to_pay', lang)}
+                {editingKhataId
+                  ? (lang === 'gu' ? 'ખાતું / ફોન નંબર એડિટ કરો' : 'Edit Khata Entry')
+                  : (khType === 'to_receive' ? t('to_receive', lang) : t('to_pay', lang))}
               </h3>
               <button
                 onClick={() => setIsKhataModalOpen(false)}
@@ -1024,7 +1081,9 @@ export default function FinanceTab({
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs"
                 >
-                  {t('save_to_khata', lang)}
+                  {editingKhataId
+                    ? (lang === 'gu' ? 'સુધારો સાચવો ✓' : 'Update Khata')
+                    : t('save_to_khata', lang)}
                 </button>
               </div>
             </form>

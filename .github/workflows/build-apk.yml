@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.2.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.3.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.2.apk
+            daily-diary-v1.0.3.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,20 +68,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.2
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.2 Latest)"
+          tag_name: v1.0.3
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.3 Latest)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.2)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.3)
 
-            આ અપડેટમાં નવી સુવિધાઓ:
-            - **નેટિવ માઇક્રોફોન અને સ્પીચ રેકગ્નિશન સુધારો:** Android Native SpeechRecognizer સાથે અવાજથી ઝડપી અને ૧૦૦% સચોટ ગુજરાતી ટાઇપિંગ.
-            - **પ્રોફાઇલ સરળ અને ક્લીન:** ઓટીપી અને અનિચ્છનીય વિકલ્પો હટાવી સીધી અને સરળ પ્રોફાઇલ.
-            - **સ્પીડ અને પર્ફોર્મન્સ બૂસ્ટ:** એકદમ સ્મૂધ અને ફાસ્ટ અનુભવ.
-            - **એપ બંધ હોય તો પણ એલાર્મ:** નેટિવ Android AlarmManager અને LocalNotifications સપોર્ટ.
+            આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ સુધારા:
+            - **ખરીદી સીધી ખર્ચમાં વિગતવાર સેવ:** ખરીદીની વસ્તુઓ (દા.ત. ₹૧૫૦) સીધી ખર્ચમાં ઉમેરતી વખતે તમામ વસ્તુઓની વિગત સાથે સેવ થાય છે.
+            - **ખાતાવહીમાં મોબાઇલ નંબર એડિટ/ઉમેરો:** અવાજથી ઉમેરેલ ખાતામાં મોબાઇલ નંબર ન હોય તો ૧-ક્લિકમાં `+ ફોન નંબર ઉમેરો` બટન અને એડિટ બટનથી સરળતાથી નંબર સેવ કરી WhatsApp રીમાઇન્ડર મોકલી શકાય છે.
+            - **કામો/રીમાઇન્ડર કાર્ડ સુધારો:** વધારાના ચેકલિસ્ટ પ્રોગ્રેસ બોક્સ હટાવી એકદમ સુંદર, ચોખ્ખું અને આધુનિક કાર્ડ લેઆઉટ.
+            - **મોબાઇલ સ્ક્રીન ફિટ અને ટોપ બાર ક્લીનઅપ:** મોબાઇલ સ્ક્રીનમાં ૧૦૦% પરફેક્ટ ફિટ, ઉપરથી ડાયરી નામ, યુઝર નામ, સુરક્ષિત અને આસિસ્ટન્ટ હટાવી કોમ્પેક્ટ અને સ્મૂધ બાર.
+            - **હાઇ સ્પીડ અને સુપર સ્મૂધ પર્ફોર્મન્સ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.2.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.3.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.2.apk
+            daily-diary-v1.0.3.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

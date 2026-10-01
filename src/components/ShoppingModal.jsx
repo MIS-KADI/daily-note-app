@@ -51,13 +51,24 @@ export default function ShoppingModal({
 
   const handleTransferToFinance = () => {
     const defaultCat = t('shopping_default_category', lang);
-    if (purchasedAmount > 0) {
-      onAddExpense(purchasedAmount, defaultCat);
-      onClose();
-    } else if (totalAmount > 0) {
-      onAddExpense(totalAmount, defaultCat);
-      onClose();
-    }
+    const itemsToRecord = purchasedAmount > 0 
+      ? shoppingList.filter((item) => item.isDone) 
+      : shoppingList;
+    
+    const amountToTransfer = purchasedAmount > 0 ? purchasedAmount : totalAmount;
+    if (amountToTransfer <= 0 && itemsToRecord.length === 0) return;
+
+    // Create itemized summary: e.g. "બટાકા (₹50), ડુંગળી (₹100)"
+    const itemsSummary = itemsToRecord
+      .map((i) => (i.price > 0 ? `${i.item} (₹${i.price})` : i.item))
+      .join(', ');
+
+    const descriptionText = itemsSummary
+      ? (lang === 'hi' ? `खरीदारी: ${itemsSummary}` : lang === 'en' ? `Shopping: ${itemsSummary}` : `ખરીદી: ${itemsSummary}`)
+      : defaultCat;
+
+    onAddExpense(amountToTransfer, descriptionText);
+    onClose();
   };
 
   return (

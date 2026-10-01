@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Bell,
   Calculator,
-  ShieldCheck,
   Lock,
   Volume2,
   Sun,
@@ -10,7 +9,6 @@ import {
   ShoppingBag,
   ShieldAlert,
   Globe,
-  Sparkles,
 } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
 import { t } from '../services/i18n';
@@ -24,7 +22,6 @@ export default function Navbar({
   onOpenCalculator,
   onOpenShopping,
   onOpenEmergency,
-  onOpenAssistant,
   onTestAlarm,
   onLockApp,
   activeAlarmCount = 0,
@@ -47,52 +44,21 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-3 py-2.5 shadow-xs">
-      <div className="flex items-center justify-between">
-        {/* Brand & Profile */}
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 text-base">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3 py-2 shadow-xs w-full max-w-full overflow-hidden">
+      <div className="flex items-center justify-between w-full">
+        {/* Brand Logo Icon */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/25 text-sm select-none">
             📔
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-sm font-bold text-slate-800 leading-tight">
-                {t('app_name', lang)}
-              </h1>
-              <span
-                className="flex items-center gap-0.5 text-[9px] font-semibold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full"
-                title={t('secure', lang)}
-              >
-                <ShieldCheck size={10} />
-                {t('secure', lang)}
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-500 leading-tight truncate max-w-[100px]">
-              {user?.name || (lang === 'hi' ? 'मेरा खाता' : lang === 'en' ? 'My Account' : 'મારું એકાઉન્ટ')}
-            </p>
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-1">
-          {/* AI Smart Voice Assistant Button */}
-          {onOpenAssistant && (
-            <button
-              onClick={onOpenAssistant}
-              className="px-2 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold text-xs shadow-sm shadow-indigo-500/25 flex items-center gap-1.5 transition active:scale-95"
-              title={lang === 'hi' ? 'स्मार्ट वॉइस सहायक' : lang === 'en' ? 'Smart AI Assistant' : 'સ્માર્ટ વોઈસ આસિસ્ટન્ટ'}
-            >
-              <Sparkles size={14} className="text-amber-300" />
-              <span className="text-[11px] font-bold">
-                {lang === 'hi' ? 'AI सहायक' : lang === 'en' ? 'AI Voice' : '🎙️ આસિસ્ટન્ટ'}
-              </span>
-            </button>
-          )}
-
+        {/* Action Controls - Compact & Clean */}
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {/* Language Selector Button */}
           <button
             onClick={onOpenLanguage}
-            className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition active:scale-95 flex items-center gap-1 text-[11px] font-bold"
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition active:scale-95 flex items-center gap-0.5 text-[11px] font-bold"
             title={t('language', lang)}
           >
             <Globe size={15} className="text-blue-600" />
@@ -102,62 +68,63 @@ export default function Navbar({
           {/* Dark / Light Mode Switcher */}
           <button
             onClick={onToggleTheme}
-            className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition active:scale-95"
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition active:scale-95"
             title={theme === 'dark' ? t('light_mode', lang) : t('dark_mode', lang)}
           >
             {theme === 'dark' ? (
-              <Sun size={16} className="text-amber-400" />
+              <Sun size={15} className="text-amber-400" />
             ) : (
-              <Moon size={16} className="text-indigo-600" />
+              <Moon size={15} className="text-indigo-600" />
             )}
           </button>
 
           {/* Shopping Quick Access */}
           <button
             onClick={onOpenShopping}
-            className="p-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition active:scale-95"
+            className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 transition active:scale-95"
             title={t('btn_shopping', lang)}
           >
-            <ShoppingBag size={16} />
+            <ShoppingBag size={15} />
           </button>
 
           {/* Quick Calculator */}
           <button
             onClick={onOpenCalculator}
-            className="p-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition active:scale-95"
+            className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 transition active:scale-95"
             title={t('btn_calculator', lang)}
           >
-            <Calculator size={16} />
+            <Calculator size={15} />
           </button>
 
           {/* Emergency Helpline */}
           <button
             onClick={onOpenEmergency}
-            className="p-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition active:scale-95"
+            className="p-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 hover:bg-red-100 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/60 transition active:scale-95"
             title={t('btn_emergency', lang)}
           >
-            <ShieldAlert size={16} />
+            <ShieldAlert size={15} />
           </button>
 
-          {/* Quick Alarm Test Button */}
+          {/* Quick Alarm Ringtone Test Button */}
           <button
             onClick={onTestAlarm}
-            className="p-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition active:scale-95 flex items-center gap-1 text-[11px] font-semibold"
-            title="Alarm Test"
+            className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 transition active:scale-95"
+            title="Alarm Ringtone"
           >
-            <Volume2 size={16} />
+            <Volume2 size={15} />
           </button>
 
           {/* Notification Permission Button */}
           <button
             onClick={handleRequestNotification}
-            className={`p-1.5 rounded-xl border transition active:scale-95 relative ${
+            className={`p-1.5 rounded-lg border transition active:scale-95 relative ${
               notificationService.hasPermission()
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
             }`}
+            title="Notifications"
           >
-            <Bell size={16} />
+            <Bell size={15} />
             {activeAlarmCount > 0 && (
               <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 text-white rounded-full text-[8px] font-bold flex items-center justify-center animate-pulse">
                 {activeAlarmCount}
@@ -168,10 +135,10 @@ export default function Navbar({
           {/* Lock App */}
           <button
             onClick={onLockApp}
-            className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition active:scale-95"
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition active:scale-95"
             title="Lock App"
           >
-            <Lock size={16} />
+            <Lock size={15} />
           </button>
         </div>
       </div>

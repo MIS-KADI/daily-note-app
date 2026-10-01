@@ -95,6 +95,41 @@ export const translations = {
     de: 'Sicher',
     ar: 'آمن',
   },
+  priority_high: {
+    gu: 'તાકીદનું / ઉચ્ચ',
+    hi: 'उच्च प्राथमिकता',
+    en: 'High Priority',
+  },
+  priority_medium: {
+    gu: 'મધ્યમ',
+    hi: 'मध्यम',
+    en: 'Medium',
+  },
+  priority_low: {
+    gu: 'સામાન્ય',
+    hi: 'સામાન્ય',
+    en: 'Low',
+  },
+  total_label: {
+    gu: 'કુલ',
+    hi: 'कुल',
+    en: 'Total',
+  },
+  completed_label: {
+    gu: 'પૂર્ણ',
+    hi: 'पूर्ण',
+    en: 'Completed',
+  },
+  add_purchase_expense: {
+    gu: 'આ ખરીદી સીધી ખર્ચમાં ઉમેરો',
+    hi: 'खरीदारी को खर्च में जोड़ें',
+    en: 'Add to Expenses',
+  },
+  purchased_items: {
+    gu: 'ખરીદેલી વસ્તુઓ',
+    hi: 'खरीदी गई वस्तुएं',
+    en: 'Purchased Items',
+  },
   test: {
     gu: 'ટેસ્ટ',
     hi: 'टेस्ट',
