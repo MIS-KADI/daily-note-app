@@ -46,7 +46,15 @@ import { storageService } from '../../services/storageService';
 import { generateMonthlyReportPDF } from '../../services/pdfReportService';
 import { notificationService } from '../../services/notificationService';
 
-export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user }) {
+export default function NotesTab({
+  notes = [],
+  onSaveNotes,
+  lang = 'gu',
+  user,
+  isDemoMode,
+  onClearDemo,
+  checkCanAdd,
+}) {
   const noteCategories = getNoteCategories(lang);
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -538,6 +546,11 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
 
   // Open Add Note Modal
   const handleOpenAdd = (targetDate = todayStr, defaultCat = null) => {
+    if (typeof checkCanAdd === 'function') {
+      if (!checkCanAdd(() => handleOpenAdd(targetDate, defaultCat))) {
+        return;
+      }
+    }
     setEditingNote(null);
     setTitle('');
     setContent('');
@@ -654,6 +667,11 @@ export default function NotesTab({ notes = [], onSaveNotes, lang = 'gu', user })
 
   // Apply Prompt to Note
   const handleSelectPrompt = (promptText) => {
+    if (!isModalOpen && typeof checkCanAdd === 'function') {
+      if (!checkCanAdd(() => handleSelectPrompt(promptText))) {
+        return;
+      }
+    }
     setTitle(promptText);
     setContent((prev) => (prev ? prev + '\n\n' : '') + `✨ ${promptText}\n\n📝 `);
     setShowPromptsDrawer(false);

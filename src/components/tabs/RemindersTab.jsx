@@ -126,6 +126,9 @@ export default function RemindersTab({
   onSaveShopping,
   user,
   lang = 'gu',
+  isDemoMode,
+  onClearDemo,
+  checkCanAdd,
 }) {
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -275,6 +278,11 @@ export default function RemindersTab({
   // Task Handlers
   // -------------------------------------------------------------
   const handleOpenAddTask = (defaultDate = todayStr, defaultType = null) => {
+    if (typeof checkCanAdd === 'function') {
+      if (!checkCanAdd(() => handleOpenAddTask(defaultDate, defaultType))) {
+        return;
+      }
+    }
     setEditingReminder(null);
     setTitle('');
     setDescription('');
@@ -386,6 +394,11 @@ export default function RemindersTab({
   // Event Handlers (Birthday & Anniversary)
   // -------------------------------------------------------------
   const handleOpenAddEvent = () => {
+    if (typeof checkCanAdd === 'function') {
+      if (!checkCanAdd(() => handleOpenAddEvent())) {
+        return;
+      }
+    }
     setEditingEvent(null);
     setEvName('');
     setEvType('birthday');

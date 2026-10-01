@@ -1,5 +1,13 @@
 // Encrypted LocalStorage & State Management Service
 import { getDailyQuote as fetchDailyQuote } from './quotesService';
+import {
+  getDefaultNotes,
+  getDefaultReminders,
+  getDefaultMedicines,
+  getDefaultFinance,
+  getDefaultKhata,
+  getDefaultEvents,
+} from './defaultData';
 
 const STORAGE_KEYS = {
   USER_PROFILE: 'daily_diary_user_profile',
@@ -19,6 +27,7 @@ const STORAGE_KEYS = {
   EVENTS: 'daily_diary_events',
   PEDOMETER_AUTO: 'daily_diary_pedometer_auto',
   ALARM_SETTINGS: 'daily_diary_alarm_settings',
+  DEMO_MODE: 'daily_diary_demo_mode',
 };
 
 const DEFAULT_ALARM_SETTINGS = {
@@ -239,10 +248,18 @@ export const storageService = {
   getNotes() {
     const data = localStorage.getItem(STORAGE_KEYS.NOTES);
     if (!data) {
-      localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(DEFAULT_NOTES));
-      return DEFAULT_NOTES;
+      if (this.isDemoMode()) {
+        const initial = getDefaultNotes(this.getLanguage());
+        localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(initial));
+        return initial;
+      }
+      return [];
     }
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch {
+      return [];
+    }
   },
 
   saveNotes(notes) {
@@ -252,8 +269,12 @@ export const storageService = {
   getReminders() {
     const data = localStorage.getItem(STORAGE_KEYS.REMINDERS);
     if (!data) {
-      localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(DEFAULT_REMINDERS));
-      return DEFAULT_REMINDERS;
+      if (this.isDemoMode()) {
+        const initial = getDefaultReminders(this.getLanguage());
+        localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(initial));
+        return initial;
+      }
+      return [];
     }
     try {
       const parsed = JSON.parse(data);
@@ -261,14 +282,14 @@ export const storageService = {
         if (r.id === 'rem-1') {
           return {
             ...r,
-            title: 'બેંક ઓફ બરોડા - ચેક જમા કરાવવો',
-            description: 'નવી ચેકબુકની એન્ટ્રી કરાવવી અને ગ્રાન્ટનો ચેક ક્લિયરન્સમાં નાખવો.',
+            title: r.title || 'બેંક ઓફ બરોડા - ચેક જમા કરાવવો',
+            description: r.description || 'નવી ચેકબુકની એન્ટ્રી કરાવવી અને ગ્રાન્ટનો ચેક ક્લિયરન્સમાં નાખવો.',
           };
         }
         return r;
       });
     } catch {
-      return DEFAULT_REMINDERS;
+      return [];
     }
   },
 
@@ -279,10 +300,18 @@ export const storageService = {
   getMedicines() {
     const data = localStorage.getItem(STORAGE_KEYS.MEDICINES);
     if (!data) {
-      localStorage.setItem(STORAGE_KEYS.MEDICINES, JSON.stringify(DEFAULT_MEDICINES));
-      return DEFAULT_MEDICINES;
+      if (this.isDemoMode()) {
+        const initial = getDefaultMedicines(this.getLanguage());
+        localStorage.setItem(STORAGE_KEYS.MEDICINES, JSON.stringify(initial));
+        return initial;
+      }
+      return [];
     }
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch {
+      return [];
+    }
   },
 
   saveMedicines(medicines) {
@@ -301,10 +330,18 @@ export const storageService = {
   getFinance() {
     const data = localStorage.getItem(STORAGE_KEYS.FINANCE);
     if (!data) {
-      localStorage.setItem(STORAGE_KEYS.FINANCE, JSON.stringify(DEFAULT_FINANCE));
-      return DEFAULT_FINANCE;
+      if (this.isDemoMode()) {
+        const initial = getDefaultFinance(this.getLanguage());
+        localStorage.setItem(STORAGE_KEYS.FINANCE, JSON.stringify(initial));
+        return initial;
+      }
+      return [];
     }
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch {
+      return [];
+    }
   },
 
   saveFinance(finance) {
@@ -454,32 +491,12 @@ export const storageService = {
   getKhata() {
     const data = localStorage.getItem(STORAGE_KEYS.KHATA);
     if (!data) {
-      const initial = [
-        {
-          id: 'kh-1',
-          partyName: 'રમેશભાઈ શાહ (Ramesh Shah)',
-          phone: '9825011223',
-          type: 'to_receive', // લેવાના છે (You'll Get)
-          amount: 5000,
-          date: new Date().toISOString().split('T')[0],
-          dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-          description: 'દુકાનના માલના બાકી નાણાં',
-          isSettled: false,
-        },
-        {
-          id: 'kh-2',
-          partyName: 'કૃષ્ણ ટ્રેડર્સ (Krishna Traders)',
-          phone: '9428044556',
-          type: 'to_pay', // આપવાના છે (You'll Give)
-          amount: 3200,
-          date: new Date().toISOString().split('T')[0],
-          dueDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
-          description: 'કાચા માલ ખરીદીનું પેમેન્ટ',
-          isSettled: false,
-        },
-      ];
-      localStorage.setItem(STORAGE_KEYS.KHATA, JSON.stringify(initial));
-      return initial;
+      if (this.isDemoMode()) {
+        const initial = getDefaultKhata(this.getLanguage());
+        localStorage.setItem(STORAGE_KEYS.KHATA, JSON.stringify(initial));
+        return initial;
+      }
+      return [];
     }
     try {
       const parsed = JSON.parse(data);
@@ -506,8 +523,12 @@ export const storageService = {
   getEvents() {
     const data = localStorage.getItem(STORAGE_KEYS.EVENTS);
     if (!data) {
-      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(DEFAULT_EVENTS));
-      return DEFAULT_EVENTS;
+      if (this.isDemoMode()) {
+        const initial = getDefaultEvents(this.getLanguage());
+        localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(initial));
+        return initial;
+      }
+      return [];
     }
     try {
       const parsed = JSON.parse(data);
@@ -527,6 +548,70 @@ export const storageService = {
 
   saveEvents(events) {
     localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+  },
+
+  isDemoMode() {
+    const val = localStorage.getItem(STORAGE_KEYS.DEMO_MODE);
+    return val === null ? true : val === 'true';
+  },
+
+  setDemoMode(enabled) {
+    localStorage.setItem(STORAGE_KEYS.DEMO_MODE, String(enabled));
+  },
+
+  clearAllDemoData() {
+    this.saveNotes([]);
+    this.saveReminders([]);
+    this.saveMedicines([]);
+    this.saveFinance([]);
+    this.saveKhata([]);
+    this.saveEvents([]);
+    this.saveShopping([]);
+    this.setDemoMode(false);
+  },
+
+  restoreDemoData(lang) {
+    const activeLang = lang || this.getLanguage() || 'gu';
+    const notes = getDefaultNotes(activeLang);
+    const rems = getDefaultReminders(activeLang);
+    const meds = getDefaultMedicines(activeLang);
+    const fin = getDefaultFinance(activeLang);
+    const kh = getDefaultKhata(activeLang);
+    const ev = getDefaultEvents(activeLang);
+
+    this.saveNotes(notes);
+    this.saveReminders(rems);
+    this.saveMedicines(meds);
+    this.saveFinance(fin);
+    this.saveKhata(kh);
+    this.saveEvents(ev);
+    this.setDemoMode(true);
+
+    return { notes, reminders: rems, medicines: meds, finance: fin, khata: kh, events: ev };
+  },
+
+  getDefaultNotes(lang) {
+    return getDefaultNotes(lang || this.getLanguage());
+  },
+
+  getDefaultReminders(lang) {
+    return getDefaultReminders(lang || this.getLanguage());
+  },
+
+  getDefaultMedicines(lang) {
+    return getDefaultMedicines(lang || this.getLanguage());
+  },
+
+  getDefaultFinance(lang) {
+    return getDefaultFinance(lang || this.getLanguage());
+  },
+
+  getDefaultKhata(lang) {
+    return getDefaultKhata(lang || this.getLanguage());
+  },
+
+  getDefaultEvents(lang) {
+    return getDefaultEvents(lang || this.getLanguage());
   },
 
   getAlarmSettings() {

@@ -42,6 +42,9 @@ export default function FinanceTab({
   onOpenUpiModal,
   user,
   lang = 'gu',
+  isDemoMode,
+  onClearDemo,
+  checkCanAdd,
 }) {
   const [activeSubView, setActiveSubView] = useState('transactions'); // 'transactions' | 'khata'
   const [filterType, setFilterType] = useState('all'); // 'all', 'expense', 'income'
@@ -104,6 +107,11 @@ export default function FinanceTab({
 
   // Handlers for Transactions
   const handleOpenAddTx = (defaultType = 'expense') => {
+    if (typeof checkCanAdd === 'function') {
+      if (!checkCanAdd(() => handleOpenAddTx(defaultType))) {
+        return;
+      }
+    }
     setTxType(defaultType);
     setTxAmount('');
     setTxCategory(defaultType === 'expense' ? expenseCategories[0] : incomeCategories[0]);
@@ -159,6 +167,11 @@ export default function FinanceTab({
 
   // Handlers for Khata
   const handleOpenAddKhata = (defaultType = 'to_receive') => {
+    if (typeof checkCanAdd === 'function') {
+      if (!checkCanAdd(() => handleOpenAddKhata(defaultType))) {
+        return;
+      }
+    }
     setEditingKhataId(null);
     setKhType(defaultType);
     setKhPartyName('');

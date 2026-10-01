@@ -157,6 +157,9 @@ export default function HealthHubTab({
   onUpdateFitness,
   lang = 'gu',
   initialSubTab = 'fitness',
+  isDemoMode,
+  onClearDemo,
+  checkCanAdd,
 }) {
   const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
   const todayStr = new Date().toISOString().split('T')[0];
@@ -181,6 +184,11 @@ export default function HealthHubTab({
   const [medHasAlarm, setMedHasAlarm] = useState(true);
 
   const handleOpenAddMed = () => {
+    if (typeof checkCanAdd === 'function') {
+      if (!checkCanAdd(() => handleOpenAddMed())) {
+        return;
+      }
+    }
     setEditingMed(null);
     setMedName('');
     setMedDosage('૧ ગોળી');
@@ -304,6 +312,11 @@ export default function HealthHubTab({
 
   const handleAddWorkout = (e) => {
     e.preventDefault();
+    if (typeof checkCanAdd === 'function') {
+      if (!checkCanAdd(() => handleAddWorkout(e))) {
+        return;
+      }
+    }
     const typeObj = currentWorkoutTypes.find((w) => w.id === selectedWorkoutType);
     const calculatedCals = Math.round((workoutDuration || 0) * (typeObj?.ratePerMin || 5));
     const nowTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });

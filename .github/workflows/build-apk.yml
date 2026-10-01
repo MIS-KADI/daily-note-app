@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.6.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.7.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.6.apk
+            daily-diary-v1.0.7.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,20 +68,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.6
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.6 Latest)"
+          tag_name: v1.0.7
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.7 Latest)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.6)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.7)
 
             આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ સુધારા:
-            - **અગાઉના મોબાઈલ નંબર પુનઃસ્થાપિત:** ખાતાવહી અને બર્થડે/એનિવર્સરીમાં અગાઉના વ્યવસ્થિત ૧૦ અંકના મોબાઈલ નંબરો (૯૮૨૫૦૧૧૨૨૩ અને ૯૪૨૮૦૪૪૫૫૬) સેટ કરી દેવામાં આવ્યા છે.
-            - **કામની નોંધ સળંગ (Continuous) લેઆઉટ:** હોમ સ્ક્રીન તેમજ કામો/રિમાઇન્ડર ટેબ બંને જગ્યાએ **"બેંક ઓફ બરોડા - ચેક જમા કરાવવો"** ટાઇટલ અને નીચેની નોંધ **"નવી ચેકબુકની એન્ટ્રી કરાવવી અને ગ્રાન્ટનો ચેક ક્લિયરન્સમાં નાખવો."** પૂરી પહોળાઈ સાથે એકદમ સળંગ અને સુંદર દેખાશે.
-            - **ખાતાવહી એક જ લાઈનમાં:** ફોન નંબર, WhatsApp અને UPI QR એક લાઈનમાં અને નીચે તારીખો એક લાઈનમાં.
+            - **બધી ભાષામાં ડાયનેમિક ડેમો ડેટા ટ્રાન્સલેશન:** ભાષા સિલેક્ટ કરતાં જ એપની તમામ નમૂનાની એન્ટ્રીઓ (નોંધ, કામો, રીમાઇન્ડર, દવાઓ, હિસાબ, ખાતાવહી, ઉત્સવો) આપોઆપ પસંદ કરેલી ભાષા મુજબ થઈ જશે.
+            - **હાઇલાઇટ થયેલ "ડેમો ડેટા હટાવો" બટન:** એપ ઓપન કરતાં જ સૌથી ઉપર એક ચમકતું, આકર્ષક બટન મૂકવામાં આવ્યું છે જે ૧-ક્લિકમાં તમામ ડેમો ડેટા સાફ કરી તમારી નવી ડાયરી શરૂ કરવા દેશે.
+            - **ડેમો મોડ લોક પ્રોટેક્શન:** જ્યાં સુધી યુઝર ડેમો ડેટા ક્લિયર ના કરે ત્યાં સુધી ડેમો ડેટા સુરક્ષિત રહેશે અને નવી એન્ટ્રી કરતી વખતે તરત જ ડેમો ડેટા ક્લિયર કરી આગળ વધવાનું પૂછવામાં આવશે.
+            - **પ્રોફાઇલમાંથી ડેમો ડેટા પુનઃસ્થાપિત:** જરૂર પડે તો પ્રોફાઇલ ટેબમાંથી ગમે ત્યારે ડેમો ડેટા ફરીથી ચાલુ પણ કરી શકાય છે.
             - **સુપરફાસ્ટ પર્ફોર્મન્સ અને સ્મૂધ યુઝર એક્સપિરિયન્સ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.6.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.7.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.6.apk
+            daily-diary-v1.0.7.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

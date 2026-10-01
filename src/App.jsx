@@ -13,6 +13,9 @@ import UpiPaymentModal from './components/UpiPaymentModal';
 import AppVideoGuideModal from './components/AppVideoGuideModal';
 import SignupModal from './components/SignupModal';
 import MobilePermissionsModal from './components/MobilePermissionsModal';
+import DemoModeBanner from './components/DemoModeBanner';
+import DemoModeModal from './components/DemoModeModal';
+import confetti from 'canvas-confetti';
 
 // Tabs
 import HomeTab from './components/tabs/HomeTab';
@@ -48,6 +51,11 @@ export default function App() {
   const [lang, setLang] = useState(() => storageService.getLanguage());
   const [quoteOffset, setQuoteOffset] = useState(0);
   const dailyQuote = storageService.getDailyQuote(lang, quoteOffset);
+
+  // Demo Mode State
+  const [isDemoMode, setIsDemoMode] = useState(() => storageService.isDemoMode());
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+  const [pendingDemoAction, setPendingDemoAction] = useState(null);
 
   // App UI State
   const [activeTab, setActiveTab] = useState('home');
@@ -346,15 +354,100 @@ export default function App() {
     storageService.saveTheme(next);
   };
 
-  // Language selection handler
+  // Language selection handler - dynamically translates all demo content if in demo mode
   const handleSelectLang = (newLang) => {
     setLang(newLang);
     storageService.saveLanguage(newLang);
+
+    // If still in demo mode, update all demo entries to match the newly selected language!
+    if (isDemoMode) {
+      const newNotes = storageService.getDefaultNotes(newLang);
+      const newReminders = storageService.getDefaultReminders(newLang);
+      const newMeds = storageService.getDefaultMedicines(newLang);
+      const newFin = storageService.getDefaultFinance(newLang);
+      const newKhata = storageService.getDefaultKhata(newLang);
+      const newEv = storageService.getDefaultEvents(newLang);
+
+      setNotes(newNotes);
+      storageService.saveNotes(newNotes);
+
+      setReminders(newReminders);
+      storageService.saveReminders(newReminders);
+
+      setMedicines(newMeds);
+      storageService.saveMedicines(newMeds);
+
+      setFinance(newFin);
+      storageService.saveFinance(newFin);
+
+      setKhata(newKhata);
+      storageService.saveKhata(newKhata);
+
+      setEvents(newEv);
+      storageService.saveEvents(newEv);
+    }
   };
 
+  // Demo Mode Action Handlers
+  const handleClearDemoData = (postAction) => {
+    storageService.clearAllDemoData();
+    setNotes([]);
+    setReminders([]);
+    setMedicines([]);
+    setFinance([]);
+    setKhata([]);
+    setEvents([]);
+    setShoppingList([]);
+    setIsDemoMode(false);
+    setIsDemoModalOpen(false);
+
+    confetti({
+      particleCount: 75,
+      spread: 70,
+      origin: { y: 0.6 },
+    });
+
+    if (typeof postAction === 'function') {
+      postAction();
+    } else if (typeof pendingDemoAction === 'function') {
+      const act = pendingDemoAction;
+      setPendingDemoAction(null);
+      act();
+    }
+  };
+
+  const handleRestoreDemoData = () => {
+    const data = storageService.restoreDemoData(lang);
+    setNotes(data.notes);
+    setReminders(data.reminders);
+    setMedicines(data.medicines);
+    setFinance(data.finance);
+    setKhata(data.khata);
+    setEvents(data.events);
+    setIsDemoMode(true);
+    confetti({
+      particleCount: 50,
+      spread: 60,
+    });
+  };
+
+  const checkCanAdd = (actionCallback) => {
+    if (isDemoMode) {
+      setPendingDemoAction(() => actionCallback);
+      setIsDemoModalOpen(true);
+      return false;
+    }
+    if (typeof actionCallback === 'function') {
+      actionCallback();
+    }
+    return true;
+  };
 
   // Transfer calculated amount directly to finance
   const handleTransferAmount = (amount, type) => {
+    if (!checkCanAdd(() => handleTransferAmount(amount, type))) {
+      return;
+    }
     setActiveTab('finance');
     const newEntry = {
       id: 'fin-' + Date.now(),
@@ -370,6 +463,9 @@ export default function App() {
 
   // Smart Voice Assistant & Bank SMS Handlers
   const handleAddParsedFinance = (tx) => {
+    if (!checkCanAdd(() => handleAddParsedFinance(tx))) {
+      return;
+    }
     setActiveTab('finance');
     const newEntry = {
       id: 'fin-' + Date.now(),
@@ -385,6 +481,9 @@ export default function App() {
   };
 
   const handleAddParsedReminder = (rem) => {
+    if (!checkCanAdd(() => handleAddParsedReminder(rem))) {
+      return;
+    }
     setActiveTab('reminders');
     const newRem = {
       id: 'rem-' + Date.now(),
@@ -416,6 +515,9 @@ export default function App() {
   };
 
   const handleAddParsedKhata = (k) => {
+    if (!checkCanAdd(() => handleAddParsedKhata(k))) {
+      return;
+    }
     setActiveTab('finance');
     const newKhata = {
       id: 'kh-' + Date.now(),
@@ -433,6 +535,9 @@ export default function App() {
   };
 
   const handleAddParsedNote = (n) => {
+    if (!checkCanAdd(() => handleAddParsedNote(n))) {
+      return;
+    }
     setActiveTab('notes');
     const newNote = {
       id: 'note-' + Date.now(),
@@ -448,6 +553,9 @@ export default function App() {
   };
 
   const handleAddParsedWater = (glassesCount = 1) => {
+    if (!checkCanAdd(() => handleAddParsedWater(glassesCount))) {
+      return;
+    }
     const current = water?.glasses || 0;
     const updated = {
       ...water,
@@ -458,6 +566,9 @@ export default function App() {
   };
 
   const handleAddParsedMedicine = (med) => {
+    if (!checkCanAdd(() => handleAddParsedMedicine(med))) {
+      return;
+    }
     setActiveTab('health');
     const newMed = {
       id: 'med-' + Date.now(),
@@ -475,6 +586,9 @@ export default function App() {
   };
 
   const handleAddParsedShopping = (item) => {
+    if (!checkCanAdd(() => handleAddParsedShopping(item))) {
+      return;
+    }
     setActiveTab('reminders');
     const rawName = item.name || item.title || 'નવી વસ્તુ';
     const cleanName = rawName.replace(/^ખરીદી:\s*/, '').trim();
@@ -511,6 +625,9 @@ export default function App() {
   };
 
   const handleAddParsedEvent = (evt) => {
+    if (!checkCanAdd(() => handleAddParsedEvent(evt))) {
+      return;
+    }
     setActiveTab('reminders');
     const newEvt = {
       id: 'evt-' + Date.now(),
@@ -774,6 +891,11 @@ export default function App() {
 
       {/* Main Tab View Container */}
       <main className="flex-1 p-3.5 overflow-y-auto">
+        {/* Highlighted Demo Mode Banner across the entire app */}
+        {isDemoMode && (
+          <DemoModeBanner lang={lang} onClearDemo={() => handleClearDemoData()} />
+        )}
+
         {activeTab === 'home' && (
           <HomeTab
             user={user}
@@ -792,7 +914,7 @@ export default function App() {
             onStepIncrement={handleStepIncrement}
             onUpdateWater={handleUpdateWater}
             onUpdateFitness={handleUpdateFitness}
-            onOpenShopping={() => setIsShoppingOpen(true)}
+            onOpenShopping={() => checkCanAdd(() => setIsShoppingOpen(true))}
             onOpenEmergency={() => setIsEmergencyOpen(true)}
             dailyQuote={dailyQuote}
             onNextQuote={() => setQuoteOffset((prev) => prev + 1)}
@@ -805,11 +927,22 @@ export default function App() {
               setAssistantAutoStart(Boolean(autoStart));
               setIsAssistantOpen(true);
             }}
+            isDemoMode={isDemoMode}
+            onClearDemo={() => handleClearDemoData()}
+            checkCanAdd={checkCanAdd}
           />
         )}
 
         {activeTab === 'notes' && (
-          <NotesTab notes={notes} onSaveNotes={handleSaveNotes} lang={lang} user={user} />
+          <NotesTab
+            notes={notes}
+            onSaveNotes={handleSaveNotes}
+            lang={lang}
+            user={user}
+            isDemoMode={isDemoMode}
+            onClearDemo={() => handleClearDemoData()}
+            checkCanAdd={checkCanAdd}
+          />
         )}
 
         {activeTab === 'reminders' && (
@@ -819,11 +952,14 @@ export default function App() {
             events={events}
             onSaveEvents={handleSaveEvents}
             onTriggerAlarm={handleCustomTriggerAlarm}
-            onOpenShopping={() => setIsShoppingOpen(true)}
+            onOpenShopping={() => checkCanAdd(() => setIsShoppingOpen(true))}
             shoppingList={shoppingList}
             onSaveShopping={handleSaveShopping}
             user={user}
             lang={lang}
+            isDemoMode={isDemoMode}
+            onClearDemo={() => handleClearDemoData()}
+            checkCanAdd={checkCanAdd}
           />
         )}
 
@@ -841,6 +977,9 @@ export default function App() {
             onUpdateFitness={handleUpdateFitness}
             lang={lang}
             initialSubTab={activeTab === 'medicine' ? 'medicines' : 'fitness'}
+            isDemoMode={isDemoMode}
+            onClearDemo={() => handleClearDemoData()}
+            checkCanAdd={checkCanAdd}
           />
         )}
 
@@ -857,6 +996,9 @@ export default function App() {
             onOpenUpiModal={(party) => setUpiModalData({ isOpen: true, party })}
             user={user}
             lang={lang}
+            isDemoMode={isDemoMode}
+            onClearDemo={() => handleClearDemoData()}
+            checkCanAdd={checkCanAdd}
           />
         )}
 
@@ -884,6 +1026,9 @@ export default function App() {
             onOpenSignup={() => setIsSignupOpen(true)}
             onOpenMobilePermissions={() => setIsMobilePermissionsOpen(true)}
             lang={lang}
+            isDemoMode={isDemoMode}
+            onClearDemo={() => handleClearDemoData()}
+            onRestoreDemo={handleRestoreDemoData}
           />
         )}
       </main>
@@ -1002,6 +1147,17 @@ export default function App() {
       <MobilePermissionsModal
         isOpen={isMobilePermissionsOpen}
         onClose={() => setIsMobilePermissionsOpen(false)}
+        lang={lang}
+      />
+
+      {/* Demo Mode Action Lock Modal */}
+      <DemoModeModal
+        isOpen={isDemoModalOpen}
+        onClose={() => {
+          setIsDemoModalOpen(false);
+          setPendingDemoAction(null);
+        }}
+        onConfirmClear={() => handleClearDemoData()}
         lang={lang}
       />
     </div>
