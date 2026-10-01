@@ -664,8 +664,8 @@ export default function FinanceTab({
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h4
                             className={`text-sm font-bold ${
                               k.isSettled ? 'line-through text-slate-500' : 'text-slate-800'
@@ -674,7 +674,7 @@ export default function FinanceTab({
                             {k.partyName}
                           </h4>
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 ${
                               k.isSettled
                                 ? 'bg-slate-200 text-slate-600'
                                 : isReceive
@@ -687,80 +687,8 @@ export default function FinanceTab({
                         </div>
 
                         {k.description && (
-                          <p className="text-xs text-slate-600 mt-1">{k.description}</p>
+                          <p className="text-xs text-slate-600 mt-1 leading-snug">{k.description}</p>
                         )}
-
-                        {/* Line 1: Mobile Number, WhatsApp and UPI QR on one line */}
-                        <div className="flex items-center gap-1.5 sm:gap-2 mt-2 flex-wrap">
-                          {k.phone && k.phone !== '0' && k.phone.trim() !== '' ? (
-                            <a
-                              href={`tel:${k.phone}`}
-                              className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2 py-0.5 rounded-lg font-bold text-[11px] hover:underline shrink-0"
-                            >
-                              <Phone size={11} className="text-blue-600" />
-                              <span>{k.phone}</span>
-                            </a>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditKhata(k)}
-                              className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
-                              title={lang === 'gu' ? 'મોબાઇલ નંબર ઉમેરો' : 'Add phone number'}
-                            >
-                              <Phone size={11} />
-                              <span>{lang === 'gu' ? '+ ફોન નંબર' : '+ Add Mobile'}</span>
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (!k.phone || k.phone === '0' || k.phone.trim() === '') {
-                                handleOpenEditKhata(k);
-                                return;
-                              }
-                              whatsappService.sendPaymentReminder({
-                                partyName: k.partyName,
-                                phone: k.phone,
-                                amount: k.amount,
-                                type: k.type,
-                                dueDate: k.dueDate,
-                                senderName: user?.name,
-                                lang,
-                              });
-                            }}
-                            className="flex items-center gap-1 text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
-                            title="WhatsApp"
-                          >
-                            <MessageCircle size={11} />
-                            <span>WhatsApp</span>
-                          </button>
-
-                          {onOpenUpiModal && !k.isSettled && (
-                            <button
-                              type="button"
-                              onClick={() => onOpenUpiModal(k)}
-                              className="flex items-center gap-1 text-indigo-700 bg-indigo-100 hover:bg-indigo-200 px-2 py-0.5 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
-                              title="UPI QR & Payment Link"
-                            >
-                              <QrCode size={11} />
-                              <span>UPI QR</span>
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Line 2: Date and Due Date on one line */}
-                        <div className="flex items-center gap-2.5 text-[11px] text-slate-500 mt-1.5 flex-wrap">
-                          <span className="flex items-center gap-1">
-                            <Calendar size={11} className="text-slate-400" />
-                            <span>{t('date', lang)}: <strong className="text-slate-700">{k.date}</strong></span>
-                          </span>
-                          {k.dueDate && (
-                            <span className="flex items-center gap-1 text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 font-semibold">
-                              <span>{t('due_date', lang)}: <strong>{k.dueDate}</strong></span>
-                            </span>
-                          )}
-                        </div>
                       </div>
 
                       {/* Right side Amount and Settle Toggle */}
@@ -773,33 +701,108 @@ export default function FinanceTab({
                           {isReceive ? '+' : '-'}₹{Number(k.amount).toLocaleString()}
                         </span>
 
-                        <div className="flex items-center justify-end gap-1 mt-2">
+                        <div className="flex items-center justify-end gap-1 mt-1.5">
                           <button
                             type="button"
                             onClick={() => handleOpenEditKhata(k)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition active:scale-95"
+                            className="p-1 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition active:scale-95"
                             title={lang === 'gu' ? 'વિગત / નંબર એડિટ કરો' : 'Edit details'}
                           >
-                            <Edit2 size={14} />
+                            <Edit2 size={13} />
                           </button>
                           <button
                             onClick={() => handleToggleSettleKhata(k)}
-                            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 active:scale-95 ${
+                            className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 active:scale-95 ${
                               k.isSettled
                                 ? 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                                 : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-2xs'
                             }`}
                           >
-                            <Check size={12} />
+                            <Check size={11} />
                             <span>{k.isSettled ? t('reopen', lang) : t('mark_settled', lang)}</span>
                           </button>
                           <button
                             onClick={() => handleDeleteKhata(k.id)}
-                            className="p-1 text-slate-300 hover:text-red-500 transition"
+                            className="p-1 text-slate-300 hover:text-rose-500 transition"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={13} />
                           </button>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Full-Width Section: Line 1 (Actions) & Line 2 (Dates) */}
+                    <div className="mt-2.5 pt-2 border-t border-slate-100/90 space-y-1.5">
+                      {/* Line 1: Mobile Number, WhatsApp and UPI QR across FULL width */}
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        {k.phone && k.phone !== '0' && k.phone.trim() !== '' ? (
+                          <a
+                            href={`tel:${k.phone}`}
+                            className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-lg font-bold text-[11px] hover:underline shrink-0"
+                          >
+                            <Phone size={11} className="text-blue-600" />
+                            <span>{k.phone}</span>
+                          </a>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditKhata(k)}
+                            className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
+                            title={lang === 'gu' ? 'મોબાઇલ નંબર ઉમેરો' : 'Add phone number'}
+                          >
+                            <Phone size={11} />
+                            <span>{lang === 'gu' ? '+ ફોન નંબર' : '+ Add Mobile'}</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!k.phone || k.phone === '0' || k.phone.trim() === '') {
+                              handleOpenEditKhata(k);
+                              return;
+                            }
+                            whatsappService.sendPaymentReminder({
+                              partyName: k.partyName,
+                              phone: k.phone,
+                              amount: k.amount,
+                              type: k.type,
+                              dueDate: k.dueDate,
+                              senderName: user?.name,
+                              lang,
+                            });
+                          }}
+                          className="flex items-center gap-1 text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
+                          title="WhatsApp"
+                        >
+                          <MessageCircle size={11} />
+                          <span>WhatsApp</span>
+                        </button>
+
+                        {onOpenUpiModal && !k.isSettled && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenUpiModal(k)}
+                            className="flex items-center gap-1 text-indigo-700 bg-indigo-100 hover:bg-indigo-200 px-2.5 py-1 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
+                            title="UPI QR & Payment Link"
+                          >
+                            <QrCode size={11} />
+                            <span>UPI QR</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Line 2: Date and Due Date across FULL width */}
+                      <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-0.5 flex-wrap">
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Calendar size={11} className="text-slate-400" />
+                          <span>{t('date', lang)}: <strong className="text-slate-700">{k.date}</strong></span>
+                        </span>
+                        {k.dueDate && (
+                          <span className="flex items-center gap-1 text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 font-semibold shrink-0">
+                            <span>{t('due_date', lang)}: <strong>{k.dueDate}</strong></span>
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

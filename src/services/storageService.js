@@ -194,7 +194,7 @@ const DEFAULT_EVENTS = [
     name: 'રમેશભાઈ શાહ (Ramesh Shah)',
     type: 'birthday',
     date: new Date().toISOString().split('T')[0], // Today
-    phone: '',
+    phone: '0000000001',
     relation: 'મિત્ર (Friend)',
     notes: 'સાંજે ૭ વાગે જન્મદિવસ પાર્ટી',
   },
@@ -203,7 +203,7 @@ const DEFAULT_EVENTS = [
     name: 'મુકેશભાઈ & રીતાબેન (Mukesh & Rita)',
     type: 'anniversary',
     date: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
-    phone: '',
+    phone: '0000000001',
     relation: 'કાકા-કાકી',
     notes: 'લગ્ન વર્ષગાંઠ (૨૫મી સિલ્વર જ્યુબિલી)',
   },
@@ -444,7 +444,7 @@ export const storageService = {
         {
           id: 'kh-1',
           partyName: 'રમેશભાઈ શાહ (Ramesh Shah)',
-          phone: '',
+          phone: '0000000001',
           type: 'to_receive', // લેવાના છે (You'll Get)
           amount: 5000,
           date: new Date().toISOString().split('T')[0],
@@ -455,7 +455,7 @@ export const storageService = {
         {
           id: 'kh-2',
           partyName: 'કૃષ્ણ ટ્રેડર્સ (Krishna Traders)',
-          phone: '',
+          phone: '0000000001',
           type: 'to_pay', // આપવાના છે (You'll Give)
           amount: 3200,
           date: new Date().toISOString().split('T')[0],
@@ -470,14 +470,14 @@ export const storageService = {
     try {
       const parsed = JSON.parse(data);
       return parsed.map((k) => {
-        // Strip legacy dummy numbers or single zero
+        // Strip legacy dummy numbers or empty and provide clean default 0000000001
         if (k.phone === '+91 98250 11223' || k.phone === '+91 94280 44556' || k.phone === '0' || !k.phone) {
-          return { ...k, phone: '' };
+          return { ...k, phone: '0000000001' };
         }
         // Enforce 10-digit mobile number
         const digits = String(k.phone).replace(/\D/g, '');
         const tenDigit = digits.length > 10 ? digits.slice(-10) : digits;
-        return { ...k, phone: tenDigit };
+        return { ...k, phone: tenDigit || '0000000001' };
       });
     } catch {
       return [];
@@ -498,11 +498,11 @@ export const storageService = {
       const parsed = JSON.parse(data);
       return parsed.map((ev) => {
         if (ev.phone === '+91 98250 11223' || ev.phone === '+91 94280 44556' || ev.phone === '0' || !ev.phone) {
-          return { ...ev, phone: '' };
+          return { ...ev, phone: '0000000001' };
         }
         const digits = String(ev.phone).replace(/\D/g, '');
         const tenDigit = digits.length > 10 ? digits.slice(-10) : digits;
-        return { ...ev, phone: tenDigit };
+        return { ...ev, phone: tenDigit || '0000000001' };
       });
     } catch {
       return [];

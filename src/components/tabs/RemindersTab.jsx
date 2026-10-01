@@ -781,103 +781,71 @@ export default function RemindersTab({
                         : 'border-l-4 border-l-emerald-500 border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* Top Row: Checkmark & Tags on Left, Action buttons on Right */}
+                    <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                      <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
                         {/* Completion Checkmark Button */}
                         <button
                           onClick={() => handleToggleComplete(r.id)}
-                          className={`w-7 h-7 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0 mt-0.5 ${
+                          className={`w-6 h-6 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0 ${
                             r.isCompleted
                               ? 'bg-emerald-600 text-white'
                               : 'border-2 border-slate-300 hover:border-indigo-500 text-transparent'
                           }`}
                         >
-                          <CheckCircle2Icon size={18} />
+                          <CheckCircle2Icon size={16} />
                         </button>
 
-                        <div className="flex-1 min-w-0">
-                          {/* Tags Bar */}
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {/* Type badge */}
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                                isShopping
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : isWork
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : isBank
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : isMeeting
-                                  ? 'bg-indigo-100 text-indigo-800'
-                                  : 'bg-slate-100 text-slate-800'
-                              }`}
-                            >
-                              {isShopping
-                                ? (t('shopping_task', lang) || '🛒 ખરીદી')
-                                : isWork
-                                ? (t('work_task', lang) || '💼 કામ')
-                                : isBank
-                                ? t('bank_work', lang)
-                                : isMeeting
-                                ? t('meeting', lang)
-                                : t('task', lang)}
-                            </span>
+                        {/* Type badge */}
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                            isShopping
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : isWork
+                              ? 'bg-blue-100 text-blue-800'
+                              : isBank
+                              ? 'bg-amber-100 text-amber-800'
+                              : isMeeting
+                              ? 'bg-indigo-100 text-indigo-800'
+                              : 'bg-slate-100 text-slate-800'
+                          }`}
+                        >
+                          {isShopping
+                            ? (t('shopping_task', lang) || '🛒 ખરીદી')
+                            : isWork
+                            ? (t('work_task', lang) || '💼 કામ')
+                            : isBank
+                            ? t('bank_work', lang)
+                            : isMeeting
+                            ? t('meeting', lang)
+                            : t('task', lang)}
+                        </span>
 
-                            {/* Advance Date indicator */}
-                            {isFuture && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-cyan-100 text-cyan-800 flex items-center gap-1">
-                                <CalendarIcon size={11} />
-                                {t('advance', lang)}: {r.date}
-                              </span>
-                            )}
+                        {/* Advance Date indicator */}
+                        {isFuture && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-cyan-100 text-cyan-800 flex items-center gap-1">
+                            <CalendarIcon size={11} />
+                            {t('advance', lang)}: {r.date}
+                          </span>
+                        )}
 
-                            {/* Time badge */}
-                            <span className="text-xs font-bold text-slate-600 flex items-center gap-1">
-                              <ClockIcon size={12} className="text-slate-400" />
-                              {r.time}
-                            </span>
+                        {/* Time badge */}
+                        <span className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                          <ClockIcon size={12} className="text-slate-400" />
+                          {r.time}
+                        </span>
 
-                            {/* Repeat badge */}
-                            {r.repeat && r.repeat !== 'none' && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 flex items-center gap-1">
-                                <RepeatIcon size={10} />
-                                {r.repeat === 'daily'
-                                  ? (lang === 'gu' ? 'દરરોજ' : 'Daily')
-                                  : r.repeat === 'weekly'
-                                  ? (lang === 'gu' ? 'દર અઠવાડિયે' : 'Weekly')
-                                  : (lang === 'gu' ? 'દર મહિને' : 'Monthly')}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Task Title */}
-                          <h4
-                            className={`text-sm font-bold mt-2 leading-snug ${
-                              r.isCompleted ? 'line-through text-slate-400' : 'text-slate-800'
-                            }`}
-                          >
-                            {r.title}
-                          </h4>
-
-                          {/* Clean Description only if not duplicate of title and not raw checklist markup */}
-                          {(() => {
-                            if (!r.description) return null;
-                            const lines = r.description
-                              .split('\n')
-                              .map((l) => l.trim())
-                              .filter((l) => l && !l.startsWith('☐') && !l.startsWith('☑️') && !l.startsWith('[ ]') && !l.startsWith('[x]') && !l.startsWith('કેટેગરી:'));
-                            const cleanText = lines.join(' ').trim();
-                            if (!cleanText) return null;
-                            const normClean = cleanText.replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
-                            const normTitle = (r.title || '').replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
-                            if (normClean === normTitle) return null;
-                            return (
-                              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                                {cleanText}
-                              </p>
-                            );
-                          })()}
-                        </div>
+                        {/* Repeat badge */}
+                        {r.repeat && r.repeat !== 'none' && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 flex items-center gap-1">
+                            <RepeatIcon size={10} />
+                            {r.repeat === 'daily'
+                              ? (lang === 'gu' ? 'દરરોજ' : 'Daily')
+                              : r.repeat === 'weekly'
+                              ? (lang === 'gu' ? 'દર અઠવાડિયે' : 'Weekly')
+                              : (lang === 'gu' ? 'દર મહિને' : 'Monthly')}
+                          </span>
+                        )}
                       </div>
 
                       {/* Right-side Card Actions */}
@@ -885,10 +853,10 @@ export default function RemindersTab({
                         {/* 1-Tap WhatsApp Share */}
                         <button
                           onClick={() => whatsappService.shareReminder(r, lang)}
-                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition"
+                          className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
                           title={t('whatsapp_share', lang)}
                         >
-                          <Share2Icon size={16} />
+                          <Share2Icon size={15} />
                         </button>
 
                         {/* Test Alarm Sound */}
@@ -913,16 +881,16 @@ export default function RemindersTab({
                                 customAudioUrl: customAudioToPlay,
                               });
                             }}
-                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition"
+                            className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
                             title={lang === 'gu' ? 'એલાર્મ સાઉન્ડ ચેક કરો' : 'Test Alarm Sound'}
                           >
-                            <Volume2Icon size={16} />
+                            <Volume2Icon size={15} />
                           </button>
                         )}
 
                         <button
                           onClick={() => handleOpenEditTask(r)}
-                          className="p-2 text-slate-400 hover:text-indigo-600 rounded-xl transition"
+                          className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg transition"
                           title={t('edit', lang)}
                         >
                           <Edit2Icon size={15} />
@@ -930,12 +898,42 @@ export default function RemindersTab({
 
                         <button
                           onClick={() => handleDeleteTask(r.id)}
-                          className="p-2 text-slate-300 hover:text-red-500 rounded-xl transition"
+                          className="p-1.5 text-slate-300 hover:text-rose-600 rounded-lg transition"
                           title={t('delete', lang)}
                         >
                           <Trash2Icon size={15} />
                         </button>
                       </div>
+                    </div>
+
+                    {/* Task Title & Description - Full Width Continuous (સળંગ) */}
+                    <div className="pt-2">
+                      <h4
+                        className={`text-sm font-bold leading-normal break-words ${
+                          r.isCompleted ? 'line-through text-slate-400' : 'text-slate-800'
+                        }`}
+                      >
+                        {(r.title || '').replace(/\r?\n+/g, ' ').trim()}
+                      </h4>
+
+                      {/* Clean Description only if not duplicate of title and not raw checklist markup */}
+                      {(() => {
+                        if (!r.description) return null;
+                        const lines = r.description
+                          .split('\n')
+                          .map((l) => l.trim())
+                          .filter((l) => l && !l.startsWith('☐') && !l.startsWith('☑️') && !l.startsWith('[ ]') && !l.startsWith('[x]') && !l.startsWith('કેટેગરી:'));
+                        const cleanText = lines.join(' ').trim();
+                        if (!cleanText) return null;
+                        const normClean = cleanText.replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
+                        const normTitle = (r.title || '').replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
+                        if (normClean === normTitle) return null;
+                        return (
+                          <p className="text-xs text-slate-500 mt-1 leading-relaxed break-words">
+                            {cleanText}
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
@@ -1125,14 +1123,24 @@ export default function RemindersTab({
                               </span>
                             )}
 
-                            {ev.phone && (
+                            {ev.phone && ev.phone !== '0' && ev.phone.trim() !== '' ? (
                               <a
                                 href={`tel:${ev.phone}`}
-                                className="flex items-center gap-1 text-blue-600 font-bold hover:underline"
+                                className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2 py-0.5 rounded-lg font-bold text-[11px] hover:underline shrink-0"
                               >
-                                <PhoneIcon size={12} />
-                                {ev.phone}
+                                <PhoneIcon size={11} className="text-blue-600" />
+                                <span>{ev.phone}</span>
                               </a>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditEvent(ev)}
+                                className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
+                                title={lang === 'gu' ? 'મોબાઇલ નંબર ઉમેરો' : 'Add phone number'}
+                              >
+                                <PhoneIcon size={11} />
+                                <span>{lang === 'gu' ? '+ ફોન નંબર' : '+ Add Mobile'}</span>
+                              </button>
                             )}
                           </div>
                         </div>

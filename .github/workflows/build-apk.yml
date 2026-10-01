@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.4.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.5.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.4.apk
+            daily-diary-v1.0.5.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,21 +68,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.4
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.4 Latest)"
+          tag_name: v1.0.5
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.5 Latest)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.4)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.5)
 
             આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ સુધારા:
-            - **મોબાઇલ નંબર લંબાઈ અને ડિફોલ્ટ નંબર સુધારો:** મોબાઇલ નંબર હવે ફક્ત ૧૦ અંકનો જ રહેશે, જૂના ડમી નંબરો હટાવી દેવામાં આવ્યા છે જેથી કોઈ મુશ્કેલી ન આવે.
-            - **સ્માર્ટ આસિસ્ટન્ટ સુધારો (Image 1):** વોઇસ આસિસ્ટન્ટમાંથી વધારાના ઉદાહરણોવાળા પ્રોમ્પ્ટ બોક્સ હટાવી એકદમ ક્લીન વિન્ડો બનાવી.
-            - **કામો/રીમાઇન્ડર કાર્ડ સુધારો (Image 2):** કામોના કાર્ડમાંથી તાકીદ/ઉચ્ચ અને રીંગટોનના બિનજરૂરી ટેગ હટાવી કાર્ડને એકદમ સાફ અને વ્યવસ્થિત બનાવ્યું.
-            - **ખાતાવહી કાર્ડ સુંદર લેઆઉટ (Image 3):** મોબાઇલ નંબર, WhatsApp અને UPI QR હવે એક જ લાઈનમાં આવશે, અને તારીખ તથા પાકતી તારીખ પણ એક જ લાઈનમાં ગોઠવવામાં આવી છે.
+            - **ડિફોલ્ટ મોબાઇલ નંબર (0000000001):** ખાતાવહી તેમજ બર્થડે/એનિવર્સરી વિશિઝમાં ડિફોલ્ટ નંબર 0000000001 સેટ કરવામાં આવ્યો છે અને સીધો કાર્ડ પર બટન તરીકે દેખાશે.
+            - **ખાતાવહી કાર્ડ સુંદર સિંગલ-લાઈન લેઆઉટ (Image 1):** ફોન નંબર, WhatsApp અને UPI QR હવે એક જ લાઈનમાં આવશે, અને નીચે તારીખ તથા પાકતી તારીખ પણ એક જ લાઈનમાં ગોઠવવામાં આવી છે.
+            - **કામો/રીમાઇન્ડર નોંધ સળંગ (Continuous) લેઆઉટ (Image 2 & 3):** રિમાઇન્ડર અને ખરીદીની નોંધ હવે બટનો વચ્ચે દબાયા વગર પૂરી પહોળાઈમાં સળંગ આવશે જેથી ૪ લાઈનમાં તૂટી ન જાય અને વાંચવામાં એકદમ સુંદર લાગે.
             - **સુપરફાસ્ટ પર્ફોર્મન્સ અને સ્મૂધ કામગીરી.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.4.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.5.apk`** પર ક્લિક કરીને સીધું ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.4.apk
+            daily-diary-v1.0.5.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
