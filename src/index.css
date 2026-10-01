@@ -295,78 +295,117 @@
   color: #fb7185 !important;
 }
 
-/* 5. Colored Badges & Quick Action Chips in Dark Mode */
-.dark-theme .bg-teal-50,
-.dark .bg-teal-50 {
+/* 5. Colored Badges & Quick Action Chips in Dark Mode (matches all opacities /20, /40, /70 etc) */
+.dark-theme [class*="bg-teal-50"],
+.dark [class*="bg-teal-50"] {
   background-color: #042f2e !important;
   color: #2dd4bf !important;
-  border-color: #0f766e !important;
+  border-color: #115e59 !important;
 }
 
-.dark-theme .bg-emerald-50,
-.dark .bg-emerald-50 {
+.dark-theme [class*="bg-emerald-50"],
+.dark [class*="bg-emerald-50"] {
   background-color: #022c22 !important;
   color: #34d399 !important;
   border-color: #065f46 !important;
 }
 
-.dark-theme .bg-cyan-50,
-.dark .bg-cyan-50 {
+.dark-theme [class*="bg-cyan-50"],
+.dark [class*="bg-cyan-50"] {
   background-color: #083344 !important;
   color: #38bdf8 !important;
   border-color: #0e7490 !important;
 }
 
-.dark-theme .bg-blue-50,
-.dark .bg-blue-50 {
+.dark-theme [class*="bg-blue-50"],
+.dark [class*="bg-blue-50"] {
   background-color: #172554 !important;
   color: #60a5fa !important;
   border-color: #1e40af !important;
 }
 
-.dark-theme .bg-purple-50,
-.dark-theme .bg-indigo-50,
-.dark .bg-purple-50,
-.dark .bg-indigo-50 {
+.dark-theme [class*="bg-purple-50"],
+.dark-theme [class*="bg-indigo-50"],
+.dark-theme [class*="bg-pink-50"],
+.dark [class*="bg-purple-50"],
+.dark [class*="bg-indigo-50"],
+.dark [class*="bg-pink-50"] {
   background-color: #1e1b4b !important;
   color: #c084fc !important;
   border-color: #3730a3 !important;
 }
 
-.dark-theme .bg-amber-50,
-.dark-theme .bg-orange-50,
-.dark .bg-amber-50,
-.dark .bg-orange-50 {
+.dark-theme [class*="bg-amber-50"],
+.dark-theme [class*="bg-orange-50"],
+.dark [class*="bg-amber-50"],
+.dark [class*="bg-orange-50"] {
   background-color: #451a03 !important;
   color: #fde047 !important;
   border-color: #78350f !important;
 }
 
-.dark-theme .bg-red-50,
-.dark-theme .bg-rose-50,
-.dark .bg-red-50,
-.dark .bg-rose-50 {
-  background-color: #4c0519 !important;
+.dark-theme [class*="bg-red-50"],
+.dark-theme [class*="bg-rose-50"],
+.dark [class*="bg-red-50"],
+.dark [class*="bg-rose-50"] {
+  background-color: #350c18 !important;
   color: #f87171 !important;
   border-color: #9f1239 !important;
 }
 
-.dark-theme .bg-amber-100,
-.dark .bg-amber-100 {
+/* 100-shade badges */
+.dark-theme [class*="bg-amber-100"],
+.dark [class*="bg-amber-100"] {
   background-color: #78350f !important;
   color: #fde047 !important;
 }
 
-.dark-theme .bg-purple-100,
-.dark .bg-purple-100 {
+.dark-theme [class*="bg-purple-100"],
+.dark [class*="bg-purple-100"] {
   background-color: #3730a3 !important;
   color: #e9d5ff !important;
 }
 
-.dark-theme .bg-blue-100,
-.dark .bg-blue-100 {
+.dark-theme [class*="bg-blue-100"],
+.dark [class*="bg-blue-100"] {
   background-color: #1e3a8a !important;
   color: #dbeafe !important;
+}
+
+.dark-theme [class*="bg-teal-100"],
+.dark [class*="bg-teal-100"] {
+  background-color: #134e4a !important;
+  color: #99f6e4 !important;
+}
+
+.dark-theme [class*="bg-emerald-100"],
+.dark [class*="bg-emerald-100"] {
+  background-color: #065f46 !important;
+  color: #a7f3d0 !important;
+}
+
+.dark-theme [class*="bg-indigo-100"],
+.dark [class*="bg-indigo-100"] {
+  background-color: #312e81 !important;
+  color: #c7d2fe !important;
+}
+
+.dark-theme [class*="bg-rose-100"],
+.dark-theme [class*="bg-red-100"],
+.dark [class*="bg-rose-100"],
+.dark [class*="bg-red-100"] {
+  background-color: #881337 !important;
+  color: #fecdd3 !important;
+}
+
+/* Hover background safety in dark mode */
+.dark-theme [class*="hover:bg-slate-50"]:hover,
+.dark-theme [class*="hover:bg-slate-100"]:hover,
+.dark-theme [class*="hover:bg-slate-200"]:hover,
+.dark [class*="hover:bg-slate-50"]:hover,
+.dark [class*="hover:bg-slate-100"]:hover,
+.dark [class*="hover:bg-slate-200"]:hover {
+  background-color: #1e293b !important;
 }
 
 /* 6. Borders */

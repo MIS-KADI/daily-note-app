@@ -402,36 +402,36 @@ export default function FinanceCharts({
 
         {/* Legend Cards */}
         <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
-          <div className="p-2.5 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex items-center justify-between">
+          <div className="p-2.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/60 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <Building2 size={15} className="text-blue-600" />
-              <span className="font-bold text-blue-900">{t('bank_balance', lang)}</span>
+              <Building2 size={15} className="text-blue-600 dark:text-blue-400" />
+              <span className="font-bold text-blue-900 dark:text-blue-200">{t('bank_balance', lang)}</span>
             </div>
-            <span className="font-black text-blue-800">₹{bankBalance.toLocaleString()}</span>
+            <span className="font-black text-blue-800 dark:text-blue-300">₹{bankBalance.toLocaleString()}</span>
           </div>
 
-          <div className="p-2.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between">
+          <div className="p-2.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="text-sm">💵</span>
-              <span className="font-bold text-emerald-900">{t('cash_balance', lang)}</span>
+              <span className="font-bold text-emerald-900 dark:text-emerald-200">{t('cash_balance', lang)}</span>
             </div>
-            <span className="font-black text-emerald-800">₹{cashBalance.toLocaleString()}</span>
+            <span className="font-black text-emerald-800 dark:text-emerald-300">₹{cashBalance.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* 4. Khata Book Lena vs Dena Chart */}
-      <div className="bg-white rounded-3xl p-4.5 border border-slate-200 shadow-xs space-y-3">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-indigo-100 text-indigo-700">
+            <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
               <Users size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-800">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                 {lang === 'hi' ? 'खाताबही अनुपात (लेना बनाम देना)' : lang === 'en' ? 'Khata Receivables vs Payables' : 'ખાતાવહી લેતી-દેતી ચાર્ટ'}
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {lang === 'hi' ? 'उधारी और बाकी रकम' : lang === 'en' ? 'Receivable vs Payable volume' : 'લેવાના vs આપવાના પ્રમાણ'}
               </p>
             </div>
@@ -439,12 +439,12 @@ export default function FinanceCharts({
         </div>
 
         {totalKhataVolume === 0 ? (
-          <div className="text-center py-6 text-slate-400 text-xs font-medium">
+          <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-medium">
             {lang === 'hi' ? 'खाताबही में कोई बाकी रकम नहीं' : lang === 'en' ? 'No pending khata records' : 'કોઈ બાકી લેતી-દેતી નોંધાયેલ નથી'}
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="w-full bg-slate-100 h-3.5 rounded-xl overflow-hidden flex shadow-inner">
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-3.5 rounded-xl overflow-hidden flex shadow-inner">
               <div
                 className="bg-emerald-500 h-full transition-all duration-700"
                 style={{ width: `${receivePct}%` }}
@@ -458,22 +458,22 @@ export default function FinanceCharts({
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+              <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-emerald-700 font-bold block">{t('my_receivables', lang)}</span>
-                  <span className="text-xs font-black text-emerald-800">₹{totalToReceive.toLocaleString()}</span>
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold block">{t('my_receivables', lang)}</span>
+                  <span className="text-xs font-black text-emerald-800 dark:text-emerald-200">₹{totalToReceive.toLocaleString()}</span>
                 </div>
-                <span className="text-[10px] font-bold bg-white text-emerald-800 px-1.5 py-0.5 rounded-md shadow-2xs">
+                <span className="text-[10px] font-bold bg-white dark:bg-emerald-900/90 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded-md shadow-2xs border border-emerald-200 dark:border-emerald-700">
                   {receivePct}%
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-between">
+              <div className="p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-rose-700 font-bold block">{t('my_payables', lang)}</span>
-                  <span className="text-xs font-black text-rose-800">₹{totalToPay.toLocaleString()}</span>
+                  <span className="text-[10px] text-rose-700 dark:text-rose-300 font-bold block">{t('my_payables', lang)}</span>
+                  <span className="text-xs font-black text-rose-800 dark:text-rose-200">₹{totalToPay.toLocaleString()}</span>
                 </div>
-                <span className="text-[10px] font-bold bg-white text-rose-800 px-1.5 py-0.5 rounded-md shadow-2xs">
+                <span className="text-[10px] font-bold bg-white dark:bg-rose-900/90 text-rose-800 dark:text-rose-200 px-1.5 py-0.5 rounded-md shadow-2xs border border-rose-200 dark:border-rose-700">
                   {payPct}%
                 </span>
               </div>
@@ -483,17 +483,17 @@ export default function FinanceCharts({
       </div>
 
       {/* 5. 7-Day Day-of-Week Expense Bar Chart */}
-      <div className="bg-white rounded-3xl p-4.5 border border-slate-200 shadow-xs space-y-3">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-amber-100 text-amber-700">
+            <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
               <Calendar size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-800">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                 {lang === 'hi' ? 'साप्ताहिक खर्च ट्रेंड (दिन अनुसार)' : lang === 'en' ? 'Day of Week Expense Trend' : 'વાર મુજબ ખર્ચ વિશ્લેષણ ગ્રાફ'}
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {lang === 'hi' ? 'सप्ताह के किस दिन सबसे ज्यादा खर्च हुआ' : lang === 'en' ? 'Peak expense days of the week' : 'કયા વારે સૌથી વધુ ખર્ચ થયો'}
               </p>
             </div>
@@ -501,29 +501,39 @@ export default function FinanceCharts({
         </div>
 
         {/* 7 Vertical Bar Columns */}
-        <div className="grid grid-cols-7 gap-1.5 pt-4 pb-2 items-end h-36 border-b border-slate-100">
+        <div className="grid grid-cols-7 gap-1.5 pt-4 pb-2 items-end h-36 border-b border-slate-100 dark:border-slate-800">
           {weekdayTotals.map((amount, idx) => {
             const heightPct = Math.max(10, Math.round((amount / maxWeekdayAmount) * 100));
             const isHighest = amount === maxWeekdayAmount && amount > 0;
             return (
               <div key={idx} className="flex flex-col items-center justify-end h-full gap-1">
-                <span className="text-[9px] font-bold text-slate-500 truncate">
-                  {amount > 0 ? `₹${amount > 999 ? `${Math.round(amount / 1000)}k` : amount}` : ''}
+                <span className={`text-[9px] font-bold truncate ${
+                  amount > 0
+                    ? isHighest
+                      ? 'text-amber-600 dark:text-amber-300 font-black'
+                      : 'text-slate-600 dark:text-slate-300'
+                    : 'text-transparent'
+                }`}>
+                  {amount > 0 ? `₹${amount > 999 ? `${Math.round(amount / 1000)}k` : amount}` : '0'}
                 </span>
                 <div
                   className={`w-full max-w-[24px] rounded-t-lg transition-all duration-500 ${
                     isHighest
-                      ? 'bg-gradient-to-t from-rose-500 to-amber-500 shadow-xs'
+                      ? 'bg-gradient-to-t from-rose-500 via-amber-500 to-yellow-400 shadow-md shadow-amber-500/20 ring-1 ring-amber-300/50'
                       : amount > 0
-                      ? 'bg-blue-400 hover:bg-blue-500'
-                      : 'bg-slate-100'
+                      ? 'bg-gradient-to-t from-blue-600 to-cyan-400 dark:from-blue-500 dark:to-cyan-300 shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50'
                   }`}
                   style={{ height: `${heightPct}%` }}
                   title={`${activeDayNames[idx]}: ₹${amount}`}
                 />
                 <span
                   className={`text-[10px] font-bold ${
-                    isHighest ? 'text-rose-600' : 'text-slate-500'
+                    isHighest
+                      ? 'text-rose-600 dark:text-amber-300 font-extrabold'
+                      : amount > 0
+                      ? 'text-blue-600 dark:text-blue-300 font-bold'
+                      : 'text-slate-500 dark:text-slate-400'
                   }`}
                 >
                   {activeDayNames[idx]}

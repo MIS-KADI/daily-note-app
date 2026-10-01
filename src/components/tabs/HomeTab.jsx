@@ -530,14 +530,14 @@ export default function HomeTab({
         </div>
 
         {/* Live Step Sensor & Direct Sync Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2 border-t border-slate-100 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
           <div className="flex items-center gap-1.5">
             <button
               onClick={toggleStepSensor}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition active:scale-95 text-[11px] ${
                 isStepSensorActive
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
               }`}
             >
               {isStepSensorActive ? (
@@ -624,7 +624,7 @@ export default function HomeTab({
             <span
               key={i}
               className={`text-sm transition-transform ${
-                i < glasses ? 'scale-110' : 'opacity-30 grayscale'
+                i < glasses ? 'scale-110 drop-shadow-sm' : 'opacity-35 grayscale contrast-125 dark:opacity-45 dark:brightness-125'
               }`}
             >
               🥛
@@ -635,29 +635,29 @@ export default function HomeTab({
 
 
       {/* Priority 1: Today's Medicine Routine Tracker */}
-      <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-xs space-y-3">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-teal-100 text-teal-700">
+            <div className="p-2 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300">
               <Pill size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-800">{t('today_medicines_routine', lang)}</h3>
-              <p className="text-[11px] text-slate-500">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t('today_medicines_routine', lang)}</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {takenMedsCount}/{todayMedicines.length} {t('medicines_taken_summary', lang)}
               </p>
             </div>
           </div>
           <button
             onClick={() => onNavigate('medicine')}
-            className="text-xs text-teal-600 font-semibold hover:underline"
+            className="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-bold hover:underline"
           >
             {t('view_all', lang)}
           </button>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
           <div
             className="bg-teal-500 h-full rounded-full transition-all duration-500"
             style={{
@@ -676,8 +676,8 @@ export default function HomeTab({
                 onClick={() => onToggleMedicine(med.id)}
                 className={`flex items-center justify-between p-3 rounded-2xl border transition cursor-pointer ${
                   isTaken
-                    ? 'bg-slate-50 border-slate-200 opacity-60'
-                    : 'bg-teal-50/40 border-teal-200/80 hover:bg-teal-50'
+                    ? 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 opacity-60'
+                    : 'bg-teal-50/40 dark:bg-slate-800/80 border-teal-200/80 dark:border-teal-800/60 hover:bg-teal-50 dark:hover:bg-slate-800'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -685,7 +685,7 @@ export default function HomeTab({
                     className={`w-6 h-6 rounded-lg flex items-center justify-center transition ${
                       isTaken
                         ? 'bg-teal-600 text-white'
-                        : 'border-2 border-slate-300 text-transparent'
+                        : 'border-2 border-slate-300 dark:border-slate-600 text-transparent'
                     }`}
                   >
                     <CheckCircle2 size={16} />
@@ -693,21 +693,21 @@ export default function HomeTab({
                   <div>
                     <h4
                       className={`text-xs font-bold ${
-                        isTaken ? 'line-through text-slate-500' : 'text-slate-800'
+                        isTaken ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'
                       }`}
                     >
                       {med.name}
                     </h4>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                       <span>{med.dosage}</span>
                       <span>•</span>
-                      <span className="font-semibold text-teal-700">{med.time}</span>
+                      <span className="font-semibold text-teal-700 dark:text-teal-300">{med.time}</span>
                       <span>•</span>
                       <span
                         className={`font-semibold ${
                           med.mealRelation === 'before_food'
-                            ? 'text-amber-700'
-                            : 'text-emerald-700'
+                            ? 'text-amber-700 dark:text-amber-400'
+                            : 'text-emerald-700 dark:text-emerald-400'
                         }`}
                       >
                         {med.mealRelation === 'before_food' ? t('before_food', lang) : t('after_food', lang)}
@@ -715,7 +715,13 @@ export default function HomeTab({
                     </div>
                   </div>
                 </div>
-                <span className="text-[10px] px-2 py-1 rounded-lg bg-white border border-slate-200 font-semibold text-slate-600">
+                <span
+                  className={`text-[10px] px-2 py-1 rounded-lg border font-bold ${
+                    isTaken
+                      ? 'bg-slate-100 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300'
+                      : 'bg-white dark:bg-teal-950/60 border-teal-200 dark:border-teal-700/60 text-teal-800 dark:text-teal-200 shadow-2xs'
+                  }`}
+                >
                   {isTaken ? t('taken', lang) : t('not_taken', lang)}
                 </span>
               </div>

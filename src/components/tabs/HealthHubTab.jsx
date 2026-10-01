@@ -838,7 +838,7 @@ export default function HealthHubTab({
             </div>
 
             {/* Live Motion Sensor Control */}
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-teal-50/70 border border-teal-200/80">
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-teal-50/70 dark:bg-slate-800/90 border border-teal-200/80 dark:border-teal-800/60 shadow-xs">
               <div className="flex items-center gap-2.5">
                 {isStepSensorActive ? (
                   <span className="relative flex h-3 w-3">
@@ -846,13 +846,13 @@ export default function HealthHubTab({
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                   </span>
                 ) : (
-                  <span className="h-3 w-3 rounded-full bg-slate-300"></span>
+                  <span className="h-3 w-3 rounded-full bg-slate-300 dark:bg-slate-600"></span>
                 )}
                 <div>
-                  <p className="text-xs font-bold text-slate-800">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
                     {isStepSensorActive ? t('live_sensor_active', lang) : t('live_sensor_start', lang)}
                   </p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
                     {isStepSensorActive
                       ? (lang === 'gu' ? 'ચાલતી વખતે સ્ટેપ્સ આપોઆપ ગણાય છે' : 'Steps are auto-counted as you walk')
                       : (lang === 'gu' ? 'સેન્સર શરૂ કરવા ક્લિક કરો' : 'Click to activate motion sensor')}
@@ -863,7 +863,7 @@ export default function HealthHubTab({
                 onClick={() => onToggleStepSensor?.()}
                 className={`px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 ${
                   isStepSensorActive
-                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-xs'
+                    ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs'
                     : 'bg-teal-600 hover:bg-teal-700 text-white shadow-xs'
                 }`}
               >
