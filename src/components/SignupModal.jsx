@@ -303,11 +303,13 @@ export default function SignupModal({
               <div className="flex gap-2">
                 <input
                   type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
                   disabled={isMobileVerified}
                   value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  placeholder="9876543210"
-                  className="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium text-xs disabled:opacity-75"
+                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="10 અંકનો મોબાઈલ નંબર"
+                  className="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-xs disabled:opacity-75"
                 />
                 {!isMobileVerified && (
                   <button

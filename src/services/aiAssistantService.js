@@ -253,11 +253,13 @@ export const aiAssistantService = {
       if (forcedIntent === 'khata') {
         const isToReceive = !lower.includes('આપવાના');
         let partyName = text.replace(/(પાસેથી|ને|ભાઈ|બેન|પાસે|થી|લેવાના|આપવાના|છે|રૂપિયા|rs|₹|\d+)/gi, '').trim() || 'પાર્ટી';
-        const khataAmount = amount || 500;
+        const phoneMatch = text.match(/\b[6-9]\d{9}\b/);
+        const khataPhone = phoneMatch ? phoneMatch[0] : '';
         return {
           intent: 'khata',
           type: isToReceive ? 'to_receive' : 'to_pay',
           partyName,
+          phone: khataPhone,
           amount: khataAmount,
           dueDate: date,
           description: text,
@@ -520,10 +522,13 @@ export const aiAssistantService = {
       if (!partyName || partyName.length < 2) partyName = isToReceive ? 'ગ્રાહક / પાર્ટી' : 'વેપારી / મિત્ર';
 
       const khataAmount = amount || 500;
+      const phoneMatch = text.match(/\b[6-9]\d{9}\b/);
+      const khataPhone = phoneMatch ? phoneMatch[0] : '';
       return {
         intent: 'khata',
         type: isToReceive ? 'to_receive' : 'to_pay',
         partyName,
+        phone: khataPhone,
         amount: khataAmount,
         dueDate: date,
         description: text,

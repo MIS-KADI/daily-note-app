@@ -823,23 +823,6 @@ export default function RemindersTab({
                                 : t('task', lang)}
                             </span>
 
-                            {/* Priority tag */}
-                            <span
-                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                                r.priority === 'high'
-                                  ? 'bg-rose-100 text-rose-800'
-                                  : r.priority === 'medium'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-emerald-100 text-emerald-800'
-                              }`}
-                            >
-                              {r.priority === 'high'
-                                ? '🔴 ' + t('priority_high', lang)
-                                : r.priority === 'medium'
-                                ? '🟡 ' + t('priority_medium', lang)
-                                : '🟢 ' + t('priority_low', lang)}
-                            </span>
-
                             {/* Advance Date indicator */}
                             {isFuture && (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-cyan-100 text-cyan-800 flex items-center gap-1">
@@ -853,17 +836,6 @@ export default function RemindersTab({
                               <ClockIcon size={12} className="text-slate-400" />
                               {r.time}
                             </span>
-
-                            {/* Ringtone badge */}
-                            {r.hasAlarm && (
-                              <span
-                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200/60 flex items-center gap-1"
-                                title="સેટ કરેલ રીંગટોન"
-                              >
-                                <MusicIcon size={10} className="text-purple-600" />
-                                <span>{getRingtoneDisplayName(r.ringtone)}</span>
-                              </span>
-                            )}
 
                             {/* Repeat badge */}
                             {r.repeat && r.repeat !== 'none' && (

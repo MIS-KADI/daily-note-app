@@ -12,7 +12,11 @@ export const sanitizePhoneNumber = (phone = '') => {
   if (!phone) return '';
   // Remove spaces, dashes, brackets, plus
   let cleaned = phone.replace(/[^0-9]/g, '');
-  // If 10-digit Indian number without country code, prepend 91
+  // Ignore dummy '0' or invalid short strings
+  if (!cleaned || cleaned.replace(/^0+/, '').length === 0 || cleaned.length < 10) {
+    return '';
+  }
+  // If 10-digit number without country code, prepend 91
   if (cleaned.length === 10) {
     cleaned = '91' + cleaned;
   }

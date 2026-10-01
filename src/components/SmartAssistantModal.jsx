@@ -13,7 +13,6 @@ import {
   Droplet,
   Users,
   Volume2,
-  HelpCircle,
   AlertCircle,
   RefreshCw,
   Globe,
@@ -61,44 +60,6 @@ export default function SmartAssistantModal({
   const recognitionRef = useRef(null);
   const autoStartedRef = useRef(false);
 
-  // Suggested quick prompts in current language across all tabs
-  const PROMPTS = {
-    gu: [
-      '૨ કિલો બટાકા અને તેલ લાવવાના છે',
-      'આજે મીટિંગ છે ૧૧ વાગે',
-      'સવારે ૮ વાગ્યે બીપીની દવા ૧ ગોળી લેવાની છે',
-      'આજે શાકભાજી માટે ૨૫૦ રૂપિયા ખર્ચ્યા',
-      'બેંકમાં ૫૦૦૦ જમા કરાવ્યા',
-      'કાલે રમેશભાઈનો જન્મદિવસ છે',
-      'રમેશભાઈ પાસેથી ૨૦૦૦ લેવાના છે',
-      '૨ ગ્લાસ પાણી પીધું',
-      'આજે પરિવાર સાથે ખૂબ સુંદર સમય વિતાવ્યો',
-    ],
-    hi: [
-      '2 किलो आलू और तेल लाना है',
-      'आज 11 बजे मीटिंग है',
-      'सुबह 8 बजे बीपी की 1 गोली लेनी है',
-      'आज सब्जी के लिए 250 रुपये खर्च किए',
-      'बैंक में 5000 जमा किए',
-      'कल राहुल का जन्मदिन है',
-      'रमेश भाई से 2000 लेने हैं',
-      '2 ग्लास पानी पिया',
-      'आज का दिन बहुत अच्छा रहा',
-    ],
-    en: [
-      'Need to buy 2 kg potatoes and cooking oil',
-      'Meeting today at 11 am',
-      'Take BP medicine 1 tablet at 8 am',
-      'Spent 250 rupees on vegetables',
-      'Deposited 5000 in Bank',
-      'Tomorrow is Rahul birthday celebration',
-      'Ramesh owes me 2000 rupees',
-      'Drank 2 glasses of water',
-      'Had a wonderful productive day today',
-    ],
-  };
-
-  const currentPrompts = PROMPTS[lang] || PROMPTS.gu;
 
   const stopListening = () => {
     if (window.AndroidSpeechBridge && typeof window.AndroidSpeechBridge.stopListening === 'function') {
@@ -986,27 +947,6 @@ export default function SmartAssistantModal({
             </div>
           )}
 
-          {/* Quick Voice Prompt Chips across all tabs */}
-          <div className="space-y-1.5 pt-1">
-            <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
-              <HelpCircle size={12} className="text-blue-400" />
-              તમામ ટેબના સચોટ ઉદાહરણો (ક્લિક કરી ચકાસો):
-            </span>
-            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
-              {currentPrompts.map((p, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setInputText(p);
-                    handleAnalyze(p);
-                  }}
-                  className="text-[11px] bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-300 px-2.5 py-1.5 rounded-xl transition text-left active:scale-95 hover:border-slate-500"
-                >
-                  "{p}"
-                </button>
-              ))}
-            </div>
-          </div>
 
         </div>
       </div>

@@ -227,15 +227,16 @@ export default function ProfileTab({ user, onUpdateUser, onReloadAllData, onOpen
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
               <Phone size={12} className="text-slate-500" />
-              {t('mobile_number', lang)}
+              {t('mobile_number', lang)} ({lang === 'gu' ? '૧૦ અંક' : '10 digits'})
             </label>
             <input
               type="tel"
+              inputMode="numeric"
+              maxLength={10}
               value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              placeholder="+91 98765 43210"
-              required
+              onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              placeholder="10 અંકનો મોબાઈલ નંબર"
             />
           </div>
 

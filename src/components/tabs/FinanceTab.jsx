@@ -174,7 +174,12 @@ export default function FinanceTab({
     setEditingKhataId(k.id);
     setKhType(k.type || 'to_receive');
     setKhPartyName(k.partyName || '');
-    setKhPhone(k.phone || '');
+    const rawPhone = k.phone || '';
+    const cleanPhone =
+      rawPhone === '+91 98250 11223' || rawPhone === '+91 94280 44556' || rawPhone === '0'
+        ? ''
+        : rawPhone.replace(/\D/g, '').slice(-10);
+    setKhPhone(cleanPhone);
     setKhAmount(k.amount ? String(k.amount) : '');
     setKhDate(k.date || new Date().toISOString().split('T')[0]);
     setKhDueDate(k.dueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
@@ -186,6 +191,7 @@ export default function FinanceTab({
     e.preventDefault();
     const num = parseFloat(khAmount);
     if (!khPartyName.trim() || isNaN(num) || num <= 0) return;
+    const cleanPhone = khPhone.replace(/\D/g, '').slice(0, 10);
 
     if (editingKhataId) {
       const updated = khata.map((k) =>
@@ -193,7 +199,7 @@ export default function FinanceTab({
           ? {
               ...k,
               partyName: khPartyName.trim(),
-              phone: khPhone.trim(),
+              phone: cleanPhone,
               type: khType,
               amount: num,
               date: khDate,
@@ -207,7 +213,7 @@ export default function FinanceTab({
       const newEntry = {
         id: 'kh-' + Date.now(),
         partyName: khPartyName.trim(),
-        phone: khPhone.trim(),
+        phone: cleanPhone,
         type: khType,
         amount: num,
         date: khDate,
@@ -684,29 +690,32 @@ export default function FinanceTab({
                           <p className="text-xs text-slate-600 mt-1">{k.description}</p>
                         )}
 
-                        <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-slate-500 mt-2">
-                          {k.phone ? (
+                        {/* Line 1: Mobile Number, WhatsApp and UPI QR on one line */}
+                        <div className="flex items-center gap-1.5 sm:gap-2 mt-2 flex-wrap">
+                          {k.phone && k.phone !== '0' && k.phone.trim() !== '' ? (
                             <a
                               href={`tel:${k.phone}`}
-                              className="flex items-center gap-1 text-blue-600 font-bold hover:underline"
+                              className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2 py-0.5 rounded-lg font-bold text-[11px] hover:underline shrink-0"
                             >
-                              <Phone size={12} />
-                              {k.phone}
+                              <Phone size={11} className="text-blue-600" />
+                              <span>{k.phone}</span>
                             </a>
                           ) : (
                             <button
                               type="button"
                               onClick={() => handleOpenEditKhata(k)}
-                              className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-lg font-bold text-[11px] transition active:scale-95"
+                              className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
                               title={lang === 'gu' ? 'મોબાઇલ નંબર ઉમેરો' : 'Add phone number'}
                             >
                               <Phone size={11} />
-                              <span>{lang === 'gu' ? '+ ફોન નંબર ઉમેરો' : '+ Add Mobile'}</span>
+                              <span>{lang === 'gu' ? '+ ફોન નંબર' : '+ Add Mobile'}</span>
                             </button>
                           )}
+
                           <button
+                            type="button"
                             onClick={() => {
-                              if (!k.phone) {
+                              if (!k.phone || k.phone === '0' || k.phone.trim() === '') {
                                 handleOpenEditKhata(k);
                                 return;
                               }
@@ -720,29 +729,35 @@ export default function FinanceTab({
                                 lang,
                               });
                             }}
-                            className="flex items-center gap-1 text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-lg font-bold transition active:scale-95"
+                            className="flex items-center gap-1 text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
                             title="WhatsApp"
                           >
-                            <MessageCircle size={12} />
+                            <MessageCircle size={11} />
                             <span>WhatsApp</span>
                           </button>
+
                           {onOpenUpiModal && !k.isSettled && (
                             <button
+                              type="button"
                               onClick={() => onOpenUpiModal(k)}
-                              className="flex items-center gap-1 text-indigo-700 bg-indigo-100 hover:bg-indigo-200 px-2 py-0.5 rounded-lg font-bold transition active:scale-95"
+                              className="flex items-center gap-1 text-indigo-700 bg-indigo-100 hover:bg-indigo-200 px-2 py-0.5 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
                               title="UPI QR & Payment Link"
                             >
-                              <QrCode size={12} />
+                              <QrCode size={11} />
                               <span>UPI QR</span>
                             </button>
                           )}
+                        </div>
+
+                        {/* Line 2: Date and Due Date on one line */}
+                        <div className="flex items-center gap-2.5 text-[11px] text-slate-500 mt-1.5 flex-wrap">
                           <span className="flex items-center gap-1">
-                            <Calendar size={12} />
-                            {t('date', lang)}: {k.date}
+                            <Calendar size={11} className="text-slate-400" />
+                            <span>{t('date', lang)}: <strong className="text-slate-700">{k.date}</strong></span>
                           </span>
                           {k.dueDate && (
-                            <span className="font-semibold text-amber-700">
-                              {t('due_date', lang)}: {k.dueDate}
+                            <span className="flex items-center gap-1 text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 font-semibold">
+                              <span>{t('due_date', lang)}: <strong>{k.dueDate}</strong></span>
                             </span>
                           )}
                         </div>
@@ -1019,14 +1034,19 @@ export default function FinanceTab({
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    {t('mobile_number', lang)}
+                    {t('mobile_number', lang)} ({lang === 'gu' ? '૧૦ અંક' : '10 digits'})
                   </label>
                   <input
                     type="tel"
-                    placeholder="+91..."
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="10 અંકનો નંબર"
                     value={khPhone}
-                    onChange={(e) => setKhPhone(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setKhPhone(val);
+                    }}
+                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 font-bold"
                   />
                 </div>
               </div>
