@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.12.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.13.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.12.apk
+            daily-diary-v1.0.13.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,22 +68,19 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.12
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.12 Background Steps, Sound Alert & Multilingual AI)"
+          tag_name: v1.0.13
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.13 Fix Motion Vibration & Sensor Optimization)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.12)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.13)
 
             આ નવા વર્ઝનમાં કરવામાં આવેલા વિશેષ સુધારા:
-            - **એક્યુરેટ હાર્ડવેર સ્ટેપ કાઉન્ટર (Background & Closed App Pedometer):** એપ બંધ હોય કે સ્ક્રીન બંધ હોય તો પણ ફોનના ડેડિકેટેડ સ્ટેપ હાર્ડવેર સેન્સર (Sensor.TYPE_STEP_COUNTER) દ્વારા સતત સ્ટેપ્સ ગણાય છે અને એપ ખુલતાની સાથે જ સિંક થઈ જાય છે.
-            - **નોટિફિકેશનમાં મધુર અવાજ (Audible Notification Chime):** દરેક એલર્ટ અને નોટિફિકેશન સાથે ક્રિસ્ટલ ક્લિયર સાઉન્ડ વાગશે.
-            - **સાઇન અપ ફોર્મ સંપૂર્ણ રદ:** એપ ઓપન કરતાં જ સીધી જ ઉપયોગમાં લઈ શકાય છે, કોઈ રજિસ્ટ્રેશન કે સાઇન અપ ફોર્મ નડશે નહિ.
-            - **વીડિયો પ્લેયર દૂર કર્યો:** કાર્ટૂન વીડિયો ગાઈડ રદ કર્યો છે જેથી એપ સુપર ફાસ્ટ અને ક્લીન રહે.
-            - **AI આસિસ્ટન્ટ ભાષા સિંક:** બોલવાની ભાષા (ગુજરાતી, હિન્દી, અંગ્રેજી) સિલેક્ટ કરતાં જ આખું પેજ અને તમામ બટનો-લેબલ તે જ ભાષામાં બદલાઈ જાય છે.
-            - **અતિ હળવી સાઈઝ (<8 MB).**
+            - **મોબાઈલ વાઇબ્રેશન સંપૂર્ણ બંધ (Eliminated Motion Vibration):** ફોન હાથમાં પકડતાં કે આઘો-પાછો કરતાં જે વાઇબ્રેટ થતું હતું તે સોફ્ટવેર એક્સીલેરોમીટર વાઇબ્રેશન કોડ કાયમ માટે કાઢી નાખ્યો છે. સ્ટેપ્સ હવે સંપૂર્ણ સાયલન્ટ અને સ્મૂથ ગણાશે.
+            - **નેટિવ હાર્ડવેર સેન્સર ઓપ્ટિમાઇઝેશન:** ફોનના હાર્ડવેર સેન્સર હબ દ્વારા બેકગ્રાઉન્ડમાં ઓરિજિનલ સ્ટેપ્સ ગણવાનું ચાલુ રહેશે અને કોઈ ખોટા ફોલ્સ-વાઇબ્રેશન કે બેટરી ડ્રેઇન થશે નહીં.
+            - **સુપર લાઇટવેઇટ સાઈઝ (<8 MB).**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.12.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.13.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.12.apk
+            daily-diary-v1.0.13.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

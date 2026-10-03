@@ -20,8 +20,8 @@ class PedometerService {
 
     // Linear Acceleration & Peak Detection
     this.smoothedMagnitude = 0;
-    this.beta = 0.35;
-    this.stepThreshold = 1.35;
+    this.beta = 0.22;
+    this.stepThreshold = 2.4; // Real human walking acceleration threshold (prevents false triggers when holding or tilting phone)
     this.isPeakRising = false;
     this.currentPeak = 0;
 
@@ -236,8 +236,16 @@ class PedometerService {
     // Sync hardware steps immediately
     this.syncHardwareSteps();
 
-    // Also attach devicemotion listener for Web / accelerometer fallback
-    if (typeof window !== 'undefined' && 'addEventListener' in window) {
+    // Check if Android Native Hardware Step Counter is supported
+    const hasHardwareSteps =
+      typeof window !== 'undefined' &&
+      window.AndroidStepBridge &&
+      typeof window.AndroidStepBridge.isHardwareStepSupported === 'function' &&
+      window.AndroidStepBridge.isHardwareStepSupported();
+
+    // ONLY attach devicemotion listener for Web / browser when native hardware steps are NOT available!
+    // This avoids double-counting, battery drain, and accelerometer jitter/vibrations on mobile!
+    if (!hasHardwareSteps && typeof window !== 'undefined' && 'addEventListener' in window) {
       window.addEventListener('devicemotion', this.motionHandler, { passive: true });
     }
     this.requestWakeLock();
@@ -298,19 +306,15 @@ class PedometerService {
       } else if (this.smoothedMagnitude > this.currentPeak) {
         this.currentPeak = this.smoothedMagnitude;
       }
-    } else if (this.isPeakRising && this.smoothedMagnitude < this.stepThreshold * 0.85) {
+    } else if (this.isPeakRising && this.smoothedMagnitude < this.stepThreshold * 0.8) {
       this.isPeakRising = false;
       const elapsed = now - this.lastStepTimestamp;
 
-      if (elapsed >= this.minStepIntervalMs) {
+      // Require real cadence and clear peak difference
+      if (elapsed >= this.minStepIntervalMs && this.currentPeak >= this.stepThreshold * 1.15) {
         this.lastStepTimestamp = now;
         this.notifyStep(1);
-
-        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-          try {
-            navigator.vibrate(10);
-          } catch (_) {}
-        }
+        // Completely silent: NO vibration on step counting!
       }
     }
   }
