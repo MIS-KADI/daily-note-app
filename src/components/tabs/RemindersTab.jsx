@@ -316,13 +316,37 @@ export default function RemindersTab({
     e.preventDefault();
     if (!title.trim()) return;
 
+    // Normalize description: if type is shopping, format non-empty lines with checkboxes
+    let finalDesc = (description || '').trim();
+    if (type === 'shopping' && finalDesc) {
+      const lines = finalDesc.split('\n');
+      const formatted = lines.map((l) => {
+        const trimmed = l.trim();
+        if (!trimmed) return '';
+        if (
+          trimmed.startsWith('☐') ||
+          trimmed.startsWith('☑️') ||
+          trimmed.startsWith('☑') ||
+          trimmed.startsWith('[ ]') ||
+          trimmed.startsWith('[x]') ||
+          trimmed.startsWith('[X]') ||
+          trimmed.startsWith('✓') ||
+          trimmed.startsWith('✔')
+        ) {
+          return trimmed;
+        }
+        return `☐ ${trimmed.replace(/^[-•*]\s*/, '')}`;
+      }).filter(Boolean);
+      finalDesc = formatted.join('\n');
+    }
+
     if (editingReminder) {
       const updated = reminders.map((r) =>
         r.id === editingReminder.id
           ? {
               ...r,
               title,
-              description,
+              description: finalDesc,
               type,
               time,
               date,
@@ -338,7 +362,7 @@ export default function RemindersTab({
       const newReminder = {
         id: 'rem-' + Date.now(),
         title,
-        description,
+        description: finalDesc,
         type,
         time,
         date,
@@ -368,16 +392,25 @@ export default function RemindersTab({
     if (!task || !task.description) return;
     const lines = task.description.split('\n');
     if (lineIndex < 0 || lineIndex >= lines.length) return;
-    let line = lines[lineIndex];
-    if (line.includes('☐')) {
-      lines[lineIndex] = line.replace('☐', '☑️');
-    } else if (line.includes('☑️')) {
-      lines[lineIndex] = line.replace('☑️', '☐');
-    } else if (line.includes('[ ]')) {
-      lines[lineIndex] = line.replace('[ ]', '[x]');
-    } else if (line.includes('[x]')) {
-      lines[lineIndex] = line.replace('[x]', '[ ]');
+    let line = lines[lineIndex].trim();
+    if (!line) return;
+
+    const isCurrentlyDone =
+      line.startsWith('☑️') ||
+      line.startsWith('☑') ||
+      line.startsWith('[x]') ||
+      line.startsWith('[X]') ||
+      line.startsWith('✓') ||
+      line.startsWith('✔');
+
+    const cleanText = line.replace(/^([☐☑️☑✓✔]|\[[ xX]\]|[-•*]|\d+\.)\s*/, '').trim();
+
+    if (isCurrentlyDone) {
+      lines[lineIndex] = `☐ ${cleanText}`;
+    } else {
+      lines[lineIndex] = `☑️ ${cleanText}`;
     }
+
     const updated = reminders.map((r) =>
       r.id === taskId ? { ...r, description: lines.join('\n') } : r
     );
@@ -929,22 +962,162 @@ export default function RemindersTab({
                         {(r.title || '').replace(/\r?\n+/g, ' ').trim()}
                       </h4>
 
-                      {/* Clean Description Note only if not duplicate of title and not raw checklist markup */}
+                      {/* Interactive Shopping / Task Checklist Display */}
                       {(() => {
                         if (!r.description) return null;
-                        const lines = r.description
-                          .split('\n')
-                          .map((l) => l.trim())
-                          .filter((l) => l && !l.startsWith('☐') && !l.startsWith('☑️') && !l.startsWith('[ ]') && !l.startsWith('[x]') && !l.startsWith('કેટેગરી:'));
-                        const cleanText = lines.join(' ').trim();
-                        if (!cleanText) return null;
-                        const normClean = cleanText.replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
-                        const normTitle = (r.title || '').replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
-                        if (normClean === normTitle) return null;
+                        const lines = r.description.split('\n');
+                        const checklistItems = [];
+                        const noteLines = [];
+
+                        lines.forEach((line, idx) => {
+                          const trimmed = line.trim();
+                          if (!trimmed) return;
+
+                          const isCheckbox =
+                            trimmed.startsWith('☐') ||
+                            trimmed.startsWith('☑️') ||
+                            trimmed.startsWith('☑') ||
+                            trimmed.startsWith('[ ]') ||
+                            trimmed.startsWith('[x]') ||
+                            trimmed.startsWith('[X]') ||
+                            trimmed.startsWith('✓') ||
+                            trimmed.startsWith('✔');
+
+                          const isBullet =
+                            trimmed.startsWith('- ') ||
+                            trimmed.startsWith('• ') ||
+                            trimmed.startsWith('* ');
+
+                          // If task is shopping, or line has checkbox or bullet markup:
+                          if (isShopping || isCheckbox || isBullet) {
+                            const isCompleted =
+                              trimmed.startsWith('☑️') ||
+                              trimmed.startsWith('☑') ||
+                              trimmed.startsWith('[x]') ||
+                              trimmed.startsWith('[X]') ||
+                              trimmed.startsWith('✓') ||
+                              trimmed.startsWith('✔');
+
+                            const cleanItemText = trimmed
+                              .replace(/^([☐☑️☑✓✔]|\[[ xX]\]|[-•*]|\d+\.)\s*/, '')
+                              .trim();
+
+                            if (cleanItemText) {
+                              checklistItems.push({
+                                lineIndex: idx,
+                                text: cleanItemText,
+                                isCompleted,
+                              });
+                            }
+                          } else if (!trimmed.startsWith('કેટેગરી:')) {
+                            noteLines.push(trimmed);
+                          }
+                        });
+
+                        const totalItems = checklistItems.length;
+                        const completedItems = checklistItems.filter((i) => i.isCompleted).length;
+                        const progressPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
                         return (
-                          <div className="mt-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100/90 text-xs text-slate-600 leading-relaxed break-normal">
-                            <span className="font-semibold text-slate-800">📝 {lang === 'gu' ? 'નોંધ:' : 'Note:'} </span>
-                            <span>{cleanText}</span>
+                          <div className="mt-2.5 space-y-2">
+                            {/* Checklist Container */}
+                            {totalItems > 0 && (
+                              <div
+                                className={`p-3 rounded-2xl border transition ${
+                                  isShopping
+                                    ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/40'
+                                    : 'bg-slate-50/80 dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-700/60'
+                                }`}
+                              >
+                                {/* Header with progress count */}
+                                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
+                                  <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200">
+                                    <span>{isShopping ? '🛒' : '📋'}</span>
+                                    <span>
+                                      {isShopping
+                                        ? (lang === 'gu' ? 'ખરીદીની યાદી (ચેકલિસ્ટ):' : lang === 'hi' ? 'खरीदारी की सूची:' : 'Shopping Checklist:')
+                                        : (lang === 'gu' ? 'કામની યાદી / ચેકલિસ્ટ:' : lang === 'hi' ? 'कार्य सूची:' : 'Task Checklist:')}
+                                    </span>
+                                  </div>
+                                  <span
+                                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                                      completedItems === totalItems
+                                        ? 'bg-emerald-600 text-white shadow-xs'
+                                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                                    }`}
+                                  >
+                                    {completedItems}/{totalItems} {completedItems === totalItems ? (lang === 'gu' ? 'સંપૂર્ણ' : 'Done') : (lang === 'gu' ? 'ખરીદાઈ' : 'Checked')} ({progressPercent}%)
+                                  </span>
+                                </div>
+
+                                {/* Progress Bar */}
+                                <div className="w-full bg-slate-200/80 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden my-1.5">
+                                  <div
+                                    className={`h-full transition-all duration-300 rounded-full ${
+                                      completedItems === totalItems
+                                        ? 'bg-emerald-500'
+                                        : isShopping
+                                        ? 'bg-emerald-600'
+                                        : 'bg-indigo-600'
+                                    }`}
+                                    style={{ width: `${progressPercent}%` }}
+                                  />
+                                </div>
+
+                                {/* Interactive Items List */}
+                                <div className="space-y-1.5 pt-0.5">
+                                  {checklistItems.map((item) => (
+                                    <div
+                                      key={item.lineIndex}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToggleTaskSubItem(r.id, item.lineIndex);
+                                      }}
+                                      className={`flex items-start gap-2.5 p-2 rounded-xl border transition cursor-pointer select-none active:scale-[0.99] ${
+                                        item.isCompleted
+                                          ? 'bg-emerald-100/60 dark:bg-emerald-950/40 border-emerald-300/70 dark:border-emerald-700/60 text-slate-400 dark:text-slate-500'
+                                          : 'bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 text-slate-800 dark:text-slate-100 shadow-2xs'
+                                      }`}
+                                      title={lang === 'gu' ? 'ક્લિક કરીને ટીક / અનટીક કરો' : 'Click to check / uncheck'}
+                                    >
+                                      <div
+                                        className={`w-4 h-4 mt-0.5 rounded flex items-center justify-center shrink-0 transition ${
+                                          item.isCompleted
+                                            ? 'bg-emerald-600 text-white'
+                                            : 'border-2 border-slate-300 dark:border-slate-500 hover:border-emerald-500'
+                                        }`}
+                                      >
+                                        {item.isCompleted && <CheckCircle2Icon size={12} />}
+                                      </div>
+                                      <span
+                                        className={`text-xs font-semibold leading-relaxed flex-1 ${
+                                          item.isCompleted
+                                            ? 'line-through text-slate-400 dark:text-slate-500'
+                                            : 'text-slate-800 dark:text-slate-100'
+                                        }`}
+                                      >
+                                        {item.text}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Additional Note (if any non-checklist lines exist) */}
+                            {(() => {
+                              const cleanText = noteLines.join(' ').trim();
+                              if (!cleanText) return null;
+                              const normClean = cleanText.replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
+                              const normTitle = (r.title || '').replace(/^(ખરીદી|કામ|મીટિંગ):\s*/, '').trim().toLowerCase();
+                              if (normClean === normTitle) return null;
+                              return (
+                                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100/90 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300 leading-relaxed break-normal">
+                                  <span className="font-semibold text-slate-800 dark:text-slate-100">📝 {lang === 'gu' ? 'નોંધ:' : 'Note:'} </span>
+                                  <span>{cleanText}</span>
+                                </div>
+                              );
+                            })()}
                           </div>
                         );
                       })()}

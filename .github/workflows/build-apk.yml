@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.14.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.15.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.14.apk
+            daily-diary-v1.0.15.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,20 +68,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.14
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.14 Fix AI Assistant Save & Smart Intent Parsing)"
+          tag_name: v1.0.15
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.15 Interactive Shopping Checklist & Demo Entries)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.14)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.15)
 
-            આ નવા વર્ઝનમાં કરવામાં આવેલા અતિ મહત્વના સુધારા:
-            - **સ્માર્ટ આસિસ્ટન્ટ સેવ ફિક્સ (100% Fixed Save Issue):** AI આસિસ્ટન્ટમાંથી બોલીને કે ટાઈપ કરીને એન્ટ્રી (જેમ કે ખરીદી, ખર્ચ, રીમાઇન્ડર વગેરે) સેવ કરતી વખતે જે સેવ નહોતું થતું તેનો રિકર્સન બગ શોધીને સંપૂર્ણ સોલ્વ કરી દેવામાં આવ્યો છે. હવે `હા, સેવ કરો` બટન દબાવતા જ તરત જ ડાયરી અને સંબંધિત ટેબમાં સેવ થઈ જાય છે.
-            - **સ્માર્ટ ઈન્ટેન્ટ અને ટફન ગ્લાસ / ગેજેટ્સ કેટેગરી અપગ્રેડ:** 'ટફન ગ્લાસ' કે 'મોબાઈલ કવર' જેવા શબ્દો હવે પાણી પીવાના ગ્લાસ સાથે મિક્સ નહીં થાય અને ખર્ચમાં 'મોબાઈલ / ગેજેટ્સ / રિચાર્જ' કે ખરીદીમાં એકદમ સચોટ રીતે ઓળખાશે.
-            - **ઝડપી અને સ્મૂથ વર્કિંગ:** એપ એકદમ સ્મૂથ, ફાસ્ટ અને બેટરી ફ્રેન્ડલી કામ કરશે.
-            - **સુપર લાઇટવેઇટ સાઈઝ (<8 MB).**
+            આ નવા વર્ઝનમાં કરવામાં આવેલા વિશેષ સુધારા:
+            - **ઇન્ટરેક્ટિવ ખરીદી યાદી / ચેકલિસ્ટ (Interactive Shopping Checklist):** નવી ખરીદી યાદી ઉમેર્યા પછી કાર્ડ પર માત્ર વિષય જ દેખાતો હતો અને ખરીદીની વિગત છુપાઈ જતી હતી તે બગ સંપૂર્ણ સોલ્વ કર્યો છે. હવે દરેક વસ્તુ ચેકબોક્સ સાથે સુંદર રીતે દેખાય છે અને તેના પર ક્લિક કરીને ટીક / અનટીક કરી શકાય છે.
+            - **લાઈવ પ્રોગ્રેસ બાર:** કેટલી વસ્તુઓ ખરીદાઈ અને કેટલી બાકી છે તેનો ટકાવારી સાથેનો પ્રોગ્રેસ બાર કાર્ડ પર લાઈવ અપડેટ થશે.
+            - **૩ નવી ડેમો ખરીદી એન્ટ્રીઓ (3 New Demo Shopping Entries):** કરિયાણું, શાકભાજી-ફળો અને ડેરી પ્રોડક્ટ્સની ૩ નવી ડેમો ચેકલિસ્ટ એન્ટ્રીઓ ઉમેરી આપી છે.
+            - **વોટ્સએપ શેરિંગ અપગ્રેડ:** ખરીદીની આખી યાદી ચેકલિસ્ટ સાથે વોટ્સએપ પર એક જ ક્લિકથી શેર કરી શકાશે.
+            - **સુપર લાઇટવેઇટ સાઈઝ (<8 MB) & સ્મૂથ વર્કિંગ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.14.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.15.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.14.apk
+            daily-diary-v1.0.15.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

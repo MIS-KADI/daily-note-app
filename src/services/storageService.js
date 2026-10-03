@@ -271,6 +271,12 @@ export const storageService = {
     }
     try {
       const parsed = JSON.parse(data);
+      if (this.isDemoMode() && !parsed.some((r) => r.type === 'shopping' || r.id === 'rem-shop-1')) {
+        const demoDefaults = getDefaultReminders(this.getLanguage()).filter((r) => r.type === 'shopping');
+        const merged = [...parsed, ...demoDefaults];
+        localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(merged));
+        return merged;
+      }
       return parsed.map((r) => {
         if (r.id === 'rem-1') {
           return {

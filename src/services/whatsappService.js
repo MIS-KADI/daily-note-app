@@ -197,8 +197,15 @@ export const whatsappService = {
     };
 
     const L = labels[lang] || labels.en || labels.gu;
+    const isShopping = remOrObj?.type === 'shopping';
+    const headerText = isShopping
+      ? (lang === 'gu' ? '🛒 ખરીદી યાદી' : lang === 'hi' ? '🛒 खरीदारी सूची' : '🛒 Shopping List')
+      : `⏰ ${L.header}`;
+    const detailsLabel = isShopping
+      ? (lang === 'gu' ? 'ખરીદીની વસ્તુઓ (ચેકલિસ્ટ)' : lang === 'hi' ? 'सामान की सूची' : 'Checklist Items')
+      : L.details;
 
-    const message = `⏰ *${L.header}:* ${title}\n📅 *${L.date}:* ${date || L.today}\n⏱️ *${L.time}:* ${time || '-'}\n${description ? `ℹ️ *${L.details}:* ${description}\n` : ''}\n— ${senderName}`;
+    const message = `*${headerText}:* ${title}\n📅 *${L.date}:* ${date || L.today}\n⏱️ *${L.time}:* ${time || '-'}\n${description ? `\n📝 *${detailsLabel}:*\n${description}\n` : ''}\n— ${senderName}`;
     openWhatsApp('', message);
   },
 };
