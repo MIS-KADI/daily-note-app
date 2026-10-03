@@ -470,18 +470,10 @@ export default function App() {
     });
   };
 
-  const checkCanAdd = (actionCallback) => {
-    if (typeof actionCallback === 'function') {
-      actionCallback();
-    }
-    return true;
-  };
+  const checkCanAdd = () => true;
 
   // Transfer calculated amount directly to finance
   const handleTransferAmount = (amount, type) => {
-    if (!checkCanAdd(() => handleTransferAmount(amount, type))) {
-      return;
-    }
     setActiveTab('finance');
     const newEntry = {
       id: 'fin-' + Date.now(),
@@ -497,9 +489,6 @@ export default function App() {
 
   // Smart Voice Assistant & Bank SMS Handlers
   const handleAddParsedFinance = (tx) => {
-    if (!checkCanAdd(() => handleAddParsedFinance(tx))) {
-      return;
-    }
     setActiveTab('finance');
     const newEntry = {
       id: 'fin-' + Date.now(),
@@ -515,9 +504,6 @@ export default function App() {
   };
 
   const handleAddParsedReminder = (rem) => {
-    if (!checkCanAdd(() => handleAddParsedReminder(rem))) {
-      return;
-    }
     setActiveTab('reminders');
     const newRem = {
       id: 'rem-' + Date.now(),
@@ -549,9 +535,6 @@ export default function App() {
   };
 
   const handleAddParsedKhata = (k) => {
-    if (!checkCanAdd(() => handleAddParsedKhata(k))) {
-      return;
-    }
     setActiveTab('finance');
     const newKhata = {
       id: 'kh-' + Date.now(),
@@ -569,9 +552,6 @@ export default function App() {
   };
 
   const handleAddParsedNote = (n) => {
-    if (!checkCanAdd(() => handleAddParsedNote(n))) {
-      return;
-    }
     setActiveTab('notes');
     const newNote = {
       id: 'note-' + Date.now(),
@@ -587,9 +567,6 @@ export default function App() {
   };
 
   const handleAddParsedWater = (glassesCount = 1) => {
-    if (!checkCanAdd(() => handleAddParsedWater(glassesCount))) {
-      return;
-    }
     const current = water?.glasses || 0;
     const updated = {
       ...water,
@@ -600,9 +577,6 @@ export default function App() {
   };
 
   const handleAddParsedMedicine = (med) => {
-    if (!checkCanAdd(() => handleAddParsedMedicine(med))) {
-      return;
-    }
     setActiveTab('health');
     const newMed = {
       id: 'med-' + Date.now(),
@@ -620,9 +594,6 @@ export default function App() {
   };
 
   const handleAddParsedShopping = (item) => {
-    if (!checkCanAdd(() => handleAddParsedShopping(item))) {
-      return;
-    }
     setActiveTab('reminders');
     const rawName = item.name || item.title || 'નવી વસ્તુ';
     const cleanName = rawName.replace(/^ખરીદી:\s*/, '').trim();
@@ -659,9 +630,6 @@ export default function App() {
   };
 
   const handleAddParsedEvent = (evt) => {
-    if (!checkCanAdd(() => handleAddParsedEvent(evt))) {
-      return;
-    }
     setActiveTab('reminders');
     const newEvt = {
       id: 'evt-' + Date.now(),

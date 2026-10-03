@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.13.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.14.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.13.apk
+            daily-diary-v1.0.14.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,19 +68,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.13
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.13 Fix Motion Vibration & Sensor Optimization)"
+          tag_name: v1.0.14
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.14 Fix AI Assistant Save & Smart Intent Parsing)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.13)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.14)
 
-            આ નવા વર્ઝનમાં કરવામાં આવેલા વિશેષ સુધારા:
-            - **મોબાઈલ વાઇબ્રેશન સંપૂર્ણ બંધ (Eliminated Motion Vibration):** ફોન હાથમાં પકડતાં કે આઘો-પાછો કરતાં જે વાઇબ્રેટ થતું હતું તે સોફ્ટવેર એક્સીલેરોમીટર વાઇબ્રેશન કોડ કાયમ માટે કાઢી નાખ્યો છે. સ્ટેપ્સ હવે સંપૂર્ણ સાયલન્ટ અને સ્મૂથ ગણાશે.
-            - **નેટિવ હાર્ડવેર સેન્સર ઓપ્ટિમાઇઝેશન:** ફોનના હાર્ડવેર સેન્સર હબ દ્વારા બેકગ્રાઉન્ડમાં ઓરિજિનલ સ્ટેપ્સ ગણવાનું ચાલુ રહેશે અને કોઈ ખોટા ફોલ્સ-વાઇબ્રેશન કે બેટરી ડ્રેઇન થશે નહીં.
+            આ નવા વર્ઝનમાં કરવામાં આવેલા અતિ મહત્વના સુધારા:
+            - **સ્માર્ટ આસિસ્ટન્ટ સેવ ફિક્સ (100% Fixed Save Issue):** AI આસિસ્ટન્ટમાંથી બોલીને કે ટાઈપ કરીને એન્ટ્રી (જેમ કે ખરીદી, ખર્ચ, રીમાઇન્ડર વગેરે) સેવ કરતી વખતે જે સેવ નહોતું થતું તેનો રિકર્સન બગ શોધીને સંપૂર્ણ સોલ્વ કરી દેવામાં આવ્યો છે. હવે `હા, સેવ કરો` બટન દબાવતા જ તરત જ ડાયરી અને સંબંધિત ટેબમાં સેવ થઈ જાય છે.
+            - **સ્માર્ટ ઈન્ટેન્ટ અને ટફન ગ્લાસ / ગેજેટ્સ કેટેગરી અપગ્રેડ:** 'ટફન ગ્લાસ' કે 'મોબાઈલ કવર' જેવા શબ્દો હવે પાણી પીવાના ગ્લાસ સાથે મિક્સ નહીં થાય અને ખર્ચમાં 'મોબાઈલ / ગેજેટ્સ / રિચાર્જ' કે ખરીદીમાં એકદમ સચોટ રીતે ઓળખાશે.
+            - **ઝડપી અને સ્મૂથ વર્કિંગ:** એપ એકદમ સ્મૂથ, ફાસ્ટ અને બેટરી ફ્રેન્ડલી કામ કરશે.
             - **સુપર લાઇટવેઇટ સાઈઝ (<8 MB).**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.13.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.14.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.13.apk
+            daily-diary-v1.0.14.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

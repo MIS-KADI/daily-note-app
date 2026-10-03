@@ -300,15 +300,26 @@ export const aiAssistantService = {
       }
     }
 
-    // 1. Water Intake Check
-    if (
-      lower.includes('પાણી') ||
-      lower.includes('ગ્લાસ') ||
-      lower.includes('पानी') ||
-      lower.includes('ग्लास') ||
-      lower.includes('water') ||
-      lower.includes('glass')
-    ) {
+    // 1. Water Intake Check (Strict: Only true drinking water, never tempered glass, eyeglasses, or currency amounts)
+    const isWaterQuery =
+      !lower.includes('ટફન') &&
+      !lower.includes('મોબાઈલ') &&
+      !lower.includes('ચશ્મા') &&
+      !lower.includes('રૂપિયા') &&
+      !lower.includes('₹') &&
+      !lower.includes('rs') &&
+      (amount === null || (amount <= 12 && (lower.includes('પાણી') || lower.includes('water') || lower.includes('पानी')))) &&
+      (
+        lower.includes('પાણી') ||
+        lower.includes('water') ||
+        lower.includes('पानी') ||
+        (
+          (lower.includes('ગ્લાસ') || lower.includes('glass') || lower.includes('ग्लास')) &&
+          (lower.includes('પીધું') || lower.includes('પીવું') || lower.includes('પીધા') || lower.includes('drink') || lower.includes('drank') || lower.includes('पिया') || lower.includes('पीना'))
+        )
+      );
+
+    if (isWaterQuery) {
       const glassesMatch = lower.match(/(\d+)\s*(?:ગ્લાસ|glass|ग्लास)/i);
       const glasses = glassesMatch ? parseInt(glassesMatch[1], 10) : amount && amount <= 10 ? Math.round(amount) : 1;
       return {
@@ -592,8 +603,9 @@ export const aiAssistantService = {
       else if (lower.includes('શાકભાજી') || lower.includes('ફળ')) category = 'શાકભાજી / ફળફળાદિ';
       else if (lower.includes('પેટ્રોલ') || lower.includes('ડીઝલ') || lower.includes('મુસાફરી') || lower.includes('રિક્ષા')) category = 'પેટ્રોલ / મુસાફરી';
       else if (lower.includes('દવા') || lower.includes('ડોક્ટર') || lower.includes('હોસ્પિટલ')) category = 'દવાઓ / હેલ્થ';
-      else if (lower.includes('લાઇટ') || lower.includes('રિચાર્જ') || lower.includes('બિલ')) category = 'લાઇટ બિલ / રિચાર્જ';
+      else if (lower.includes('મોબાઈલ') || lower.includes('કવર') || lower.includes('ગ્લાસ') || lower.includes('રિચાર્જ') || lower.includes('ફોન') || lower.includes('બિલ')) category = 'મોબાઈલ / ગેજેટ્સ / રિચાર્જ';
       else if (lower.includes('સ્કૂલ') || lower.includes('કોલેજ') || lower.includes('ફી')) category = 'શિક્ષણ / ફી';
+      else if (lower.includes('કપડાં') || lower.includes('શર્ટ') || lower.includes('પેન્ટ') || lower.includes('સાડી')) category = 'કપડાં / ખરીદી';
 
       const expAmount = amount || 100;
       return {
