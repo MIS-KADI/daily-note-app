@@ -1,8 +1,14 @@
 package com.miskadi.dailynoteapp;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,25 +22,49 @@ import android.webkit.WebView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
-public class MainActivity extends BridgeActivity {
+public class MainActivity extends BridgeActivity implements SensorEventListener {
     private static final String TAG = "DailyNoteMainActivity";
     private static final int PERMISSION_REQ_CODE = 1002;
+
+    private static final String PREFS_NAME = "DailyNoteStepPrefs";
+    private static final String PREF_BASELINE_STEPS = "baseline_steps";
+    private static final String PREF_BASELINE_DATE = "baseline_date";
+    private static final String PREF_TODAY_STEPS = "today_steps";
+
     private SpeechRecognizer speechRecognizer;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    private SensorManager sensorManager;
+    private Sensor stepCounterSensor;
+    private Sensor stepDetectorSensor;
+    private SharedPreferences stepPrefs;
+    private int currentTodaySteps = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestAppPermissions();
+        setupStepSensors();
         setupNativeSpeechBridge();
+        setupNativeStepBridge();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         requestAppPermissions();
+        registerStepSensors();
+        syncHardwareStepsWithJs();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
     }
 
     private void requestAppPermissions() {
@@ -52,6 +82,11 @@ public class MainActivity extends BridgeActivity {
                     permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
                 }
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION);
+                }
+            }
 
             if (!permissionsToRequest.isEmpty()) {
                 ActivityCompat.requestPermissions(this, permissionsToRequest.toArray(new String[0]), PERMISSION_REQ_CODE);
@@ -59,13 +94,136 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    // -------------------------------------------------------------
+    // Hardware Step Sensors Setup & Background Counter
+    // -------------------------------------------------------------
+    private void setupStepSensors() {
+        stepPrefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        currentTodaySteps = stepPrefs.getInt(PREF_TODAY_STEPS, 0);
+
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager != null) {
+            stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+            stepDetectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+            registerStepSensors();
+        }
+    }
+
+    private void registerStepSensors() {
+        if (sensorManager != null) {
+            if (stepCounterSensor != null) {
+                sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_UI);
+                Log.d(TAG, "Hardware STEP_COUNTER registered successfully");
+            }
+            if (stepDetectorSensor != null) {
+                sensorManager.registerListener(this, stepDetectorSensor, SensorManager.SENSOR_DELAY_UI);
+                Log.d(TAG, "Hardware STEP_DETECTOR registered successfully");
+            }
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event == null || event.sensor == null) return;
+
+        if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
+            float rawValue = event.values[0];
+            int totalHardwareSteps = (int) rawValue;
+            String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+
+            String savedDate = stepPrefs.getString(PREF_BASELINE_DATE, "");
+            int baseline = stepPrefs.getInt(PREF_BASELINE_STEPS, 0);
+
+            // If day changed, or no baseline, or device rebooted (hardware counter < baseline)
+            if (!todayDate.equals(savedDate) || baseline <= 0 || totalHardwareSteps < baseline) {
+                baseline = totalHardwareSteps;
+                stepPrefs.edit()
+                    .putString(PREF_BASELINE_DATE, todayDate)
+                    .putInt(PREF_BASELINE_STEPS, baseline)
+                    .putInt(PREF_TODAY_STEPS, 0)
+                    .apply();
+                currentTodaySteps = 0;
+            } else {
+                currentTodaySteps = totalHardwareSteps - baseline;
+                stepPrefs.edit().putInt(PREF_TODAY_STEPS, currentTodaySteps).apply();
+            }
+
+            sendJsStepUpdate(currentTodaySteps);
+        } else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
+            if (event.values.length > 0 && event.values[0] == 1.0f) {
+                sendJsStepDetected(1);
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    private void sendJsStepUpdate(int steps) {
+        mainHandler.post(() -> {
+            if (this.bridge != null && this.bridge.getWebView() != null) {
+                String js = "if (window.onNativeStepCountUpdate) { window.onNativeStepCountUpdate(" + steps + "); }";
+                this.bridge.getWebView().evaluateJavascript(js, null);
+            }
+        });
+    }
+
+    private void sendJsStepDetected(int count) {
+        mainHandler.post(() -> {
+            if (this.bridge != null && this.bridge.getWebView() != null) {
+                String js = "if (window.onNativeStepDetected) { window.onNativeStepDetected(" + count + "); }";
+                this.bridge.getWebView().evaluateJavascript(js, null);
+            }
+        });
+    }
+
+    private void syncHardwareStepsWithJs() {
+        if (stepPrefs != null) {
+            int saved = stepPrefs.getInt(PREF_TODAY_STEPS, 0);
+            if (saved > 0) {
+                sendJsStepUpdate(saved);
+            }
+        }
+    }
+
+    private void setupNativeStepBridge() {
+        mainHandler.post(() -> {
+            if (this.bridge != null && this.bridge.getWebView() != null) {
+                WebView webView = this.bridge.getWebView();
+                webView.addJavascriptInterface(new Object() {
+                    @JavascriptInterface
+                    public boolean isHardwareStepSupported() {
+                        return stepCounterSensor != null || stepDetectorSensor != null;
+                    }
+
+                    @JavascriptInterface
+                    public int getTodaySteps() {
+                        return stepPrefs != null ? stepPrefs.getInt(PREF_TODAY_STEPS, 0) : 0;
+                    }
+
+                    @JavascriptInterface
+                    public void syncSteps() {
+                        syncHardwareStepsWithJs();
+                    }
+
+                    @JavascriptInterface
+                    public void requestPermission() {
+                        mainHandler.post(() -> requestAppPermissions());
+                    }
+                }, "AndroidStepBridge");
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // Native Android Speech Recognition Bridge
+    // -------------------------------------------------------------
     private void setupNativeSpeechBridge() {
         mainHandler.post(() -> {
             if (this.bridge != null && this.bridge.getWebView() != null) {
                 WebView webView = this.bridge.getWebView();
                 webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
-                // Add Javascript interface for ultra-fast, robust native Android speech recognition
                 webView.addJavascriptInterface(new Object() {
                     @JavascriptInterface
                     public boolean isAvailable() {
@@ -115,7 +273,6 @@ public class MainActivity extends BridgeActivity {
             Intent speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 
-            // Handle language format: "gu-IN", "hi-IN", "en-IN", etc.
             String targetLang = "gu-IN";
             if (langCode != null && !langCode.isEmpty()) {
                 if (langCode.startsWith("gu")) targetLang = "gu-IN";
@@ -216,6 +373,9 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onDestroy() {
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
         if (speechRecognizer != null) {
             try {
                 speechRecognizer.destroy();

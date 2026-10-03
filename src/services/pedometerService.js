@@ -1,7 +1,9 @@
 /**
- * Web Pedometer / Live Motion Sensor Step Tracker Service
- * Multi-device, high-precision accelerometer stride detector
- * Works seamlessly on Android Chrome, iOS Safari & PWA
+ * Universal Pedometer & Hardware Step Tracker Service
+ * Supports:
+ * 1. Native Android Hardware Step Counter (Sensor.TYPE_STEP_COUNTER & TYPE_STEP_DETECTOR)
+ *    - Tracks steps even when app is closed, phone is locked, or screen is off!
+ * 2. Mobile Web & PWA Accelerometer Stride Sensor (DeviceMotionEvent fallback)
  */
 import { storageService } from './storageService';
 
@@ -9,41 +11,61 @@ class PedometerService {
   constructor() {
     this.isTracking = false;
     this.listeners = new Set();
+    this.exactStepsListeners = new Set();
     this.statusListeners = new Set();
 
     // Gravity Low-Pass Filter state
     this.gravity = { x: 0, y: 0, z: 9.8 };
-    this.alpha = 0.85; // Low-pass filter factor for gravity isolation
+    this.alpha = 0.85;
 
     // Linear Acceleration & Peak Detection
     this.smoothedMagnitude = 0;
-    this.beta = 0.35; // Smoothing factor for noise cancellation
-    this.stepThreshold = 1.35; // Linear acceleration magnitude threshold (m/s^2)
+    this.beta = 0.35;
+    this.stepThreshold = 1.35;
     this.isPeakRising = false;
     this.currentPeak = 0;
 
-    // Cadence timing: Human walking cadence is 1.2 to 2.8 steps/sec (350ms - 800ms)
+    // Cadence timing: Human walking cadence is 1.2 to 2.8 steps/sec
     this.lastStepTimestamp = 0;
-    this.minStepIntervalMs = 260; // Max ~230 steps/min sprint cadence
+    this.minStepIntervalMs = 260;
 
-    // Wake Lock instance to prevent mobile screen sleep while walking
+    // Screen Wake Lock
     this.wakeLock = null;
 
     // Bound handlers
     this.motionHandler = this.handleMotion.bind(this);
     this.visibilityHandler = this.handleVisibilityChange.bind(this);
 
-    // Bind page visibility listener once
+    if (typeof window !== 'undefined') {
+      // Connect Native Android Hardware Step Callbacks
+      window.onNativeStepCountUpdate = (steps) => {
+        const numSteps = Number(steps);
+        if (!isNaN(numSteps)) {
+          this.notifyExactSteps(numSteps);
+        }
+      };
+
+      window.onNativeStepDetected = (count) => {
+        this.notifyStep(Number(count) || 1);
+      };
+
+      // Auto-sync hardware steps on launch if bridge is available
+      setTimeout(() => {
+        this.syncHardwareSteps();
+      }, 500);
+    }
+
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.visibilityHandler);
     }
   }
 
   isSupported() {
-    return (
-      typeof window !== 'undefined' &&
-      ('DeviceMotionEvent' in window || 'LinearAccelerationSensor' in window)
-    );
+    if (typeof window === 'undefined') return false;
+    if (window.AndroidStepBridge && window.AndroidStepBridge.isHardwareStepSupported()) {
+      return true;
+    }
+    return 'DeviceMotionEvent' in window || 'LinearAccelerationSensor' in window;
   }
 
   isAutoTrackingEnabled() {
@@ -59,7 +81,32 @@ class PedometerService {
     }
   }
 
+  syncHardwareSteps() {
+    if (typeof window !== 'undefined' && window.AndroidStepBridge) {
+      try {
+        if (typeof window.AndroidStepBridge.syncSteps === 'function') {
+          window.AndroidStepBridge.syncSteps();
+        }
+        const today = window.AndroidStepBridge.getTodaySteps?.();
+        if (typeof today === 'number' && today > 0) {
+          this.notifyExactSteps(today);
+        }
+      } catch (e) {
+        console.warn('Native step sync error:', e);
+      }
+    }
+  }
+
   async requestPermission() {
+    if (typeof window !== 'undefined' && window.AndroidStepBridge) {
+      try {
+        window.AndroidStepBridge.requestPermission?.();
+        return true;
+      } catch (e) {
+        console.warn('Native step permission error:', e);
+      }
+    }
+
     if (
       typeof DeviceMotionEvent !== 'undefined' &&
       typeof DeviceMotionEvent.requestPermission === 'function'
@@ -72,13 +119,10 @@ class PedometerService {
         return false;
       }
     }
-    // Android Chrome and standard browsers grant sensor access directly on secure origins
+
     return this.isSupported();
   }
 
-  /**
-   * Acquire Screen Wake Lock so phone doesn't sleep while walking
-   */
   async requestWakeLock() {
     if (typeof navigator !== 'undefined' && 'wakeLock' in navigator && !this.wakeLock) {
       try {
@@ -87,8 +131,7 @@ class PedometerService {
           this.wakeLock = null;
         });
       } catch (e) {
-        // WakeLock request might fail if tab is not active or battery saver is on
-        console.debug('WakeLock request notice:', e);
+        console.debug('WakeLock notice:', e);
       }
     }
   }
@@ -101,14 +144,15 @@ class PedometerService {
   }
 
   handleVisibilityChange() {
-    if (document.visibilityState === 'visible' && this.isTracking) {
-      this.requestWakeLock();
+    if (document.visibilityState === 'visible') {
+      // Whenever app becomes visible / is resumed, sync hardware steps!
+      this.syncHardwareSteps();
+      if (this.isTracking) {
+        this.requestWakeLock();
+      }
     }
   }
 
-  /**
-   * Register a step callback. Returns unsubscribe function.
-   */
   addListener(callback) {
     if (typeof callback === 'function') {
       this.listeners.add(callback);
@@ -118,17 +162,18 @@ class PedometerService {
     };
   }
 
-  removeListener(callback) {
-    this.listeners.delete(callback);
+  addExactStepsListener(callback) {
+    if (typeof callback === 'function') {
+      this.exactStepsListeners.add(callback);
+    }
+    return () => {
+      this.exactStepsListeners.delete(callback);
+    };
   }
 
-  /**
-   * Register a tracking status change listener (active: boolean).
-   */
   addStatusListener(callback) {
     if (typeof callback === 'function') {
       this.statusListeners.add(callback);
-      // Immediately notify current status
       callback(this.isTracking);
     }
     return () => {
@@ -141,7 +186,17 @@ class PedometerService {
       try {
         cb(stepCount);
       } catch (err) {
-        console.error('Error in pedometer step listener:', err);
+        console.error('Error in step listener:', err);
+      }
+    }
+  }
+
+  notifyExactSteps(totalSteps) {
+    for (const cb of this.exactStepsListeners) {
+      try {
+        cb(totalSteps);
+      } catch (err) {
+        console.error('Error in exact steps listener:', err);
       }
     }
   }
@@ -151,20 +206,18 @@ class PedometerService {
       try {
         cb(isActive);
       } catch (err) {
-        console.error('Error in pedometer status listener:', err);
+        console.error('Error in status listener:', err);
       }
     }
   }
 
-  /**
-   * Start tracking motion & steps
-   */
   async startTracking(optionalCallback) {
     if (optionalCallback) {
       this.addListener(optionalCallback);
     }
 
     if (this.isTracking) {
+      this.syncHardwareSteps();
       this.notifyStatus(true);
       return true;
     }
@@ -180,33 +233,34 @@ class PedometerService {
     this.smoothedMagnitude = 0;
     this.lastStepTimestamp = Date.now();
 
-    window.addEventListener('devicemotion', this.motionHandler, { passive: true });
+    // Sync hardware steps immediately
+    this.syncHardwareSteps();
+
+    // Also attach devicemotion listener for Web / accelerometer fallback
+    if (typeof window !== 'undefined' && 'addEventListener' in window) {
+      window.addEventListener('devicemotion', this.motionHandler, { passive: true });
+    }
     this.requestWakeLock();
     this.notifyStatus(true);
     return true;
   }
 
-  /**
-   * Stop tracking motion
-   */
   stopTracking() {
     if (!this.isTracking) return;
     this.isTracking = false;
-    window.removeEventListener('devicemotion', this.motionHandler);
+    if (typeof window !== 'undefined' && 'removeEventListener' in window) {
+      window.removeEventListener('devicemotion', this.motionHandler);
+    }
     this.releaseWakeLock();
     this.notifyStatus(false);
   }
 
-  /**
-   * Core Motion & Step Detection Engine
-   */
   handleMotion(event) {
     if (!this.isTracking) return;
 
     let magnitude = 0;
     const pureAcc = event.acceleration;
 
-    // Check if device provides pure linear acceleration (without gravity)
     if (
       pureAcc &&
       pureAcc.x !== null &&
@@ -218,7 +272,6 @@ class PedometerService {
         pureAcc.x * pureAcc.x + pureAcc.y * pureAcc.y + pureAcc.z * pureAcc.z
       );
     } else {
-      // Isolate gravity from raw acceleration with low-pass filter
       const raw = event.accelerationIncludingGravity;
       if (!raw || raw.x === null || raw.y === null || raw.z === null) return;
 
@@ -233,13 +286,11 @@ class PedometerService {
       magnitude = Math.sqrt(lx * lx + ly * ly + lz * lz);
     }
 
-    // Apply noise smoothing filter
     this.smoothedMagnitude =
       this.beta * magnitude + (1 - this.beta) * this.smoothedMagnitude;
 
     const now = Date.now();
 
-    // Peak-valley stride detection algorithm
     if (this.smoothedMagnitude > this.stepThreshold) {
       if (!this.isPeakRising) {
         this.isPeakRising = true;
@@ -248,16 +299,13 @@ class PedometerService {
         this.currentPeak = this.smoothedMagnitude;
       }
     } else if (this.isPeakRising && this.smoothedMagnitude < this.stepThreshold * 0.85) {
-      // Wave has completed its crest and dipped below threshold
       this.isPeakRising = false;
       const elapsed = now - this.lastStepTimestamp;
 
-      // Verify cadence timing (must not be jitter faster than human sprint)
       if (elapsed >= this.minStepIntervalMs) {
         this.lastStepTimestamp = now;
         this.notifyStep(1);
 
-        // Subtle haptic feedback if supported
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
           try {
             navigator.vibrate(10);
@@ -267,9 +315,6 @@ class PedometerService {
     }
   }
 
-  /**
-   * Helper to manually simulate or test step increments
-   */
   simulateStep(count = 1) {
     this.notifyStep(count);
   }

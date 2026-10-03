@@ -29,10 +29,143 @@ import { aiAssistantService } from '../services/aiAssistantService';
 import { audioService } from '../services/audioService';
 import { t } from '../services/i18n';
 
+const MODAL_I18N = {
+  gu: {
+    title: 'સ્માર્ટ AI આસિસ્ટન્ટ',
+    badge_confirm: 'સેવ પહેલાં કન્ફર્મેશન',
+    subtitle: 'તમે બોલશો તે ચકાસીને કન્ફર્મ કર્યા પછી જ સેવ થશે!',
+    voice_lang_label: 'બોલવાની ભાષા:',
+    category_title: 'જો કેટેગરી બદલવી હોય તો ૧-ક્લિક કરો:',
+    auto_mode: 'ઑટો મોડ (Auto)',
+    categories: {
+      shopping: '🛒 ખરીદી',
+      reminder: '⏰ મીટિંગ/કામ',
+      finance: '💰 ખર્ચ/આવક',
+      medicine: '💊 દવા',
+      khata: '🤝 ખાતાવહી',
+      event: '🎉 ઉત્સવ',
+      note: '📝 નોંધ',
+    },
+    listening: '🎙️ હું સાંભળી રહ્યો છું, બોલો...',
+    tap_to_speak: 'માઇક દબાવીને બોલો (Tap to Speak)',
+    active_lang: 'સક્રિય ભાષા',
+    placeholder: 'અથવા અહીં લખો (દા.ત. ૨ કિલો બટાકા લાવવાના છે)...',
+    placeholders: {
+      shopping: 'ખરીદીની વસ્તુઓ બોલો કે લખો (દા.ત. ૨ કિલો બટાકા અને તેલ)...',
+      reminder: 'કામ કે મીટિંગ બોલો કે લખો (દા.ત. આજે મીટિંગ છે ૧૧ વાગે)...',
+      finance: 'ખર્ચ કે આવક બોલો કે લખો (દા.ત. ૨૫૦ રૂપિયા શાકભાજી માટે ખર્ચ્યા)...',
+      medicine: 'દવા શેડ્યૂલ બોલો કે લખો (દા.ત. સવારે ૮ વાગ્યે બીપીની દવા ૧ ગોળી)...',
+      khata: 'ખાતાવહી બોલો કે લખો (દા.ત. રમેશભાઈ પાસેથી ૨૦૦૦ લેવાના છે)...',
+      event: 'જન્મદિવસ કે ઉત્સવ બોલો (દા.ત. કાલે રમેશભાઈનો જન્મદિવસ છે)...',
+      note: 'ડાયરી નોંધ બોલો કે લખો...',
+      auto: 'અથવા અહીં લખો (દા.ત. ૨ કિલો બટાકા લાવવાના છે)...',
+    },
+    verify_title: 'સેવ કરતાં પહેલાં ચકાસણી:',
+    target_tab: 'લક્ષ્ય ટેબ',
+    alarm_on: 'અલાર્મ ઓન',
+    amount: 'રકમ:',
+    btn_confirm: '✅ હા, સેવ કરો',
+    btn_cancel: '❌ રદ કરો',
+    success_title: '✓ સફળતાપૂર્વક સાચવી લીધું!',
+    btn_speak_again: '🎙️ બીજી એન્ટ્રી બોલો',
+    btn_close: 'વિન્ડો બંધ કરો ✕',
+    mobile_perms: 'મોબાઇલ પરવાનગી સેટિંગ્સ',
+    speak_again: 'ફરી બોલો',
+    retry_notice: 'વોઇસ એરર. ફરી પ્રયત્ન કરો.',
+  },
+  hi: {
+    title: 'स्मार्ट AI असिस्टेंट',
+    badge_confirm: 'सेव से पहले पुष्टि',
+    subtitle: 'आप जो बोलेंगे उसकी जांच और पुष्टि करने के बाद ही सेव होगा!',
+    voice_lang_label: 'बोलने की भाषा:',
+    category_title: 'यदि श्रेणी बदलनी हो तो 1-क्लिक करें:',
+    auto_mode: 'ऑटो मोड (Auto)',
+    categories: {
+      shopping: '🛒 खरीदारी',
+      reminder: '⏰ मीटिंग/कार्य',
+      finance: '💰 खर्च/आय',
+      medicine: '💊 दवा',
+      khata: '🤝 खाता बही',
+      event: '🎉 उत्सव',
+      note: '📝 नोट',
+    },
+    listening: '🎙️ मैं सुन रहा हूँ, बोलिए...',
+    tap_to_speak: 'माइक दबाकर बोलें (Tap to Speak)',
+    active_lang: 'सक्रिय भाषा',
+    placeholder: 'या यहाँ लिखें (उदा. 2 किलो आलू लाने हैं)...',
+    placeholders: {
+      shopping: 'खरीदारी की सामग्री बोलें या लिखें (उदा. 2 किलो आलू और तेल)...',
+      reminder: 'कार्य या मीटिंग बोलें या लिखें (उदा. आज सुबह 11 बजे मीटिंग है)...',
+      finance: 'खर्च या आय बोलें या लिखें (उदा. 250 रुपये सब्जी में खर्च हुए)...',
+      medicine: 'दवा का समय बोलें या लिखें (उदा. सुबह 8 बजे बीपी की 1 गोली)...',
+      khata: 'खाता बही बोलें या लिखें (उदा. रमेश भाई से 2000 लेने हैं)...',
+      event: 'जन्मदिन या उत्सव बोलें (उदा. कल रमेश भाई का जन्मदिन है)...',
+      note: 'डायरी नोट बोलें या लिखें...',
+      auto: 'या यहाँ लिखें (उदा. 2 किलो आलू लाने हैं)...',
+    },
+    verify_title: 'सेव करने से पहले पुष्टि:',
+    target_tab: 'लक्ष्य टैब',
+    alarm_on: 'अलार्म ऑन',
+    amount: 'राशि:',
+    btn_confirm: '✅ हाँ, सेव करें',
+    btn_cancel: '❌ रद्द करें',
+    success_title: '✓ सफलतापूर्वक सेव हो गया!',
+    btn_speak_again: '🎙️ दूसरी एंट्री बोलें',
+    btn_close: 'विंडो बंद करें ✕',
+    mobile_perms: 'मोबाइल अनुमति सेटिंग्स',
+    speak_again: 'पुनः बोलें',
+    retry_notice: 'वॉयस एरर। पुनः प्रयास करें।',
+  },
+  en: {
+    title: 'Smart AI Assistant',
+    badge_confirm: 'Confirm Before Save',
+    subtitle: 'Everything you speak is verified and confirmed before saving!',
+    voice_lang_label: 'Speaking Language:',
+    category_title: '1-Click to change category:',
+    auto_mode: 'Auto Mode',
+    categories: {
+      shopping: '🛒 Shopping',
+      reminder: '⏰ Task/Meeting',
+      finance: '💰 Expense/Income',
+      medicine: '💊 Medicine',
+      khata: '🤝 Khata',
+      event: '🎉 Event/B\'day',
+      note: '📝 Note',
+    },
+    listening: '🎙️ Listening, please speak...',
+    tap_to_speak: 'Tap mic to speak',
+    active_lang: 'Active language',
+    placeholder: 'Or type here (e.g. Bring 2 kg potatoes)...',
+    placeholders: {
+      shopping: 'Speak or type shopping items (e.g. 2 kg potatoes)...',
+      reminder: 'Speak or type task/meeting (e.g. Meeting today at 11 am)...',
+      finance: 'Speak or type expense/income (e.g. Spent 250 rs on vegetables)...',
+      medicine: 'Speak or type medicine schedule (e.g. 1 BP tablet at 8 am)...',
+      khata: 'Speak or type khata (e.g. Ramesh owes 2000 rs)...',
+      event: 'Speak or type birthday/event (e.g. Friend birthday tomorrow)...',
+      note: 'Speak or type diary note...',
+      auto: 'Or type here (e.g. Bring 2 kg potatoes)...',
+    },
+    verify_title: 'Verify Before Saving:',
+    target_tab: 'Target Tab',
+    alarm_on: 'Alarm ON',
+    amount: 'Amount:',
+    btn_confirm: '✅ Yes, Save',
+    btn_cancel: '❌ Cancel',
+    success_title: '✓ Saved Successfully!',
+    btn_speak_again: '🎙️ Speak Next Entry',
+    btn_close: 'Close Window ✕',
+    mobile_perms: 'Mobile Permission Settings',
+    speak_again: 'Try Again',
+    retry_notice: 'Voice error. Please try again.',
+  },
+};
+
 export default function SmartAssistantModal({
   isOpen,
   onClose,
   lang = 'gu',
+  onLanguageChange,
   autoStart = false,
   onAddFinance,
   onAddReminder,
@@ -53,9 +186,25 @@ export default function SmartAssistantModal({
   const [interimText, setInterimText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('auto'); // 'auto', 'shopping', 'reminder', 'finance', 'medicine', 'khata', 'event', 'note'
   
-  // Voice language selection
+  // Voice language selection & active modal language
+  const [currentLang, setCurrentLang] = useState(lang);
   const defaultVoiceLang = lang === 'hi' ? 'hi-IN' : lang === 'en' ? 'en-IN' : 'gu-IN';
   const [voiceLang, setVoiceLang] = useState(defaultVoiceLang);
+
+  useEffect(() => {
+    setCurrentLang(lang);
+    setVoiceLang(lang === 'hi' ? 'hi-IN' : lang === 'en' ? 'en-IN' : 'gu-IN');
+  }, [lang]);
+
+  const handleSelectLanguage = (code) => {
+    setVoiceLang(code);
+    const newLang = code.startsWith('hi') ? 'hi' : code.startsWith('en') ? 'en' : 'gu';
+    setCurrentLang(newLang);
+    onLanguageChange?.(newLang);
+    if (isListening) stopListening();
+  };
+
+  const tLang = MODAL_I18N[currentLang] || MODAL_I18N.gu;
 
   const recognitionRef = useRef(null);
   const autoStartedRef = useRef(false);
@@ -261,40 +410,7 @@ export default function SmartAssistantModal({
   };
 
   const getInputPlaceholder = () => {
-    switch (selectedCategory) {
-      case 'shopping':
-        return lang === 'gu'
-          ? 'ખરીદીની વસ્તુઓ બોલો કે લખો (દા.ત. ૨ કિલો બટાકા અને તેલ)...'
-          : 'Speak or type shopping items (e.g. 2 kg potatoes)...';
-      case 'reminder':
-        return lang === 'gu'
-          ? 'કામ કે મીટિંગ બોલો કે લખો (દા.ત. આજે મીટિંગ છે ૧૧ વાગે)...'
-          : 'Speak or type task/meeting (e.g. Meeting today at 11 am)...';
-      case 'finance':
-        return lang === 'gu'
-          ? 'ખર્ચ કે આવક બોલો કે લખો (દા.ત. ૨૫૦ રૂપિયા શાકભાજી માટે ખર્ચ્યા)...'
-          : 'Speak or type expense/income (e.g. Spent 250 rs)...';
-      case 'medicine':
-        return lang === 'gu'
-          ? 'દવા શેડ્યૂલ બોલો કે લખો (દા.ત. સવારે ૮ વાગ્યે બીપીની દવા ૧ ગોળી)...'
-          : 'Speak or type medicine (e.g. Take BP medicine 1 tablet at 8 am)...';
-      case 'khata':
-        return lang === 'gu'
-          ? 'ખાતાવહી બોલો કે લખો (દા.ત. રમેશભાઈ પાસેથી ૨૦૦૦ લેવાના છે)...'
-          : 'Speak or type khata (e.g. Ramesh owes 2000 rs)...';
-      case 'event':
-        return lang === 'gu'
-          ? 'જન્મદિવસ કે ઉત્સવ બોલો (દા.ત. કાલે રમેશભાઈનો જન્મદિવસ છે)...'
-          : 'Speak or type celebration (e.g. Tomorrow is Ramesh birthday)...';
-      case 'note':
-        return lang === 'gu'
-          ? 'ડાયરી નોંધ બોલો કે લખો...'
-          : 'Speak or type diary note...';
-      default:
-        return lang === 'gu'
-          ? 'અથવા અહીં લખો (દા.ત. ૨ કિલો બટાકા લાવવાના છે)...'
-          : 'Or type here (e.g. Buy 2 kg potatoes)...';
-    }
+    return (tLang.placeholders && tLang.placeholders[selectedCategory]) || tLang.placeholder;
   };
 
   const startListening = async () => {
@@ -319,9 +435,11 @@ export default function SmartAssistantModal({
 
     if (!speechSupported) {
       setVoiceError(
-        lang === 'gu'
-          ? 'તમારા બ્રાઉઝરમાં વોઇસ સપોર્ટ ઉપલબ્ધ નથી. તમે નીચે બોક્સમાં લખીને વિશ્લેષણ કરી શકો છો.'
-          : 'Voice typing not supported. Please type below.'
+        currentLang === 'hi'
+          ? 'आपके ब्राउज़र में वॉयस सपोर्ट उपलब्ध नहीं है। आप नीचे बॉक्स में लिखकर विश्लेषण कर सकते हैं।'
+          : currentLang === 'en'
+          ? 'Voice typing not supported. Please type below.'
+          : 'તમારા બ્રાઉઝરમાં વોઇસ સપોર્ટ ઉપલબ્ધ નથી. તમે નીચે બોક્સમાં લખીને વિશ્લેષણ કરી શકો છો.'
       );
       return;
     }
@@ -401,29 +519,40 @@ export default function SmartAssistantModal({
       setIsListening(false);
       setInterimText('');
 
+      const getErrText = (guText, hiText, enText) =>
+        currentLang === 'hi' ? hiText : currentLang === 'en' ? enText : guText;
+
       if (errorCode === 'permission_denied') {
         setVoiceError(
-          lang === 'gu'
-            ? 'માઇક્રોફોનની પરવાનગી નથી મળી. કૃપા કરીને સેટિંગ્સમાં માઇક્રોફોન Allow કરો.'
-            : 'Microphone permission denied. Please allow microphone in settings.'
+          getErrText(
+            'માઇક્રોફોનની પરવાનગી નથી મળી. કૃપા કરીને સેટિંગ્સમાં માઇક્રોફોન Allow કરો.',
+            'माइक्रोफ़ोन की अनुमति नहीं मिली। कृपया सेटिंग्स में अनुमति दें।',
+            'Microphone permission denied. Please allow microphone in settings.'
+          )
         );
       } else if (errorCode === 'no_match' || errorCode === 'timeout') {
         setVoiceError(
-          lang === 'gu'
-            ? 'કોઈ અવાજ ઓળખાયો નથી. ફરીથી માઇક બટન દબાવીને સ્પષ્ટ બોલો.'
-            : 'No speech recognized. Tap mic and speak again.'
+          getErrText(
+            'કોઈ અવાજ ઓળખાયો નથી. ફરીથી માઇક બટન દબાવીને સ્પષ્ટ બોલો.',
+            'कोई आवाज़ पहचानी नहीं गई। कृपया दोबारा माइक दबाकर स्पष्ट बोलें।',
+            'No speech recognized. Tap mic and speak clearly again.'
+          )
         );
       } else if (errorCode === 'network') {
         setVoiceError(
-          lang === 'gu'
-            ? 'ગૂગલ સ્પીચ માટે ઇન્ટરનેટ કનેક્શન તપાસો અથવા નીચે બોક્સમાં લખો.'
-            : 'Please check internet connection or type your entry below.'
+          getErrText(
+            'ગૂગલ સ્પીચ માટે ઇન્ટરનેટ કનેક્શન તપાસો અથવા નીચે બોક્સમાં લખો.',
+            'कृपया इंटरनेट कनेक्शन जांचें या नीचे बॉक्स में लिखें।',
+            'Please check internet connection or type your entry below.'
+          )
         );
       } else {
         setVoiceError(
-          lang === 'gu'
-            ? 'અવાજ પકડવામાં તકલીફ થઈ. ફરી માઇક દબાવો અથવા નીચે લખો.'
-            : 'Speech error. Tap mic again or type below.'
+          getErrText(
+            'અવાજ પકડવામાં તકલીફ થઈ. ફરી માઇક દબાવો અથવા નીચે લખો.',
+            'आवाज़ पहचानने में समस्या हुई। पुनः माइक दबाएँ या नीचे लिखें।',
+            'Speech error. Tap mic again or type below.'
+          )
         );
       }
     };
@@ -487,29 +616,40 @@ export default function SmartAssistantModal({
         setIsListening(false);
         setInterimText('');
 
+        const getErrText = (guText, hiText, enText) =>
+          currentLang === 'hi' ? hiText : currentLang === 'en' ? enText : guText;
+
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
           setVoiceError(
-            lang === 'gu'
-              ? 'માઇક્રોફોનની પરમિશન બ્લોક છે. ઉપર લૉક આઇકન પર ક્લિક કરી Allow કરો.'
-              : 'Microphone permission blocked. Please allow microphone in settings.'
+            getErrText(
+              'માઇક્રોફોનની પરમિશન બ્લોક છે. ઉપર લૉક આઇકન પર ક્લિક કરી Allow કરો.',
+              'माइक्रोफ़ोन अनुमति बंद है। कृपया सेटिंग्स में अनुमति दें।',
+              'Microphone permission blocked. Please allow microphone in settings.'
+            )
           );
         } else if (event.error === 'no-speech') {
           setVoiceError(
-            lang === 'gu'
-              ? 'કોઈ અવાજ સંભળાયો નથી. ફરી માઇક બટન દબાવીને બોલો.'
-              : 'No speech detected. Please tap mic and speak again.'
+            getErrText(
+              'કોઈ અવાજ સંભળાયો નથી. ફરી માઇક બટન દબાવીને બોલો.',
+              'कोई आवाज़ सुनाई नहीं दी। कृपया दोबारा माइक दबाकर बोलें।',
+              'No speech detected. Please tap mic and speak again.'
+            )
           );
         } else if (event.error === 'network') {
           setVoiceError(
-            lang === 'gu'
-              ? 'ઇન્ટરનેટ નબળું છે. તમે નીચે લખીને પણ ચકાસી શકો છો.'
-              : 'Network issue. You can type below to analyze.'
+            getErrText(
+              'ઇન્ટરનેટ નબળું છે. તમે નીચે લખીને પણ ચકાસી શકો છો.',
+              'इंटरनेट धीमा है। आप नीचे लिखकर भी विश्लेषण कर सकते हैं।',
+              'Network issue. You can type below to analyze.'
+            )
           );
         } else {
           setVoiceError(
-            lang === 'gu'
-              ? `વોઇસ એરર (${event.error}). ફરી પ્રયત્ન કરો.`
-              : `Voice error (${event.error}). Please try again.`
+            getErrText(
+              `વોઇસ એરર (${event.error}). ફરી પ્રયત્ન કરો.`,
+              `वॉयस एरर (${event.error})। पुनः प्रयास करें।`,
+              `Voice error (${event.error}). Please try again.`
+            )
           );
         }
       };
@@ -530,7 +670,7 @@ export default function SmartAssistantModal({
       delete window.onNativeSpeechError;
       delete window.onNativeSpeechEnd;
     };
-  }, [voiceLang, lang, selectedCategory]);
+  }, [voiceLang, currentLang, selectedCategory]);
 
   // Handle auto-start when opened via "✨ બોલો"
   useEffect(() => {
@@ -550,21 +690,21 @@ export default function SmartAssistantModal({
   const getIntentBadge = (intent) => {
     switch (intent) {
       case 'shopping':
-        return { label: '🛒 ખરીદી યાદી (Shopping)', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', icon: ShoppingBag };
+        return { label: `${tLang.categories?.shopping || '🛒 Shopping'}`, color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', icon: ShoppingBag };
       case 'reminder':
-        return { label: '⏰ કામ / મીટિંગ (Tasks & Reminders)', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40', icon: Clock };
+        return { label: `${tLang.categories?.reminder || '⏰ Task/Meeting'}`, color: 'bg-blue-500/20 text-blue-300 border-blue-500/40', icon: Clock };
       case 'finance':
-        return { label: '💰 હિસાબ / ખર્ચ (Finance)', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40', icon: IndianRupee };
+        return { label: `${tLang.categories?.finance || '💰 Finance'}`, color: 'bg-amber-500/20 text-amber-300 border-amber-500/40', icon: IndianRupee };
       case 'medicine':
-        return { label: '💊 દવા શેડ્યૂલ (Medicine)', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40', icon: Pill };
+        return { label: `${tLang.categories?.medicine || '💊 Medicine'}`, color: 'bg-rose-500/20 text-rose-300 border-rose-500/40', icon: Pill };
       case 'khata':
-        return { label: '🤝 ખાતાવહી ઉધાર-જમા (Khata)', color: 'bg-orange-500/20 text-orange-300 border-orange-500/40', icon: Users };
+        return { label: `${tLang.categories?.khata || '🤝 Khata'}`, color: 'bg-orange-500/20 text-orange-300 border-orange-500/40', icon: Users };
       case 'event':
-        return { label: '🎉 ઉત્સવ / ઇવેન્ટ (Events)', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40', icon: Calendar };
+        return { label: `${tLang.categories?.event || '🎉 Event'}`, color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40', icon: Calendar };
       case 'water':
-        return { label: '💧 વોટર ટ્રેકર (Water)', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40', icon: Droplet };
+        return { label: '💧 Water', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40', icon: Droplet };
       default:
-        return { label: '📝 ડાયરી નોંધ (Diary Note)', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40', icon: BookOpen };
+        return { label: `${tLang.categories?.note || '📝 Note'}`, color: 'bg-purple-500/20 text-purple-300 border-purple-500/40', icon: BookOpen };
     }
   };
 
@@ -582,13 +722,13 @@ export default function SmartAssistantModal({
             </div>
             <div>
               <h3 className="font-extrabold text-base leading-tight flex items-center gap-1.5">
-                સ્માર્ટ AI આસિસ્ટન્ટ
+                {tLang.title}
                 <span className="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full uppercase tracking-wider font-black flex items-center gap-1">
-                  <ShieldCheck size={10} /> સેવ પહેલાં કન્ફર્મેશન
+                  <ShieldCheck size={10} /> {tLang.badge_confirm}
                 </span>
               </h3>
               <p className="text-[11px] text-slate-400">
-                તમે બોલશો તે ચકાસીને કન્ફર્મ કર્યા પછી જ સેવ થશે!
+                {tLang.subtitle}
               </p>
             </div>
           </div>
@@ -598,7 +738,7 @@ export default function SmartAssistantModal({
                 type="button"
                 onClick={onOpenMobilePermissions}
                 className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-blue-300 hover:text-white border border-slate-700 transition"
-                title="મોબાઇલ પરવાનગી સેટિંગ્સ"
+                title={tLang.mobile_perms}
               >
                 <Smartphone size={16} />
               </button>
@@ -619,7 +759,7 @@ export default function SmartAssistantModal({
           <div className="flex items-center justify-between bg-slate-800/80 p-2 rounded-2xl border border-slate-700/60">
             <span className="text-[10px] text-slate-400 font-bold px-1.5 flex items-center gap-1">
               <Globe size={11} className="text-blue-400" />
-              બોલવાની ભાષા:
+              {tLang.voice_lang_label}
             </span>
             <div className="flex items-center gap-1">
               {[
@@ -629,10 +769,7 @@ export default function SmartAssistantModal({
               ].map((item) => (
                 <button
                   key={item.code}
-                  onClick={() => {
-                    setVoiceLang(item.code);
-                    if (isListening) stopListening();
-                  }}
+                  onClick={() => handleSelectLanguage(item.code)}
                   className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition active:scale-95 ${
                     voiceLang === item.code
                       ? 'bg-blue-600 text-white shadow-xs'
@@ -650,7 +787,7 @@ export default function SmartAssistantModal({
             <div className="flex items-center justify-between px-1">
               <span className="text-[11px] text-slate-300 font-black flex items-center gap-1">
                 <Zap size={13} className="text-amber-400" />
-                {lang === 'gu' ? 'જો કેટેગરી બદલવી હોય તો ૧-ક્લિક કરો:' : 'Select Category (1-Click):'}
+                {tLang.category_title}
               </span>
               {selectedCategory !== 'auto' && (
                 <button
@@ -663,20 +800,20 @@ export default function SmartAssistantModal({
                   }}
                   className="text-[10px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer"
                 >
-                  {lang === 'gu' ? 'ઑટો મોડ (Auto)' : 'Auto'}
+                  {tLang.auto_mode}
                 </button>
               )}
             </div>
 
             <div className="flex flex-wrap gap-1.5">
               {[
-                { id: 'shopping', label: '🛒 ખરીદી' },
-                { id: 'reminder', label: '⏰ મીટિંગ/કામ' },
-                { id: 'finance', label: '💰 ખર્ચ/આવક' },
-                { id: 'medicine', label: '💊 દવા' },
-                { id: 'khata', label: '🤝 ખાતાવહી' },
-                { id: 'event', label: '🎉 ઉત્સવ' },
-                { id: 'note', label: '📝 નોંધ' },
+                { id: 'shopping', label: tLang.categories?.shopping || '🛒 ખરીદી' },
+                { id: 'reminder', label: tLang.categories?.reminder || '⏰ મીટિંગ/કામ' },
+                { id: 'finance', label: tLang.categories?.finance || '💰 ખર્ચ/આવક' },
+                { id: 'medicine', label: tLang.categories?.medicine || '💊 દવા' },
+                { id: 'khata', label: tLang.categories?.khata || '🤝 ખાતાવહી' },
+                { id: 'event', label: tLang.categories?.event || '🎉 ઉત્સવ' },
+                { id: 'note', label: tLang.categories?.note || '📝 નોંધ' },
               ].map((cat) => {
                 const isSelected =
                   (parsedResult && parsedResult.intent === cat.id) ||
@@ -711,7 +848,7 @@ export default function SmartAssistantModal({
                     className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-red-600 hover:bg-red-500 px-2.5 py-1 rounded-lg transition"
                   >
                     <RefreshCw size={11} />
-                    ફરી બોલો
+                    {tLang.speak_again}
                   </button>
                   {onOpenMobilePermissions && (
                     <button
@@ -719,7 +856,7 @@ export default function SmartAssistantModal({
                       className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-200 bg-blue-900/60 hover:bg-blue-800 px-2.5 py-1 rounded-lg transition border border-blue-500/40"
                     >
                       <Smartphone size={11} />
-                      પરવાનગી સેટિંગ્સ
+                      {tLang.mobile_perms}
                     </button>
                   )}
                 </div>
@@ -760,8 +897,8 @@ export default function SmartAssistantModal({
 
             <p className="text-xs font-bold mt-2 text-slate-200">
               {isListening
-                ? '🎙️ હું સાંભળી રહ્યો છું, બોલો...'
-                : 'માઇક દબાવીને બોલો (Tap to Speak)'}
+                ? tLang.listening
+                : tLang.tap_to_speak}
             </p>
             {interimText && (
               <p className="text-xs text-amber-300 font-semibold mt-1 px-4 text-center italic truncate max-w-xs">
@@ -769,7 +906,7 @@ export default function SmartAssistantModal({
               </p>
             )}
             <span className="text-[10px] text-slate-400 mt-0.5">
-              સક્રિય ભાષા: {voiceLang === 'gu-IN' ? 'ગુજરાતી' : voiceLang === 'hi-IN' ? 'हिन्दी' : 'English'}
+              {tLang.active_lang}: {voiceLang === 'gu-IN' ? 'ગુજરાતી' : voiceLang === 'hi-IN' ? 'हिन्दी' : 'English'}
             </span>
           </div>
 
@@ -791,7 +928,7 @@ export default function SmartAssistantModal({
             <button
               type="submit"
               className="p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition active:scale-95 shadow-sm"
-              title="વિશ્લેષણ કરો"
+              title={tLang.placeholder}
             >
               <Send size={15} />
             </button>
@@ -804,7 +941,7 @@ export default function SmartAssistantModal({
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
                   <ShieldCheck size={14} className="text-amber-400" />
-                  સેવ કરતાં પહેલાં ચકાસણી:
+                  {tLang.verify_title}
                 </span>
                 {(() => {
                   const badge = getIntentBadge(parsedResult.intent);
@@ -823,10 +960,10 @@ export default function SmartAssistantModal({
               {/* Target Tab Destination Info Box */}
               <div className="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-700 space-y-2">
                 <div className="text-[11px] font-bold text-indigo-300 flex items-center justify-between">
-                  <span>🎯 લક્ષ્ય ટેબ: {parsedResult.targetTab}</span>
+                  <span>🎯 {tLang.target_tab}: {parsedResult.targetTab}</span>
                   {parsedResult.hasAlarm && (
                     <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <Clock size={10} /> અલાર્મ ઓન
+                      <Clock size={10} /> {tLang.alarm_on}
                     </span>
                   )}
                 </div>
@@ -843,7 +980,7 @@ export default function SmartAssistantModal({
 
                 {parsedResult.amount && (
                   <div className="flex items-center gap-2 text-xs pt-0.5">
-                    <span className="text-slate-400 font-semibold">રકમ:</span>
+                    <span className="text-slate-400 font-semibold">{tLang.amount}</span>
                     <span className="font-black text-emerald-400 text-sm">
                       ₹{parsedResult.amount.toLocaleString()}
                     </span>
@@ -854,17 +991,17 @@ export default function SmartAssistantModal({
               {/* Quick Tab Category Override (In case user wants to change tab) */}
               <div className="space-y-1.5">
                 <span className="text-[10px] text-slate-400 font-semibold block">
-                  જો કેટેગરી બદલવી હોય તો ૧-ક્લિક કરો:
+                  {tLang.category_title}
                 </span>
                 <div className="flex flex-wrap gap-1">
                   {[
-                    { id: 'shopping', label: '🛒 ખરીદી' },
-                    { id: 'reminder', label: '⏰ મીટિંગ/કામ' },
-                    { id: 'finance', label: '💰 ખર્ચ/આવક' },
-                    { id: 'medicine', label: '💊 દવા' },
-                    { id: 'khata', label: '🤝 ખાતાવહી' },
-                    { id: 'event', label: '🎉 ઉત્સવ' },
-                    { id: 'note', label: '📝 નોંધ' },
+                    { id: 'shopping', label: tLang.categories?.shopping || '🛒 ખરીદી' },
+                    { id: 'reminder', label: tLang.categories?.reminder || '⏰ મીટિંગ/કામ' },
+                    { id: 'finance', label: tLang.categories?.finance || '💰 ખર્ચ/આવક' },
+                    { id: 'medicine', label: tLang.categories?.medicine || '💊 દવા' },
+                    { id: 'khata', label: tLang.categories?.khata || '🤝 ખાતાવહી' },
+                    { id: 'event', label: tLang.categories?.event || '🎉 ઉત્સવ' },
+                    { id: 'note', label: tLang.categories?.note || '📝 નોંધ' },
                   ].map((cat) => (
                     <button
                       key={cat.id}
@@ -890,7 +1027,7 @@ export default function SmartAssistantModal({
                   className="py-3 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center gap-1.5"
                 >
                   <CheckCircle2 size={16} />
-                  <span>✅ હા, સેવ કરો</span>
+                  <span>{tLang.btn_confirm}</span>
                 </button>
 
                 <button
@@ -902,7 +1039,7 @@ export default function SmartAssistantModal({
                   className="py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                 >
                   <X size={15} />
-                  <span>❌ રદ કરો</span>
+                  <span>{tLang.btn_cancel}</span>
                 </button>
               </div>
 
@@ -916,7 +1053,7 @@ export default function SmartAssistantModal({
                 <CheckCircle2 size={22} className="text-emerald-400 shrink-0" />
                 <div>
                   <div className="font-extrabold text-white text-sm">
-                    ✓ સફળતાપૂર્વક સાચવી લીધું!
+                    {tLang.success_title}
                   </div>
                   <div className="text-[11px] text-emerald-300 font-medium">
                     {parsedResult.title} ➔ {parsedResult.targetTab}
@@ -935,13 +1072,13 @@ export default function SmartAssistantModal({
                   className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] active:scale-95 transition flex items-center justify-center gap-1"
                 >
                   <Mic size={13} />
-                  <span>🎙️ બીજી એન્ટ્રી બોલો</span>
+                  <span>{tLang.btn_speak_again}</span>
                 </button>
                 <button
                   onClick={onClose}
                   className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] active:scale-95 transition"
                 >
-                  વિન્ડો બંધ કરો ✕
+                  {tLang.btn_close}
                 </button>
               </div>
             </div>

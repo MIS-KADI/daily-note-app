@@ -28,7 +28,7 @@ class NotificationService {
         id: 'daily_diary_alerts',
         name: 'Daily Diary Reminders & Alarms',
         description: 'Important alarms for medicines, meetings, and daily diary',
-        importance: 5, // High priority heads-up notification
+        importance: 5, // High priority heads-up notification with sound
         visibility: 1,
         sound: 'beep.wav',
         vibration: true,
@@ -72,7 +72,20 @@ class NotificationService {
     return 'Notification' in window && Notification.permission === 'granted';
   }
 
+  playNotificationSound() {
+    try {
+      if (typeof window !== 'undefined') {
+        const audio = new Audio('/beep.wav');
+        audio.volume = 0.9;
+        audio.play().catch(() => {});
+      }
+    } catch (_) {}
+  }
+
   async send(title, options = {}) {
+    // Play sound immediately on device
+    this.playNotificationSound();
+
     if (Capacitor.isNativePlatform()) {
       try {
         const randomId = Math.floor(Math.random() * 1000000);
@@ -83,8 +96,9 @@ class NotificationService {
               body: options.body || '',
               id: randomId,
               channelId: 'daily_diary_alerts',
+              sound: 'beep.wav',
               schedule: {
-                at: new Date(Date.now() + 600),
+                at: new Date(Date.now() + 150),
                 allowWhileIdle: true,
               },
             },
@@ -104,7 +118,8 @@ class NotificationService {
       const notification = new Notification(title, {
         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⏰</text></svg>',
         badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
-        vibrate: [200, 100, 200, 100, 200],
+        vibrate: [250, 120, 250, 120, 250],
+        silent: false,
         ...options,
       });
 
@@ -140,6 +155,7 @@ class NotificationService {
             title,
             body: body || '',
             channelId: 'daily_diary_alerts',
+            sound: 'beep.wav',
             schedule: {
               at: targetDate,
               allowWhileIdle: true, // Rings even when app is killed or phone in Doze mode

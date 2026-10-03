@@ -10,8 +10,6 @@ import LanguageModal from './components/LanguageModal';
 import SmartAssistantModal from './components/SmartAssistantModal';
 import BankSmsParserModal from './components/BankSmsParserModal';
 import UpiPaymentModal from './components/UpiPaymentModal';
-import AppVideoGuideModal from './components/AppVideoGuideModal';
-import SignupModal from './components/SignupModal';
 import MobilePermissionsModal from './components/MobilePermissionsModal';
 import DemoModeBanner from './components/DemoModeBanner';
 import DemoModeModal from './components/DemoModeModal';
@@ -65,11 +63,9 @@ export default function App() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
-  const [isSignupOpen, setIsSignupOpen] = useState(!user?.isRegistered);
   const [isMobilePermissionsOpen, setIsMobilePermissionsOpen] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [assistantAutoStart, setAssistantAutoStart] = useState(false);
-  const [isVideoGuideOpen, setIsVideoGuideOpen] = useState(false);
   const [isSmsParserOpen, setIsSmsParserOpen] = useState(false);
   const [upiModalData, setUpiModalData] = useState(null);
   const [isStepSensorActive, setIsStepSensorActive] = useState(false);
@@ -239,6 +235,33 @@ export default function App() {
     });
   }, []);
 
+  // Hardware Step Counter Sync (Synchronizes steps walked while app was closed or in background)
+  const handleSetExactSteps = useCallback((totalSteps) => {
+    if (typeof totalSteps !== 'number' || isNaN(totalSteps) || totalSteps <= 0) return;
+    setFitness((prevFitness) => {
+      if (totalSteps <= (prevFitness?.steps || 0)) {
+        return prevFitness;
+      }
+      const nextSteps = totalSteps;
+      const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
+      const workoutCalories = (prevFitness?.workouts || []).reduce(
+        (sum, w) => sum + Number(w.calories || 0),
+        0
+      );
+      const nextCalories = Math.round(nextSteps * 0.045) + workoutCalories;
+
+      const updated = {
+        ...prevFitness,
+        steps: nextSteps,
+        distanceKm: nextKm,
+        calories: nextCalories,
+      };
+
+      storageService.saveFitness(updated);
+      return updated;
+    });
+  }, []);
+
   const handleToggleStepSensor = async () => {
     if (isStepSensorActive) {
       pedometerService.setAutoTrackingEnabled(false);
@@ -270,6 +293,10 @@ export default function App() {
       handleStepIncrement(stepCount);
     });
 
+    const unsubExact = pedometerService.addExactStepsListener((exactSteps) => {
+      handleSetExactSteps(exactSteps);
+    });
+
     const unsubStatus = pedometerService.addStatusListener((isActive) => {
       setIsStepSensorActive(isActive);
     });
@@ -287,9 +314,10 @@ export default function App() {
 
     return () => {
       unsubStep();
+      unsubExact();
       unsubStatus();
     };
-  }, [handleStepIncrement]);
+  }, [handleStepIncrement, handleSetExactSteps]);
 
   // Reload all data (e.g. after backup restore)
   const handleReloadAllData = () => {
@@ -647,11 +675,6 @@ export default function App() {
     streakService.recordActivityToday();
   };
 
-  const handleCompleteSignup = (newUserProfile) => {
-    setUser(newUserProfile);
-    setIsSignupOpen(false);
-    setIsLocked(false);
-  };
 
 
   // Test Alarm trigger
@@ -1024,7 +1047,6 @@ export default function App() {
             user={user}
             onUpdateUser={handleUpdateUser}
             onReloadAllData={handleReloadAllData}
-            onOpenSignup={() => setIsSignupOpen(true)}
             onOpenMobilePermissions={() => setIsMobilePermissionsOpen(true)}
             lang={lang}
             isDemoMode={isDemoMode}
@@ -1079,18 +1101,8 @@ export default function App() {
         lang={lang}
       />
 
-      {/* First-Time Signup Onboarding Modal */}
-      {(!user?.isRegistered || isSignupOpen) && (
-        <SignupModal
-          isOpen={!user?.isRegistered || isSignupOpen}
-          onComplete={handleCompleteSignup}
-          lang={lang}
-          initialData={user || {}}
-        />
-      )}
-
-      {/* PIN Lock Screen Modal (Only for registered users) */}
-      {user?.isRegistered && isLocked && (
+      {/* PIN Lock Screen Modal (Only when locked) */}
+      {isLocked && (
         <PinLockModal
           correctPin={user?.pin || '1234'}
           isBiometricEnabled={user?.isBiometricEnabled ?? true}
@@ -1109,6 +1121,7 @@ export default function App() {
         }}
         autoStart={assistantAutoStart}
         lang={lang}
+        onLanguageChange={setLang}
         onAddFinance={handleAddParsedFinance}
         onAddReminder={handleAddParsedReminder}
         onAddKhata={handleAddParsedKhata}
@@ -1136,12 +1149,6 @@ export default function App() {
         userUpiId={user?.upiId || ''}
         user={user}
         lang={lang}
-      />
-
-      {/* AI Interactive Explainer Video Guide Modal */}
-      <AppVideoGuideModal
-        isOpen={isVideoGuideOpen}
-        onClose={() => setIsVideoGuideOpen(false)}
       />
 
       {/* Mobile Permissions & Access Setup Modal */}

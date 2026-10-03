@@ -39,17 +39,17 @@ const DEFAULT_ALARM_SETTINGS = {
 };
 
 const DEFAULT_USER = {
-  name: '',
-  mobile: '',
+  name: 'પ્રિય યુઝર',
+  mobile: '0000000001',
   email: '',
   dob: '',
-  isRegistered: false,
+  isRegistered: true,
   isLinked: false,
-  isMobileVerified: false,
+  isMobileVerified: true,
   isEmailVerified: false,
   pin: '1234',
-  isPinRequired: true,
-  isBiometricEnabled: true,
+  isPinRequired: false,
+  isBiometricEnabled: false,
   isEncrypted: true,
   createdAt: new Date().toISOString(),
 };
@@ -227,14 +227,7 @@ export const storageService = {
     }
     try {
       const parsed = JSON.parse(data);
-      // If user profile does not have isRegistered flag, check if it was dummy user
-      if (parsed.isRegistered === undefined) {
-        if (!parsed.name || parsed.name === 'પ્રિય યુઝર' || !parsed.dob) {
-          parsed.isRegistered = false;
-        } else {
-          parsed.isRegistered = true;
-        }
-      }
+      parsed.isRegistered = true;
       return parsed;
     } catch {
       return DEFAULT_USER;
