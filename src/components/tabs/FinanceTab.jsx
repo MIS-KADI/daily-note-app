@@ -28,6 +28,7 @@ import {
 import confetti from 'canvas-confetti';
 import { t, getExpenseCategories, getIncomeCategories, getPaymentModes } from '../../services/i18n';
 import { whatsappService } from '../../services/whatsappService';
+import { permissionService } from '../../services/permissionService';
 import FinanceCharts from '../FinanceCharts';
 
 export default function FinanceTab({
@@ -198,6 +199,14 @@ export default function FinanceTab({
     setKhDueDate(k.dueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
     setKhDescription(k.description || '');
     setIsKhataModalOpen(true);
+  };
+
+  const handlePickContactForKhata = async () => {
+    const res = await permissionService.pickContact();
+    if (res.success) {
+      if (res.name) setKhPartyName(res.name);
+      if (res.mobile) setKhPhone(res.mobile.slice(-10));
+    }
   };
 
   const handleSaveKhata = (e) => {
@@ -1020,16 +1029,26 @@ export default function FinanceTab({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  {t('party_name', lang)} *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                    {t('party_name', lang)} *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handlePickContactForKhata}
+                    className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 active:scale-95 transition"
+                  >
+                    <Users size={12} />
+                    <span>{lang === 'gu' ? 'સંપર્કમાંથી પસંદ કરો' : 'Pick from Contacts'}</span>
+                  </button>
+                </div>
                 <input
                   type="text"
                   required
                   placeholder={t('party_name', lang)}
                   value={khPartyName}
                   onChange={(e) => setKhPartyName(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-blue-500 font-bold"
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-blue-500 font-bold"
                 />
               </div>
 

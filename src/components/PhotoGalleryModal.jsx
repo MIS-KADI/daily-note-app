@@ -18,8 +18,17 @@ import {
   Tag,
   Eye,
   Info,
+  Lock,
+  Unlock,
+  Fingerprint,
+  ShieldCheck,
+  KeyRound,
+  ShieldAlert,
 } from 'lucide-react';
 import { photoStorageService } from '../services/photoStorageService';
+import { storageService } from '../services/storageService';
+import { biometricService } from '../services/biometricService';
+import { permissionService } from '../services/permissionService';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import confetti from 'canvas-confetti';
@@ -48,7 +57,19 @@ export default function PhotoGalleryModal({ isOpen, onClose, lang = 'gu' }) {
   const [stats, setStats] = useState({ totalCount: 0, favoriteCount: 0, mbUsed: '0 MB' });
   const [notice, setNotice] = useState('');
 
+  // Privacy & Vault Security Lock States
+  const [isVaultLocked, setIsVaultLocked] = useState(() => {
+    return localStorage.getItem('photo_vault_locked') === 'true';
+  });
+  const [isUnlockedForSession, setIsUnlockedForSession] = useState(() => {
+    return localStorage.getItem('photo_vault_locked') !== 'true';
+  });
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [isBiometricTesting, setIsBiometricTesting] = useState(false);
+
   const fileInputRef = useRef(null);
+  const user = storageService.getUserProfile();
 
   // Load photos from IndexedDB
   const loadPhotos = async () => {
@@ -67,6 +88,11 @@ export default function PhotoGalleryModal({ isOpen, onClose, lang = 'gu' }) {
 
   useEffect(() => {
     if (isOpen) {
+      const lockEnabled = localStorage.getItem('photo_vault_locked') === 'true';
+      setIsVaultLocked(lockEnabled);
+      setIsUnlockedForSession(!lockEnabled);
+      setPinInput('');
+      setPinError('');
       loadPhotos();
       setSelectedPhoto(null);
       setIsEditing(false);
@@ -74,6 +100,67 @@ export default function PhotoGalleryModal({ isOpen, onClose, lang = 'gu' }) {
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  // Toggle Vault Lock setting
+  const handleToggleVaultLock = () => {
+    const nextState = !isVaultLocked;
+    setIsVaultLocked(nextState);
+    localStorage.setItem('photo_vault_locked', nextState ? 'true' : 'false');
+    if (nextState) {
+      showNotice(
+        lang === 'gu'
+          ? '🔒 ફોટો ગેલેરી લૉક સક્ષમ થયું! હવે પિન કે ફિંગરપ્રિન્ટ જરૂરી રહેશે.'
+          : '🔒 Photo Vault locked! PIN or Biometrics required.'
+      );
+    } else {
+      setIsUnlockedForSession(true);
+      showNotice(
+        lang === 'gu'
+          ? '🔓 ફોટો ગેલેરી લૉક બંધ કરવામાં આવ્યું.'
+          : '🔓 Photo Vault lock disabled.'
+      );
+    }
+  };
+
+  // Verify PIN Unlock
+  const handleVerifyPin = (e) => {
+    if (e) e.preventDefault();
+    const correctPin = user?.pin || '1234';
+    if (pinInput === correctPin) {
+      setIsUnlockedForSession(true);
+      setPinError('');
+      setPinInput('');
+      confetti({ particleCount: 25, spread: 50, origin: { y: 0.6 } });
+    } else {
+      setPinError(lang === 'gu' ? 'ખોટો PIN! ફરી પ્રયાસ કરો.' : 'Incorrect PIN! Try again.');
+      setPinInput('');
+    }
+  };
+
+  // Verify Biometric Unlock
+  const handleVerifyBiometric = async () => {
+    setIsBiometricTesting(true);
+    setPinError('');
+    try {
+      const res = await biometricService.authenticate();
+      if (res.success) {
+        setIsUnlockedForSession(true);
+        confetti({ particleCount: 30, spread: 60, origin: { y: 0.6 } });
+      } else if (!res.cancelled) {
+        setPinError(res.error || (lang === 'gu' ? 'ફિંગરપ્રિન્ટ મેળ ખાતી નથી.' : 'Biometrics failed.'));
+      }
+    } catch (err) {
+      console.warn('Biometric unlock error:', err);
+    } finally {
+      setIsBiometricTesting(false);
+    }
+  };
+
+  // Open safe photo picker after requesting permissions
+  const handleOpenPhotoPicker = async () => {
+    await permissionService.requestPhotoPermission();
+    fileInputRef.current?.click();
+  };
 
   // Handle file uploads from device gallery
   const handleFileSelect = async (e) => {
@@ -265,7 +352,6 @@ export default function PhotoGalleryModal({ isOpen, onClose, lang = 'gu' }) {
           dialogTitle: 'ફોટો શેર કરો',
         });
       } else if (navigator.share) {
-        // Try native Web Share
         await navigator.share({
           title: photo.title || 'મારી ફેવરિટ તસવીર',
           text: `${photo.title || 'યાદગાર તસવીર'} - દૈનિક ડાયરી`,
@@ -280,13 +366,11 @@ export default function PhotoGalleryModal({ isOpen, onClose, lang = 'gu' }) {
 
   // Filtered photos
   const filteredPhotos = photos.filter((p) => {
-    // Category filter
     if (activeCategory === 'favorites' && !p.isFavorite) return false;
     if (activeCategory !== 'all' && activeCategory !== 'favorites' && p.category !== activeCategory) {
       return false;
     }
 
-    // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       const matchTitle = (p.title || '').toLowerCase().includes(q);
@@ -322,17 +406,34 @@ export default function PhotoGalleryModal({ isOpen, onClose, lang = 'gu' }) {
                     {stats.favoriteCount} {lang === 'gu' ? 'ફેવરિટ' : 'favorites'}
                   </span>
                   <span>•</span>
-                  <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-md">
-                    ૧૦૦% પ્રાઇવેટ ઓફલાઇન
+                  <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-md font-semibold flex items-center gap-1">
+                    <ShieldCheck size={10} />
+                    ૧૦૦% ઓફલાઇન સુરક્ષિત
                   </span>
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5">
+              {/* Vault PIN/Fingerprint Lock Toggle */}
+              <button
+                onClick={handleToggleVaultLock}
+                title={isVaultLocked ? 'વોલ્ટ લૉક સક્રિય છે' : 'વોલ્ટ લૉક બંધ છે'}
+                className={`p-2 rounded-xl border transition active:scale-95 flex items-center gap-1 text-xs font-bold ${
+                  isVaultLocked
+                    ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-xs'
+                    : 'bg-white/20 hover:bg-white/30 text-white border-white/20'
+                }`}
+              >
+                {isVaultLocked ? <Lock size={15} /> : <Unlock size={15} />}
+                <span className="text-[10px] hidden sm:inline">
+                  {isVaultLocked ? 'લૉક' : 'અનલૉક'}
+                </span>
+              </button>
+
               {/* Add Photo Button in Header */}
               <button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleOpenPhotoPicker}
                 disabled={uploading}
                 className="px-3 py-1.5 rounded-xl bg-white text-indigo-700 hover:bg-blue-50 font-bold text-xs shadow-md transition active:scale-95 flex items-center gap-1.5"
               >
@@ -380,195 +481,273 @@ export default function PhotoGalleryModal({ isOpen, onClose, lang = 'gu' }) {
           </div>
         )}
 
-        {/* Search & Category Filter Toolbar */}
-        <div className="p-3 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 space-y-2.5 shrink-0">
-          {/* Search Box */}
-          <div className="relative">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={
-                lang === 'gu'
-                  ? 'તસવીરનું નામ કે તારીખ શોધો...'
-                  : 'Search by photo title or date...'
-              }
-              className="w-full pl-9 pr-8 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          {/* Category Chips - Scrollable */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            {CATEGORIES.map((cat) => {
-              const isActive = activeCategory === cat.id;
-              const count =
-                cat.id === 'all'
-                  ? photos.length
-                  : cat.id === 'favorites'
-                  ? photos.filter((p) => p.isFavorite).length
-                  : photos.filter((p) => p.category === cat.id).length;
-
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap transition active:scale-95 flex items-center gap-1 border shrink-0 ${
-                    isActive
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <span>{lang === 'gu' ? cat.labelGu : cat.labelEn}</span>
-                  <span
-                    className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${
-                      isActive
-                        ? 'bg-white/25 text-white'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Photos Grid Area */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-3 text-slate-400">
-              <Loader2 size={28} className="animate-spin text-blue-600" />
-              <p className="text-xs">
-                {lang === 'gu' ? 'તસવીરો લોડ થઈ રહી છે...' : 'Loading photos...'}
-              </p>
+        {/* VAULT SECURITY LOCK SCREEN (When Vault is Locked) */}
+        {isVaultLocked && !isUnlockedForSession ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-slate-50 dark:bg-slate-900/90 space-y-4">
+            <div className="w-16 h-16 rounded-3xl bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-md">
+              <Lock size={32} />
             </div>
-          ) : filteredPhotos.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-              <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 flex items-center justify-center text-3xl shadow-xs mb-3">
-                {activeCategory === 'favorites' ? '⭐' : '🖼️'}
-              </div>
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                {activeCategory === 'favorites'
-                  ? lang === 'gu'
-                    ? 'હજુ કોઈ ફેવરિટ ફોટો પસંદ કરેલ નથી'
-                    : 'No favorite photos yet'
-                  : lang === 'gu'
-                  ? 'કોઈ ફોટો મળ્યો નથી'
-                  : 'No photos found'}
+
+            <div>
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
+                {lang === 'gu' ? '🔒 સુરક્ષિત પ્રાઇવેટ ફોટો વોલ્ટ' : '🔒 Secure Private Photo Vault'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mt-1 leading-relaxed">
-                {activeCategory === 'favorites'
-                  ? lang === 'gu'
-                    ? 'કોઈપણ ફોટાના ખૂણા પર આપેલ ⭐ સ્ટાર બટન દબાવીને તેને ફેવરિટ બનાવો.'
-                    : 'Tap the ⭐ star on any photo to add it to your favorites.'
-                  : lang === 'gu'
-                  ? 'તમારા પરિવાર, પ્રવાસ કે ખાસ ક્ષણોના ફોટા સાચવવા નીચેના બટન પર ક્લિક કરો.'
-                  : 'Tap below to select photos from your device gallery.'}
+                {lang === 'gu'
+                  ? 'આ ફોટો ગેલેરી સુરક્ષિત લૉક થયેલી છે. જોવા માટે તમારો ૪ અંકનો PIN દાખલ કરો અથવા ફિંગરપ્રિન્ટ ચકાસો.'
+                  : 'This photo vault is locked. Enter your 4-digit PIN or verify biometrics to unlock.'}
               </p>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="mt-4 px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-md shadow-blue-500/25 active:scale-95 transition flex items-center gap-2"
-              >
-                <Plus size={16} />
-                <span>{lang === 'gu' ? 'ગેલેરીમાંથી ફોટો પસંદ કરો' : 'Pick from Gallery'}</span>
-              </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {filteredPhotos.map((photo) => (
-                <div
-                  key={photo.id}
-                  onClick={() => handleOpenLightbox(photo)}
-                  className="group relative bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs cursor-pointer hover:shadow-md transition active:scale-98 flex flex-col"
+
+            {/* PIN Input Form */}
+            <form onSubmit={handleVerifyPin} className="w-full max-w-xs space-y-3">
+              <div className="relative">
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={pinInput}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setPinInput(val);
+                    if (val.length === 4 && val === (user?.pin || '1234')) {
+                      setIsUnlockedForSession(true);
+                      confetti({ particleCount: 25, spread: 50, origin: { y: 0.6 } });
+                    }
+                  }}
+                  placeholder="••••"
+                  className="w-full text-center tracking-[0.5em] text-2xl font-bold py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
+                  autoFocus
+                />
+              </div>
+
+              {pinError && (
+                <p className="text-xs font-bold text-red-600 dark:text-red-400 animate-in fade-in">
+                  {pinError}
+                </p>
+              )}
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md active:scale-95 transition"
                 >
-                  {/* Photo Thumbnail Container */}
-                  <div className="aspect-square w-full relative overflow-hidden bg-slate-200 dark:bg-slate-800">
-                    <img
-                      src={photo.thumbnailUrl || photo.dataUrl}
-                      alt={photo.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                    />
+                  {lang === 'gu' ? 'PIN થી અનલૉક કરો' : 'Unlock with PIN'}
+                </button>
 
-                    {/* Gradient Overlay on bottom */}
-                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                {user?.isBiometricEnabled && (
+                  <button
+                    type="button"
+                    onClick={handleVerifyBiometric}
+                    disabled={isBiometricTesting}
+                    className="p-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 active:scale-95 transition"
+                    title="Fingerprint Unlock"
+                  >
+                    <Fingerprint size={20} className="text-blue-600 dark:text-blue-400" />
+                  </button>
+                )}
+              </div>
+            </form>
 
-                    {/* Favorite Star Button (Top Right) */}
+            <div className="pt-2">
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                <ShieldCheck size={12} className="text-emerald-500" />
+                ૧૦૦% સુરક્ષિત લોકલ એન્ક્રિપ્શન
+              </span>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Search & Category Filter Toolbar */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 space-y-2.5 shrink-0">
+              {/* Search Box */}
+              <div className="relative">
+                <Search
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={
+                    lang === 'gu'
+                      ? 'તસવીરનું નામ કે તારીખ શોધો...'
+                      : 'Search by photo title or date...'
+                  }
+                  className="w-full pl-9 pr-8 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Category Chips - Scrollable */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                {CATEGORIES.map((cat) => {
+                  const isActive = activeCategory === cat.id;
+                  const count =
+                    cat.id === 'all'
+                      ? photos.length
+                      : cat.id === 'favorites'
+                      ? photos.filter((p) => p.isFavorite).length
+                      : photos.filter((p) => p.category === cat.id).length;
+
+                  return (
                     <button
-                      onClick={(e) => handleToggleFavorite(photo.id, e)}
-                      title={photo.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                      className={`absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-md transition shadow-md active:scale-125 z-10 ${
-                        photo.isFavorite
-                          ? 'bg-amber-400 text-slate-900 shadow-amber-400/50 scale-105'
-                          : 'bg-black/40 text-white hover:bg-black/60'
+                      key={cat.id}
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap transition active:scale-95 flex items-center gap-1 border shrink-0 ${
+                        isActive
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                       }`}
                     >
-                      <Star
-                        size={14}
-                        className={photo.isFavorite ? 'fill-slate-900 stroke-slate-900' : 'stroke-white'}
-                      />
+                      <span>{lang === 'gu' ? cat.labelGu : cat.labelEn}</span>
+                      <span
+                        className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${
+                          isActive
+                            ? 'bg-white/25 text-white'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                        }`}
+                      >
+                        {count}
+                      </span>
                     </button>
-
-                    {/* Category Tag (Bottom Left) */}
-                    <div className="absolute bottom-1.5 left-2 pointer-events-none">
-                      <span className="text-[9px] font-bold text-white/90 bg-black/40 backdrop-blur-xs px-1.5 py-0.5 rounded-md">
-                        {CATEGORIES.find((c) => c.id === photo.category)?.icon || '📸'}{' '}
-                        {photo.category}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Caption & Date details */}
-                  <div className="p-2 bg-white dark:bg-slate-900 flex-1 flex flex-col justify-between">
-                    <h4 className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">
-                      {photo.title || (lang === 'gu' ? 'યાદગાર તસવીર' : 'Memory Photo')}
-                    </h4>
-                    <div className="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      <span className="flex items-center gap-0.5">
-                        <Calendar size={9} />
-                        {photo.date}
-                      </span>
-                      <span>{photo.fileSize}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Footer Info & Storage Counter */}
-        <div className="p-2.5 px-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-1.5">
-            <Info size={12} className="text-blue-500" />
-            <span>
-              {lang === 'gu'
-                ? `સ્ટોરેજ: ${stats.mbUsed} • તમામ ફોટો ડિવાઇસમાં ૧૦૦% ઓફલાઇન સચવાય છે`
-                : `Storage: ${stats.mbUsed} • Photos stored 100% locally on device`}
-            </span>
-          </div>
+            {/* Photos Grid Area */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center h-48 gap-3 text-slate-400">
+                  <Loader2 size={28} className="animate-spin text-blue-600" />
+                  <p className="text-xs">
+                    {lang === 'gu' ? 'તસવીરો લોડ થઈ રહી છે...' : 'Loading photos...'}
+                  </p>
+                </div>
+              ) : filteredPhotos.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                  <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 flex items-center justify-center text-3xl shadow-xs mb-3">
+                    {activeCategory === 'favorites' ? '⭐' : '🖼️'}
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    {activeCategory === 'favorites'
+                      ? lang === 'gu'
+                        ? 'હજુ કોઈ ફેવરિટ ફોટો પસંદ કરેલ નથી'
+                        : 'No favorite photos yet'
+                      : lang === 'gu'
+                      ? 'કોઈ ફોટો મળ્યો નથી'
+                      : 'No photos found'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mt-1 leading-relaxed">
+                    {activeCategory === 'favorites'
+                      ? lang === 'gu'
+                        ? 'કોઈપણ ફોટાના ખૂણા પર આપેલ ⭐ સ્ટાર બટન દબાવીને તેને ફેવરિટ બનાવો.'
+                        : 'Tap the ⭐ star on any photo to add it to your favorites.'
+                      : lang === 'gu'
+                      ? 'તમારા પરિવાર, પ્રવાસ કે ખાસ ક્ષણોના ફોટા સાચવવા નીચેના બટન પર ક્લિક કરો.'
+                      : 'Tap below to select photos from your device gallery.'}
+                  </p>
+                  <button
+                    onClick={handleOpenPhotoPicker}
+                    className="mt-4 px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-md shadow-blue-500/25 active:scale-95 transition flex items-center gap-2"
+                  >
+                    <Plus size={16} />
+                    <span>{lang === 'gu' ? 'ગેલેરીમાંથી ફોટો પસંદ કરો' : 'Pick from Gallery'}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {filteredPhotos.map((photo) => (
+                    <div
+                      key={photo.id}
+                      onClick={() => handleOpenLightbox(photo)}
+                      className="group relative bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs cursor-pointer hover:shadow-md transition active:scale-98 flex flex-col"
+                    >
+                      {/* Photo Thumbnail Container */}
+                      <div className="aspect-square w-full relative overflow-hidden bg-slate-200 dark:bg-slate-800">
+                        <img
+                          src={photo.thumbnailUrl || photo.dataUrl}
+                          alt={photo.title}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        />
 
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1"
-          >
-            <Plus size={12} />
-            <span>{lang === 'gu' ? 'નવા ફોટા' : 'Add More'}</span>
-          </button>
-        </div>
+                        {/* Gradient Overlay on bottom */}
+                        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+
+                        {/* Favorite Star Button (Top Right) */}
+                        <button
+                          onClick={(e) => handleToggleFavorite(photo.id, e)}
+                          title={photo.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                          className={`absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-md transition shadow-md active:scale-125 z-10 ${
+                            photo.isFavorite
+                              ? 'bg-amber-400 text-slate-900 shadow-amber-400/50 scale-105'
+                              : 'bg-black/40 text-white hover:bg-black/60'
+                          }`}
+                        >
+                          <Star
+                            size={14}
+                            className={photo.isFavorite ? 'fill-slate-900 stroke-slate-900' : 'stroke-white'}
+                          />
+                        </button>
+
+                        {/* Category Tag (Bottom Left) */}
+                        <div className="absolute bottom-1.5 left-2 pointer-events-none">
+                          <span className="text-[9px] font-bold text-white/90 bg-black/40 backdrop-blur-xs px-1.5 py-0.5 rounded-md">
+                            {CATEGORIES.find((c) => c.id === photo.category)?.icon || '📸'}{' '}
+                            {photo.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Caption & Date details */}
+                      <div className="p-2 bg-white dark:bg-slate-900 flex-1 flex flex-col justify-between">
+                        <h4 className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">
+                          {photo.title || (lang === 'gu' ? 'યાદગાર તસવીર' : 'Memory Photo')}
+                        </h4>
+                        <div className="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          <span className="flex items-center gap-0.5">
+                            <Calendar size={9} />
+                            {photo.date}
+                          </span>
+                          <span>{photo.fileSize}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Info & Storage Counter */}
+            <div className="p-2.5 px-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck size={12} className="text-emerald-500" />
+                <span>
+                  {lang === 'gu'
+                    ? `સ્ટોરેજ: ${stats.mbUsed} • તમામ ફોટો ડિવાઇસમાં ૧૦૦% ઓફલાઇન સચવાય છે`
+                    : `Storage: ${stats.mbUsed} • Photos stored 100% locally on device`}
+                </span>
+              </div>
+
+              <button
+                onClick={handleOpenPhotoPicker}
+                className="text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1"
+              >
+                <Plus size={12} />
+                <span>{lang === 'gu' ? 'નવા ફોટા' : 'Add More'}</span>
+              </button>
+            </div>
+          </>
+        )}
 
         {/* Full-Screen High-Res Lightbox Modal */}
         {selectedPhoto && (

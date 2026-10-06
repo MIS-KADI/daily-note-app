@@ -52,6 +52,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         setupStepSensors();
         setupNativeSpeechBridge();
         setupNativeStepBridge();
+        setupNativePermissionBridge();
     }
 
     @Override
@@ -74,10 +75,16 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQ_CODE) {
-            Log.d(TAG, "Permissions granted/handled, auto-starting step sensors and syncing steps immediately");
+            Log.d(TAG, "Permissions updated, syncing steps and notifying web layer");
             setupStepSensors();
             registerStepSensors();
             syncHardwareStepsWithJs();
+
+            mainHandler.post(() -> {
+                if (this.bridge != null && this.bridge.getWebView() != null) {
+                    this.bridge.getWebView().evaluateJavascript("if (window.onNativePermissionsResult) { window.onNativePermissionsResult(); }", null);
+                }
+            });
         }
     }
 
@@ -95,11 +102,22 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                     permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
                 }
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.READ_MEDIA_IMAGES);
+                }
+            } else {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+                }
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
                     permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION);
                 }
+            }
+            // Contacts Access
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.READ_CONTACTS);
             }
 
             if (!permissionsToRequest.isEmpty()) {
@@ -237,6 +255,77 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
                         mainHandler.post(() -> requestAppPermissions());
                     }
                 }, "AndroidStepBridge");
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // Native Permissions Bridge for Web UI
+    // -------------------------------------------------------------
+    private void setupNativePermissionBridge() {
+        mainHandler.post(() -> {
+            if (this.bridge != null && this.bridge.getWebView() != null) {
+                WebView webView = this.bridge.getWebView();
+                webView.addJavascriptInterface(new Object() {
+                    @JavascriptInterface
+                    public boolean hasPhotoPermission() {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            return ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            return ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+                        }
+                        return true;
+                    }
+
+                    @JavascriptInterface
+                    public void requestPhotoPermission() {
+                        mainHandler.post(() -> {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_MEDIA_IMAGES}, PERMISSION_REQ_CODE);
+                            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQ_CODE);
+                            }
+                        });
+                    }
+
+                    @JavascriptInterface
+                    public boolean hasContactPermission() {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            return ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED;
+                        }
+                        return true;
+                    }
+
+                    @JavascriptInterface
+                    public void requestContactPermission() {
+                        mainHandler.post(() -> {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS}, PERMISSION_REQ_CODE);
+                            }
+                        });
+                    }
+
+                    @JavascriptInterface
+                    public void requestAllPermissions() {
+                        mainHandler.post(() -> requestAppPermissions());
+                    }
+
+                    @JavascriptInterface
+                    public String getPermissionsStatusJson() {
+                        boolean audio = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+                        boolean notif = true;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            notif = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+                        }
+                        boolean steps = true;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            steps = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED;
+                        }
+                        boolean photos = hasPhotoPermission();
+                        boolean contacts = hasContactPermission();
+                        return "{\"audio\":" + audio + ",\"notifications\":" + notif + ",\"steps\":" + steps + ",\"photos\":" + photos + ",\"contacts\":" + contacts + "}";
+                    }
+                }, "AndroidPermissionBridge");
             }
         });
     }

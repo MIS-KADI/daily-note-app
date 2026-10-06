@@ -700,6 +700,32 @@ export default function ProfileTab({
                     : 'This app is 100% ad-free and tracker-free. You have full ownership to export backups or wipe all stored data at any time.'}
                 </p>
               </div>
+
+              {/* Point 6: Photos & Media Vault Privacy */}
+              <div className="p-3 rounded-2xl bg-pink-50/60 dark:bg-pink-950/40 border border-pink-200/80 dark:border-pink-900/60 space-y-1">
+                <span className="font-black text-pink-900 dark:text-pink-200 flex items-center gap-1.5">
+                  <span>📸</span>
+                  <span>{lang === 'gu' ? '૬. ફોટો અને મીડિયા ગોપનીયતા (Photos & Media Vault Privacy)' : '6. Photos & Media Vault Privacy'}</span>
+                </span>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                  {lang === 'gu'
+                    ? 'તમારી ફોટો ગેલેરીના તમામ ફેવરિટ ફોટા માત્ર તમારા મોબાઇલમાં જ સ્થાનિક રીતે સચવાય છે. તે કોઈ સર્વર પર અપલોડ થતા નથી અને તમે તેને વ્યક્તિગત PIN અથવા ફિંગરપ્રિન્ટ લૉક વડે સુરક્ષિત રાખી શકો છો.'
+                    : 'All photos in your favorite gallery vault are saved locally on your device only. They are never transmitted to any external server and can be secured with a PIN or fingerprint lock.'}
+                </p>
+              </div>
+
+              {/* Point 7: Contacts Privacy */}
+              <div className="p-3 rounded-2xl bg-teal-50/60 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-900/60 space-y-1">
+                <span className="font-black text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
+                  <span>👥</span>
+                  <span>{lang === 'gu' ? '૭. સંપર્કોની સુરક્ષા (Contacts Access Privacy)' : '7. Contacts Access Privacy'}</span>
+                </span>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                  {lang === 'gu'
+                    ? 'સંપર્કોની પરવાનગી માત્ર ખાતાવહી, કામોના રિમાઇન્ડર અને ઇમરજન્સી હેલ્પલાઇન માટે તમારા ફોનમાંથી સીધા નામ અને નંબર પસંદ કરવા માટે જ વપરાય છે. તમારી કોન્ટેક્ટ બુક ક્યારેય કોઈ સાથે શેર થતી નથી.'
+                    : 'Contact access is strictly utilized on-demand when selecting contacts for khata transactions, reminders, or emergency speed-dial. Your phonebook is never uploaded, synced, or shared.'}
+                </p>
+              </div>
             </div>
 
             {/* Modal Footer */}
