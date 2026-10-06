@@ -48,6 +48,7 @@ export default function HomeTab({
   onOpenShopping,
   onOpenEmergency,
   onOpenAssistant,
+  onOpenPhotoGallery,
   dailyQuote,
   onNextQuote,
   lang = 'gu',
@@ -316,66 +317,120 @@ export default function HomeTab({
       {/* Daily Streak & Mood Tracker Card */}
       <MoodTrackerCard lang={lang} />
 
+      {/* Favorite Photo Gallery Showcase Card */}
+      {onOpenPhotoGallery && (
+        <div
+          onClick={onOpenPhotoGallery}
+          className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 rounded-3xl p-3.5 text-white shadow-md shadow-purple-600/20 flex items-center justify-between gap-3 border border-white/20 cursor-pointer active:scale-98 transition group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shrink-0 shadow-xs border border-white/30 group-hover:scale-105 transition">
+              📸
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black tracking-wide text-amber-300">
+                  {lang === 'gu' ? 'મારી યાદગાર ફોટો ગેલેરી' : lang === 'hi' ? 'मेरी पसंदीदा फोटो गैलरी' : 'Favorite Photo Gallery'}
+                </span>
+                <span className="text-[9px] bg-white/25 px-1.5 py-0.2 rounded-full uppercase font-bold text-white">
+                  ⭐ ફેવરિટ
+                </span>
+              </div>
+              <p className="text-[11px] text-pink-100 truncate mt-0.5">
+                {lang === 'gu'
+                  ? 'પરિવાર, પ્રવાસ અને ખાસ ક્ષણોના ફોટા સાચવી રાખો'
+                  : lang === 'hi'
+                  ? 'परिवार, यात्रा और खास पलों की तस्वीरें सहेजें'
+                  : 'Save family, travel and memory photos securely'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenPhotoGallery();
+            }}
+            className="px-3 py-1.5 rounded-xl bg-white text-purple-700 hover:bg-pink-50 font-extrabold text-xs shadow-md shadow-black/10 transition active:scale-95 shrink-0 flex items-center gap-1"
+          >
+            <span>{lang === 'gu' ? 'જુઓ' : lang === 'hi' ? 'देखें' : 'View'}</span>
+            <ChevronRight size={13} />
+          </button>
+        </div>
+      )}
+
       {/* Quick Action Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
         <button
           onClick={() => onNavigate('notes')}
-          className="p-3 bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
             📝
           </div>
-          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_new_note', lang)}</span>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('btn_new_note', lang)}</span>
         </button>
 
         <button
           onClick={() => onNavigate('health')}
-          className="p-3 bg-white dark:bg-slate-900 hover:bg-teal-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 hover:bg-teal-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-sm">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-sm">
             ❤️
           </div>
-          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('tab_health', lang)}</span>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('tab_health', lang)}</span>
         </button>
 
         <button
           onClick={() => onNavigate('reminders')}
-          className="p-3 bg-white dark:bg-slate-900 hover:bg-indigo-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 hover:bg-indigo-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
             ⏰
           </div>
-          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_tasks_meetings', lang)}</span>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('btn_tasks_meetings', lang)}</span>
         </button>
+
+        {onOpenPhotoGallery && (
+          <button
+            onClick={onOpenPhotoGallery}
+            className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 hover:bg-purple-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-sm">
+              📸
+            </div>
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('btn_photo_gallery', lang)}</span>
+          </button>
+        )}
 
         <button
           onClick={onOpenCalculator}
-          className="p-3 bg-white dark:bg-slate-900 hover:bg-amber-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 hover:bg-amber-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm">
             🧮
           </div>
-          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_calculator', lang)}</span>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('btn_calculator', lang)}</span>
         </button>
 
         <button
           onClick={onOpenShopping}
-          className="p-3 bg-white dark:bg-slate-900 hover:bg-emerald-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 hover:bg-emerald-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
             🛒
           </div>
-          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_shopping', lang)}</span>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('btn_shopping', lang)}</span>
         </button>
 
         <button
           onClick={onOpenEmergency}
-          className="p-3 bg-white dark:bg-slate-900 hover:bg-red-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 hover:bg-red-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-950/80 text-red-600 dark:text-red-400 flex items-center justify-center font-bold text-sm">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-100 dark:bg-red-950/80 text-red-600 dark:text-red-400 flex items-center justify-center font-bold text-sm">
             🚨
           </div>
-          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_emergency', lang)}</span>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('btn_emergency', lang)}</span>
         </button>
       </div>
 

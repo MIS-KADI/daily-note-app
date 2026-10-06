@@ -11,6 +11,7 @@ import SmartAssistantModal from './components/SmartAssistantModal';
 import BankSmsParserModal from './components/BankSmsParserModal';
 import UpiPaymentModal from './components/UpiPaymentModal';
 import MobilePermissionsModal from './components/MobilePermissionsModal';
+import PhotoGalleryModal from './components/PhotoGalleryModal';
 import DemoModeBanner from './components/DemoModeBanner';
 import DemoModeModal from './components/DemoModeModal';
 import confetti from 'canvas-confetti';
@@ -63,6 +64,7 @@ export default function App() {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isShoppingOpen, setIsShoppingOpen] = useState(false);
   const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
+  const [isPhotoGalleryOpen, setIsPhotoGalleryOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
@@ -889,6 +891,7 @@ export default function App() {
         onOpenCalculator={() => setIsCalculatorOpen(true)}
         onOpenShopping={() => setIsShoppingOpen(true)}
         onOpenEmergency={() => setIsEmergencyOpen(true)}
+        onOpenPhotoGallery={() => setIsPhotoGalleryOpen(true)}
         onOpenAssistant={(autoStart = false) => {
           setAssistantAutoStart(Boolean(autoStart));
           setIsAssistantOpen(true);
@@ -963,6 +966,7 @@ export default function App() {
             onUpdateFitness={handleUpdateFitness}
             onOpenShopping={() => checkCanAdd(() => setIsShoppingOpen(true))}
             onOpenEmergency={() => setIsEmergencyOpen(true)}
+            onOpenPhotoGallery={() => setIsPhotoGalleryOpen(true)}
             dailyQuote={dailyQuote}
             onNextQuote={() => setQuoteOffset((prev) => prev + 1)}
             lang={lang}
@@ -1073,6 +1077,7 @@ export default function App() {
             onUpdateUser={handleUpdateUser}
             onReloadAllData={handleReloadAllData}
             onOpenMobilePermissions={() => setIsMobilePermissionsOpen(true)}
+            onOpenPhotoGallery={() => setIsPhotoGalleryOpen(true)}
             lang={lang}
             isDemoMode={isDemoMode}
             onClearDemo={() => handleClearDemoData()}
@@ -1180,6 +1185,13 @@ export default function App() {
       <MobilePermissionsModal
         isOpen={isMobilePermissionsOpen}
         onClose={() => setIsMobilePermissionsOpen(false)}
+        lang={lang}
+      />
+
+      {/* Favorite Photo Gallery & Memories Modal */}
+      <PhotoGalleryModal
+        isOpen={isPhotoGalleryOpen}
+        onClose={() => setIsPhotoGalleryOpen(false)}
         lang={lang}
       />
     </div>

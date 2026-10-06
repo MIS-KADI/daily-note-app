@@ -27,6 +27,7 @@ export default function ProfileTab({
   onUpdateUser,
   onReloadAllData,
   onOpenMobilePermissions,
+  onOpenPhotoGallery,
   lang = 'gu',
   isDemoMode,
   onClearDemo,
@@ -497,6 +498,39 @@ export default function ProfileTab({
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
             મોબાઈલમાં વૉઇસ ટાઇપિંગ અને સમયસર અલાર્મ વાગવા માટે જરૂરી પરવાનગીઓ સેટ કરવા માટે અહીં ક્લિક કરો.
+          </p>
+        </div>
+      )}
+
+      {/* Favorite Photo Gallery Card in Profile */}
+      {onOpenPhotoGallery && (
+        <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-indigo-50 dark:from-slate-900 dark:to-slate-900/90 rounded-3xl p-5 border border-purple-200 dark:border-slate-800 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2.5 bg-gradient-to-tr from-purple-600 to-pink-600 text-white rounded-2xl shadow-sm text-lg">
+                📸
+              </span>
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  {lang === 'gu' ? 'મારી યાદગાર ફોટો ગેલેરી' : lang === 'hi' ? 'मेरी पसंदीदा फोटो गैलरी' : 'Favorite Photo Gallery'}
+                </h3>
+                <p className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold">
+                  {lang === 'gu' ? 'ફેવરિટ તસવીરો સાચવો • ૧૦૦% ઓફલાઇન સેવ' : 'Store favorite photos 100% offline'}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenPhotoGallery}
+              className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5"
+            >
+              <span>{lang === 'gu' ? 'ગેલેરી ખોલો' : 'Open Vault'}</span>
+            </button>
+          </div>
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            {lang === 'gu'
+              ? 'તમારા પરિવાર, પ્રવાસ કે અંગત યાદગાર ફોટા ઓટોમેટીક સાઈઝ ઓપ્ટિમાઈઝ કરીને ફોનમાં સુરક્ષિત સાચવી રાખો.'
+              : 'Safely organize and keep your favorite photos directly on your device with high optimization.'}
           </p>
         </div>
       )}

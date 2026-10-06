@@ -478,6 +478,15 @@ export const translations = {
     de: 'Rechner',
     ar: 'آلة حاسبة',
   },
+  btn_photo_gallery: {
+    gu: 'ફોટો ગેલેરી',
+    hi: 'फोटो गैलरी',
+    en: 'Photo Gallery',
+    es: 'Galería',
+    fr: 'Galerie Photos',
+    de: 'Fotogalerie',
+    ar: 'معرض الصور',
+  },
   btn_shopping: {
     gu: 'ખરીદી યાદી',
     hi: 'खरीदारी सूची',

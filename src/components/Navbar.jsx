@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   ShieldAlert,
   Globe,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
 import { t } from '../services/i18n';
@@ -22,6 +23,7 @@ export default function Navbar({
   onOpenCalculator,
   onOpenShopping,
   onOpenEmergency,
+  onOpenPhotoGallery,
   onTestAlarm,
   onLockApp,
   activeAlarmCount = 0,
@@ -76,6 +78,15 @@ export default function Navbar({
             ) : (
               <Moon size={15} className="text-indigo-600" />
             )}
+          </button>
+
+          {/* Photo Gallery Quick Access */}
+          <button
+            onClick={onOpenPhotoGallery}
+            className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 transition active:scale-95"
+            title={lang === 'gu' ? '📸 ફોટો ગેલેરી' : '📸 Photo Gallery'}
+          >
+            <ImageIcon size={15} />
           </button>
 
           {/* Shopping Quick Access */}
