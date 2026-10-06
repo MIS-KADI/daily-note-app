@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.16.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.17.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.16.apk
+            daily-diary-v1.0.17.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,26 +68,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.16
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.16 Clean UI, Health Hub Water Tracker & Privacy Policy)"
+          tag_name: v1.0.17
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.17 Dark/Light Mode, Clean Data, Instant Step Counter & Auto Daily Reset)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.16)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.17)
 
             આ નવા વર્ઝનમાં કરવામાં આવેલા વિશેષ સુધારા:
-            - **આરોગ્ય વિભાગમાં ફિટનેસ અને વોટર ટ્રેકર (Health Hub):** હોમ પેજ પરથી ફિટનેસ અને વોટર ટ્રેકર હટાવીને સીધા હેલ્થ વિભાગમાં લઈ લીધા છે.
-            - **હોમ ટેબમાંથી ડાયરી સેક્શન રિમૂવ:** ડાયરીનું અલગ ટેબ હોવાથી હોમ પેજ પરથી ડાયરી પ્રિવ્યુ હટાવી દીધો છે.
-            - **ડાયરીમાં તારીખ સિલેક્ટ કરીને નવી નોંધ ઉમેરવાનું ફિક્સ:** કેલેન્ડર કે તારીખ ફિલ્ટરમાંથી કોઈપણ તારીખ સિલેક્ટ કરતી વખતે સીધું "આ તારીખે નવી નોંધ લખો" નું પ્રમોટ બટન ઉપલબ્ધ કર્યું.
-            - **અનાવશ્યક વિગતો દૂર:**
-              1. અગાઉની યાદગાર ક્ષણ (Throwback Memory) કાર્ડ અને પોપઅપ રિમૂવ કર્યું.
-              2. એડવાન્સ નોંધો (Advance Notes) ફિલ્ટર અને કાઉન્ટ રિમૂવ કર્યું.
-              3. નોંધ લખતી વખતે મૂડ સિલેક્ટર (Today's Mood) રિમૂવ કર્યું.
-              4. કીબોર્ડ & માત્રા સહાયક (Keyboard Helper) બટન અને ડ્રોઅર રિમૂવ કર્યું.
-            - **પ્રોફાઇલ ટેબમાં પ્રાઇવસી પોલિસી (Privacy Policy):** ૧૦૦% ઓફલાઇન, લોકલ સ્ટોરેજ અને ડેટા સિક્યોરિટીની સંપૂર્ણ પ્રાઇવસી પોલિસી કાર્ડ અને મોડલ ઉમેરી આપ્યા છે.
-            - **અલ્ટ્રા લાઇટવેઇટ સાઈઝ (<8 MB) & સ્મૂથ ફાસ્ટ પર્ફોર્મન્સ.**
+            - **ડાર્ક મોડ અને લાઈટ મોડ સર્વાંગી સુધારો (Dark & Light Mode Polish):** દરેક મોબાઇલ સ્ક્રીન પર તમામ કાર્ડ્સ, મોડલ્સ, ઇનપુટ ફીલ્ડ્સ અને ટેક્સ્ટ ક્રિસ્ટલ ક્લિયર અને સ્પષ્ટ વંચાય તેવું ઉત્કૃષ્ટ કોન્ટ્રાસ્ટ અને કલર બેલેન્સિંગ.
+            - **બધા ડમી/ડિફોલ્ટ ડેટા દૂર (Clean Initial State):** એપ ઇન્સ્ટોલ કરતી વખતે આવતી જૂની ડિફોલ્ટ એન્ટ્રીઓ (નોંધ, રિમાઇન્ડર, દવા, બેંક બેલેન્સ 42,500, ખાતા, શોપિંગ) સંપૂર્ણપણે હટાવીને એકદમ ક્લીન સ્લેટ રાખેલ છે.
+            - **ઇન્સ્ટોલેશન પર ઓટોમેટિક સ્ટેપ કાઉન્ટિંગ શરૂ (Auto-Start Step Counter):** એપ્લિકેશન ઇન્સ્ટોલ કરી પરમિશન આપતાં જ કોઈ પણ બટન દબાવ્યા વિના બેકગ્રાઉન્ડમાં આપમેળે સ્ટેપ ગણતરી શરૂ થઈ જાય છે.
+            - **તારીખ બદલાતાં આરોગ્ય વિગતો ઓટો-રીસેટ (Daily Midnight Auto-Reset):** દરરોજ મધ્યરાત્રિએ / નવી તારીખે પગલાં (Steps) અને પાણીના ગ્લાસ (Water glasses) આપમેળે 0 થઈ નવા દિવસ માટે તૈયાર થશે, અને જૂના દિવસનો ઇતિહાસ સાચવાઈ જશે.
+            - **અલ્ટ્રા લાઇટવેઇટ સાઈઝ (<8 MB) અને સુપર સ્મૂથ ફાસ્ટ પર્ફોર્મન્સ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.16.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.17.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.16.apk
+            daily-diary-v1.0.17.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

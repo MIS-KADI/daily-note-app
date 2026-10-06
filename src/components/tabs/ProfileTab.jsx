@@ -36,7 +36,7 @@ export default function ProfileTab({
   const [mobile, setMobile] = useState(user?.mobile || '');
   const [email, setEmail] = useState(user?.email || '');
   const [dob, setDob] = useState(user?.dob || '');
-  const [upiId, setUpiId] = useState(user?.upiId || '9876543210@paytm');
+  const [upiId, setUpiId] = useState(user?.upiId || '');
   const [isPinRequired, setIsPinRequired] = useState(user?.isPinRequired ?? false);
   const [pin, setPin] = useState(user?.pin || '1234');
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(user?.isBiometricEnabled ?? true);

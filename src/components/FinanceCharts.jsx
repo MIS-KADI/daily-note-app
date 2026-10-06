@@ -29,7 +29,7 @@ const CATEGORY_COLORS = [
 
 export default function FinanceCharts({
   finance = [],
-  accounts = { bankBalance: 42500, cashBalance: 6800 },
+  accounts = { bankBalance: 0, cashBalance: 0 },
   khata = [],
   lang = 'gu',
 }) {

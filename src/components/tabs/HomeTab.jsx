@@ -41,7 +41,7 @@ export default function HomeTab({
   isStepSensorActive = false,
   onToggleStepSensor,
   onStepIncrement,
-  accounts = { bankBalance: 42500, cashBalance: 6800 },
+  accounts = { bankBalance: 0, cashBalance: 0 },
   khata = [],
   onUpdateWater,
   onUpdateFitness,
@@ -320,62 +320,62 @@ export default function HomeTab({
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         <button
           onClick={() => onNavigate('notes')}
-          className="p-3 bg-white hover:bg-blue-50/50 rounded-2xl border border-slate-200 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-3 bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
             📝
           </div>
-          <span className="text-[11px] font-semibold text-slate-700">{t('btn_new_note', lang)}</span>
+          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_new_note', lang)}</span>
         </button>
 
         <button
           onClick={() => onNavigate('health')}
-          className="p-3 bg-white hover:bg-teal-50/50 rounded-2xl border border-slate-200 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-3 bg-white dark:bg-slate-900 hover:bg-teal-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-sm">
             ❤️
           </div>
-          <span className="text-[11px] font-semibold text-slate-700">{t('tab_health', lang)}</span>
+          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('tab_health', lang)}</span>
         </button>
 
         <button
           onClick={() => onNavigate('reminders')}
-          className="p-3 bg-white hover:bg-indigo-50/50 rounded-2xl border border-slate-200 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-3 bg-white dark:bg-slate-900 hover:bg-indigo-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
             ⏰
           </div>
-          <span className="text-[11px] font-semibold text-slate-700">{t('btn_tasks_meetings', lang)}</span>
+          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_tasks_meetings', lang)}</span>
         </button>
 
         <button
           onClick={onOpenCalculator}
-          className="p-3 bg-white hover:bg-amber-50/50 rounded-2xl border border-slate-200 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-3 bg-white dark:bg-slate-900 hover:bg-amber-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm">
             🧮
           </div>
-          <span className="text-[11px] font-semibold text-slate-700">{t('btn_calculator', lang)}</span>
+          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_calculator', lang)}</span>
         </button>
 
         <button
           onClick={onOpenShopping}
-          className="p-3 bg-white hover:bg-emerald-50/50 rounded-2xl border border-slate-200 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-3 bg-white dark:bg-slate-900 hover:bg-emerald-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
             🛒
           </div>
-          <span className="text-[11px] font-semibold text-slate-700">{t('btn_shopping', lang)}</span>
+          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_shopping', lang)}</span>
         </button>
 
         <button
           onClick={onOpenEmergency}
-          className="p-3 bg-white hover:bg-red-50/50 rounded-2xl border border-slate-200 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+          className="p-3 bg-white dark:bg-slate-900 hover:bg-red-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
         >
-          <div className="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-950/80 text-red-600 dark:text-red-400 flex items-center justify-center font-bold text-sm">
             🚨
           </div>
-          <span className="text-[11px] font-semibold text-slate-700">{t('btn_emergency', lang)}</span>
+          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t('btn_emergency', lang)}</span>
         </button>
       </div>
 

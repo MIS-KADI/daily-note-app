@@ -31,6 +31,9 @@ import { notificationService } from './services/notificationService';
 import { streakService } from './services/streakService';
 import { pedometerService } from './services/pedometerService';
 
+// Clean default mock dummy data once for fresh/updated v17 install
+storageService.cleanDefaultDummyDataOnce();
+
 export default function App() {
   // State from LocalStorage
   const [user, setUser] = useState(() => storageService.getUserProfile());
@@ -73,6 +76,9 @@ export default function App() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
+  // Active Date tracker for Midnight / Daily Health Auto-Reset
+  const currentDateRef = useRef(new Date().toISOString().split('T')[0]);
+
   // Monitor network online/offline state
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -108,14 +114,22 @@ export default function App() {
     setIsStandalone(Boolean(isStandaloneMode));
   }, []);
 
-  // Sync dark theme class to html/documentElement for Tailwind dark: variants
+  // Sync dark theme class to html/body/documentElement for Tailwind dark: variants and full mobile screen coverage
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       document.documentElement.classList.add('dark-theme');
+      if (document.body) {
+        document.body.classList.add('dark');
+        document.body.classList.add('dark-theme');
+      }
     } else {
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.remove('dark-theme');
+      if (document.body) {
+        document.body.classList.remove('dark');
+        document.body.classList.remove('dark-theme');
+      }
     }
   }, [theme]);
 
@@ -301,18 +315,26 @@ export default function App() {
       setIsStepSensorActive(isActive);
     });
 
-    // Auto-start sensor if enabled in preferences
-    if (pedometerService.isAutoTrackingEnabled() && pedometerService.isSupported()) {
-      pedometerService.startTracking().then((started) => {
-        if (!started) {
-          setNeedsSensorPermission(true);
-        } else {
-          setNeedsSensorPermission(false);
+    // Auto-start sensor automatically on app launch / install
+    const autoStartSensors = async () => {
+      if (pedometerService.isAutoTrackingEnabled()) {
+        try {
+          const started = await pedometerService.startTracking();
+          setIsStepSensorActive(Boolean(started));
+          setNeedsSensorPermission(!started);
+        } catch (e) {
+          console.warn('Pedometer auto start error:', e);
         }
-      });
-    }
+      }
+    };
+
+    autoStartSensors();
+    const timer1 = setTimeout(autoStartSensors, 800);
+    const timer2 = setTimeout(autoStartSensors, 2500);
 
     return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       unsubStep();
       unsubExact();
       unsubStatus();
@@ -713,8 +735,41 @@ export default function App() {
       const now = new Date();
       const currentHours = String(now.getHours()).padStart(2, '0');
       const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-      const currentTimeStr = `${currentHours}:${currentMinutes}`;
-      const todayDateStr = now.toISOString().split('T')[0];
+      // 0. Daily Health Metrics Auto-Reset on Date Rollover (Midnight / New Day)
+      if (currentDateRef.current !== todayDateStr) {
+        currentDateRef.current = todayDateStr;
+
+        // Auto-reset water for the new day
+        setWater((prevWater) => {
+          const updated = { date: todayDateStr, glasses: 0, target: prevWater?.target || 8 };
+          storageService.saveWater(updated);
+          return updated;
+        });
+
+        // Auto-reset fitness (steps, distance, calories, workouts) & archive yesterday's steps
+        setFitness((prevFitness) => {
+          if (prevFitness?.steps > 0) {
+            try {
+              const hist = storageService.getWeeklyStepHistory();
+              const yDate = prevFitness.date || new Date(Date.now() - 86400000).toISOString().split('T')[0];
+              const updatedHist = hist.map((h) => (h.date === yDate ? { ...h, steps: prevFitness.steps } : h));
+              storageService.saveWeeklyStepHistory(updatedHist);
+            } catch (e) {
+              console.warn('Daily step archive error:', e);
+            }
+          }
+          const updated = {
+            ...prevFitness,
+            date: todayDateStr,
+            steps: 0,
+            distanceKm: 0,
+            calories: 0,
+            workouts: [],
+          };
+          storageService.saveFitness(updated);
+          return updated;
+        });
+      }
 
       // 1. Check Medicine Alarms
       medicines.forEach((med) => {

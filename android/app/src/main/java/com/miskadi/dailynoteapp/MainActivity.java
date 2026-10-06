@@ -57,14 +57,28 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
     @Override
     public void onResume() {
         super.onResume();
-        requestAppPermissions();
-        registerStepSensors();
+        if (sensorManager == null || (stepCounterSensor == null && stepDetectorSensor == null)) {
+            setupStepSensors();
+        } else {
+            registerStepSensors();
+        }
         syncHardwareStepsWithJs();
     }
 
     @Override
     public void onPause() {
         super.onPause();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQ_CODE) {
+            Log.d(TAG, "Permissions granted/handled, auto-starting step sensors and syncing steps immediately");
+            setupStepSensors();
+            registerStepSensors();
+            syncHardwareStepsWithJs();
+        }
     }
 
     private void requestAppPermissions() {
@@ -126,10 +140,11 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
     public void onSensorChanged(SensorEvent event) {
         if (event == null || event.sensor == null) return;
 
+        String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+
         if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
             float rawValue = event.values[0];
             int totalHardwareSteps = (int) rawValue;
-            String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
 
             String savedDate = stepPrefs.getString(PREF_BASELINE_DATE, "");
             int baseline = stepPrefs.getInt(PREF_BASELINE_STEPS, 0);
@@ -150,8 +165,19 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
 
             sendJsStepUpdate(currentTodaySteps);
         } else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
+            String savedDate = stepPrefs.getString(PREF_BASELINE_DATE, "");
+            if (!todayDate.equals(savedDate)) {
+                stepPrefs.edit()
+                    .putString(PREF_BASELINE_DATE, todayDate)
+                    .putInt(PREF_TODAY_STEPS, 0)
+                    .apply();
+                currentTodaySteps = 0;
+            }
             if (event.values.length > 0 && event.values[0] == 1.0f) {
+                currentTodaySteps++;
+                stepPrefs.edit().putInt(PREF_TODAY_STEPS, currentTodaySteps).apply();
                 sendJsStepDetected(1);
+                sendJsStepUpdate(currentTodaySteps);
             }
         }
     }

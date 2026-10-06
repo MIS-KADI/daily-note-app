@@ -817,18 +817,18 @@ export default function RemindersTab({
                 return (
                   <div
                     key={r.id}
-                    className={`p-4 rounded-3xl border transition shadow-xs bg-white relative overflow-hidden ${
+                    className={`p-4 rounded-3xl border transition shadow-xs bg-white dark:bg-slate-900 relative overflow-hidden ${
                       r.isCompleted
-                        ? 'opacity-65 border-slate-200 bg-slate-50'
+                        ? 'opacity-65 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50'
                         : r.priority === 'high'
-                        ? 'border-l-4 border-l-rose-500 border-slate-200 hover:border-slate-300'
+                        ? 'border-l-4 border-l-rose-500 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                         : r.priority === 'medium'
-                        ? 'border-l-4 border-l-amber-500 border-slate-200 hover:border-slate-300'
-                        : 'border-l-4 border-l-emerald-500 border-slate-200 hover:border-slate-300'
+                        ? 'border-l-4 border-l-amber-500 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                        : 'border-l-4 border-l-emerald-500 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
                     {/* Top Row: Checkmark & Tags on Left, Action buttons on Right */}
-                    <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                    <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                       <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
                         {/* Completion Checkmark Button */}
                         <button
@@ -956,7 +956,7 @@ export default function RemindersTab({
                     <div className="pt-2">
                       <h4
                         className={`text-sm font-bold leading-normal break-normal ${
-                          r.isCompleted ? 'line-through text-slate-400' : 'text-slate-800'
+                          r.isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'
                         }`}
                       >
                         {(r.title || '').replace(/\r?\n+/g, ' ').trim()}

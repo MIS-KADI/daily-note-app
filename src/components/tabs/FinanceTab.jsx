@@ -33,7 +33,7 @@ import FinanceCharts from '../FinanceCharts';
 export default function FinanceTab({
   finance = [],
   onSaveFinance,
-  accounts = { bankBalance: 42500, cashBalance: 6800 },
+  accounts = { bankBalance: 0, cashBalance: 0 },
   onSaveAccounts,
   khata = [],
   onSaveKhata,
@@ -78,8 +78,8 @@ export default function FinanceTab({
   const [editingKhataId, setEditingKhataId] = useState(null);
 
   // Balance edit form
-  const [tempBankBal, setTempBankBal] = useState(accounts?.bankBalance ?? 42500);
-  const [tempCashBal, setTempCashBal] = useState(accounts?.cashBalance ?? 6800);
+  const [tempBankBal, setTempBankBal] = useState(accounts?.bankBalance ?? 0);
+  const [tempCashBal, setTempCashBal] = useState(accounts?.cashBalance ?? 0);
 
   // Calculations
   const totalIncome = finance
@@ -406,13 +406,13 @@ export default function FinanceTab({
       </div>
 
       {/* Segmented Controller: Transactions vs Charts vs Khata */}
-      <div className="bg-white p-1 rounded-2xl border border-slate-200 grid grid-cols-3 gap-1 shadow-xs">
+      <div className="bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 grid grid-cols-3 gap-1 shadow-xs">
         <button
           onClick={() => setActiveSubView('transactions')}
           className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
             activeSubView === 'transactions'
               ? 'bg-blue-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <CreditCard size={14} />
@@ -424,7 +424,7 @@ export default function FinanceTab({
           className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
             activeSubView === 'analytics'
               ? 'bg-blue-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <BarChart3 size={14} />
@@ -436,7 +436,7 @@ export default function FinanceTab({
           className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
             activeSubView === 'khata'
               ? 'bg-blue-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <Users size={14} />

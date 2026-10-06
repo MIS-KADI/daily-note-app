@@ -38,7 +38,7 @@ export default function ReportsTab({
   medicines = [],
   medicineLogs = {},
   finance = [],
-  accounts = { bankBalance: 42500, cashBalance: 6800 },
+  accounts = { bankBalance: 0, cashBalance: 0 },
   khata = [],
   fitness = null,
   lang = 'gu',
@@ -473,13 +473,13 @@ export default function ReportsTab({
         </div>
 
         <div className="grid grid-cols-4 gap-2 pt-1 text-center">
-          <div className="bg-white/80 rounded-xl p-2 border border-teal-100">
-            <span className="text-[9px] text-slate-500 block">{t('steps_today', lang)}</span>
-            <span className="text-xs font-bold text-slate-800">{(fitness?.steps || 4250).toLocaleString()}</span>
+          <div className="bg-white/80 dark:bg-slate-800 rounded-xl p-2 border border-teal-100 dark:border-teal-900/60">
+            <span className="text-[9px] text-slate-500 dark:text-slate-400 block">{t('steps_today', lang)}</span>
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{(fitness?.steps || 0).toLocaleString()}</span>
           </div>
-          <div className="bg-white/80 rounded-xl p-2 border border-teal-100">
-            <span className="text-[9px] text-slate-500 block">{t('calories_burned', lang)}</span>
-            <span className="text-xs font-bold text-orange-600">{fitness?.calories || 220} kcal</span>
+          <div className="bg-white/80 dark:bg-slate-800 rounded-xl p-2 border border-teal-100 dark:border-teal-900/60">
+            <span className="text-[9px] text-slate-500 dark:text-slate-400 block">{t('calories_burned', lang)}</span>
+            <span className="text-xs font-bold text-orange-600 dark:text-orange-400">{fitness?.calories || 0} kcal</span>
           </div>
           <div className="bg-white/80 rounded-xl p-2 border border-teal-100">
             <span className="text-[9px] text-slate-500 block">{t('heart_rate', lang)}</span>

@@ -39,8 +39,8 @@ const DEFAULT_ALARM_SETTINGS = {
 };
 
 const DEFAULT_USER = {
-  name: 'પ્રિય યુઝર',
-  mobile: '0000000001',
+  name: '',
+  mobile: '',
   email: '',
   dob: '',
   isRegistered: true,
@@ -270,23 +270,7 @@ export const storageService = {
       return [];
     }
     try {
-      const parsed = JSON.parse(data);
-      if (this.isDemoMode() && !parsed.some((r) => r.type === 'shopping' || r.id === 'rem-shop-1')) {
-        const demoDefaults = getDefaultReminders(this.getLanguage()).filter((r) => r.type === 'shopping');
-        const merged = [...parsed, ...demoDefaults];
-        localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(merged));
-        return merged;
-      }
-      return parsed.map((r) => {
-        if (r.id === 'rem-1') {
-          return {
-            ...r,
-            title: r.title || 'બેંક ઓફ બરોડા - ચેક જમા કરાવવો',
-            description: r.description || 'નવી ચેકબુકની એન્ટ્રી કરાવવી અને ગ્રાન્ટનો ચેક ક્લિયરન્સમાં નાખવો.',
-          };
-        }
-        return r;
-      });
+      return JSON.parse(data);
     } catch {
       return [];
     }
@@ -351,18 +335,24 @@ export const storageService = {
     const todayStr = new Date().toISOString().split('T')[0];
     const data = localStorage.getItem(STORAGE_KEYS.WATER);
     if (!data) {
-      const initial = { date: todayStr, glasses: 4, target: 8 };
+      const initial = { date: todayStr, glasses: 0, target: 8 };
       localStorage.setItem(STORAGE_KEYS.WATER, JSON.stringify(initial));
       return initial;
     }
-    const parsed = JSON.parse(data);
-    // Reset glasses for a new day automatically!
-    if (parsed.date !== todayStr) {
-      const reset = { date: todayStr, glasses: 0, target: parsed.target || 8 };
-      localStorage.setItem(STORAGE_KEYS.WATER, JSON.stringify(reset));
-      return reset;
+    try {
+      const parsed = JSON.parse(data);
+      // Reset glasses for a new day automatically!
+      if (parsed.date !== todayStr) {
+        const reset = { date: todayStr, glasses: 0, target: parsed.target || 8 };
+        localStorage.setItem(STORAGE_KEYS.WATER, JSON.stringify(reset));
+        return reset;
+      }
+      return parsed;
+    } catch {
+      const initial = { date: todayStr, glasses: 0, target: 8 };
+      localStorage.setItem(STORAGE_KEYS.WATER, JSON.stringify(initial));
+      return initial;
     }
-    return parsed;
   },
 
   saveWater(water) {
@@ -372,16 +362,13 @@ export const storageService = {
   getShopping() {
     const data = localStorage.getItem(STORAGE_KEYS.SHOPPING);
     if (!data) {
-      const initial = [
-        { id: 's-1', item: 'તાજું દૂધ (૫૦૦ ml)', price: 34, isDone: false },
-        { id: 's-2', item: 'લીંબુ અને આદુ', price: 20, isDone: false },
-        { id: 's-3', item: 'બ્રેડ / નાસ્તો', price: 45, isDone: true },
-        { id: 's-4', item: 'ખાંડ ૧ કિલો', price: 44, isDone: false },
-      ];
-      localStorage.setItem(STORAGE_KEYS.SHOPPING, JSON.stringify(initial));
-      return initial;
+      return [];
     }
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch {
+      return [];
+    }
   },
 
   saveShopping(shopping) {
@@ -410,53 +397,65 @@ export const storageService = {
     if (!data) {
       const initial = {
         date: todayStr,
-        steps: 4250,
+        steps: 0,
         stepTarget: 8000,
-        calories: 220,
-        distanceKm: 3.1,
+        calories: 0,
+        distanceKm: 0,
         heartRate: 74,
         bloodPressure: { systolic: 120, diastolic: 80 },
         bloodSugar: { fasting: 94, postMeal: 132 },
         sleepHours: 7.5,
         weightKg: 68,
         heightCm: 170,
-        workouts: [
-          {
-            id: 'w-1',
-            type: 'walk',
-            name: 'સવારનું ચાલવું (Morning Walk)',
-            durationMinutes: 30,
-            calories: 125,
-            time: '06:45',
-          },
-          {
-            id: 'w-2',
-            type: 'gym',
-            name: 'જીમ અને કાર્ડિયો કસરત (Gym & Cardio)',
-            durationMinutes: 25,
-            calories: 160,
-            time: '18:30',
-          },
-        ],
+        workouts: [],
       };
       localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(initial));
       return initial;
     }
-    const parsed = JSON.parse(data);
-    // If new day, roll over target/height/weight/BP but reset daily steps
-    if (parsed.date !== todayStr) {
-      const reset = {
-        ...parsed,
+    try {
+      const parsed = JSON.parse(data);
+      // If new day, roll over target/height/weight/BP but reset daily steps & archive yesterday's steps
+      if (parsed.date !== todayStr) {
+        if (parsed.steps > 0) {
+          try {
+            const hist = this.getWeeklyStepHistory();
+            const yDate = parsed.date || new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            const updatedHist = hist.map((h) => (h.date === yDate ? { ...h, steps: parsed.steps } : h));
+            this.saveWeeklyStepHistory(updatedHist);
+          } catch (e) {
+            console.warn('Archive history error:', e);
+          }
+        }
+        const reset = {
+          ...parsed,
+          date: todayStr,
+          steps: 0,
+          distanceKm: 0,
+          calories: 0,
+          workouts: [],
+        };
+        localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(reset));
+        return reset;
+      }
+      return parsed;
+    } catch {
+      const initial = {
         date: todayStr,
         steps: 0,
-        distanceKm: 0,
+        stepTarget: 8000,
         calories: 0,
+        distanceKm: 0,
+        heartRate: 74,
+        bloodPressure: { systolic: 120, diastolic: 80 },
+        bloodSugar: { fasting: 94, postMeal: 132 },
+        sleepHours: 7.5,
+        weightKg: 68,
+        heightCm: 170,
         workouts: [],
       };
-      localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(reset));
-      return reset;
+      localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(initial));
+      return initial;
     }
-    return parsed;
   },
 
   saveFitness(fitness) {
@@ -476,11 +475,15 @@ export const storageService = {
   getAccounts() {
     const data = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
     if (!data) {
-      const initial = { bankBalance: 42500, cashBalance: 6800 };
+      const initial = { bankBalance: 0, cashBalance: 0 };
       localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(initial));
       return initial;
     }
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch {
+      return { bankBalance: 0, cashBalance: 0 };
+    }
   },
 
   saveAccounts(accounts) {
@@ -498,18 +501,7 @@ export const storageService = {
       return [];
     }
     try {
-      const parsed = JSON.parse(data);
-      return parsed.map((k) => {
-        // Strip legacy dummy numbers or 0000000001 and restore previous numbers
-        let phone = k.phone;
-        if (!phone || phone === '0' || phone === '0000000001' || phone === '+91 98250 11223' || phone === '+91 94280 44556') {
-          phone = k.id === 'kh-2' ? '9428044556' : '9825011223';
-        }
-        // Enforce 10-digit mobile number
-        const digits = String(phone).replace(/\D/g, '');
-        const tenDigit = digits.length > 10 ? digits.slice(-10) : digits;
-        return { ...k, phone: tenDigit || (k.id === 'kh-2' ? '9428044556' : '9825011223') };
-      });
+      return JSON.parse(data);
     } catch {
       return [];
     }
@@ -530,16 +522,7 @@ export const storageService = {
       return [];
     }
     try {
-      const parsed = JSON.parse(data);
-      return parsed.map((ev) => {
-        let phone = ev.phone;
-        if (!phone || phone === '0' || phone === '0000000001' || phone === '+91 98250 11223' || phone === '+91 94280 44556') {
-          phone = ev.type === 'anniversary' ? '9428044556' : '9825011223';
-        }
-        const digits = String(phone).replace(/\D/g, '');
-        const tenDigit = digits.length > 10 ? digits.slice(-10) : digits;
-        return { ...ev, phone: tenDigit || (ev.type === 'anniversary' ? '9428044556' : '9825011223') };
-      });
+      return JSON.parse(data);
     } catch {
       return [];
     }
@@ -551,11 +534,119 @@ export const storageService = {
 
   isDemoMode() {
     const val = localStorage.getItem(STORAGE_KEYS.DEMO_MODE);
-    return val === null ? true : val === 'true';
+    return val === 'true'; // Default is false!
   },
 
   setDemoMode(enabled) {
     localStorage.setItem(STORAGE_KEYS.DEMO_MODE, String(enabled));
+  },
+
+  cleanDefaultDummyDataOnce() {
+    const CLEAN_KEY = 'daily_diary_v17_cleaned_defaults';
+    if (localStorage.getItem(CLEAN_KEY)) return;
+
+    try {
+      // Clean dummy notes
+      const notesData = localStorage.getItem(STORAGE_KEYS.NOTES);
+      if (notesData) {
+        const notes = JSON.parse(notesData);
+        const filtered = notes.filter((n) => !['note-1', 'note-2', 'demo-1'].includes(n.id));
+        this.saveNotes(filtered);
+      }
+
+      // Clean dummy reminders
+      const remData = localStorage.getItem(STORAGE_KEYS.REMINDERS);
+      if (remData) {
+        const rems = JSON.parse(remData);
+        const filtered = rems.filter((r) => !['rem-1', 'rem-2', 'rem-3', 'rem-shop-1'].includes(r.id));
+        this.saveReminders(filtered);
+      }
+
+      // Clean dummy medicines
+      const medData = localStorage.getItem(STORAGE_KEYS.MEDICINES);
+      if (medData) {
+        const meds = JSON.parse(medData);
+        const filtered = meds.filter((m) => !['med-1', 'med-2', 'med-3', 'med-4'].includes(m.id));
+        this.saveMedicines(filtered);
+      }
+
+      // Clean dummy finance
+      const finData = localStorage.getItem(STORAGE_KEYS.FINANCE);
+      if (finData) {
+        const fin = JSON.parse(finData);
+        const filtered = fin.filter((f) => !['fin-1', 'fin-2', 'fin-3', 'fin-4'].includes(f.id));
+        this.saveFinance(filtered);
+      }
+
+      // Clean dummy khata
+      const khataData = localStorage.getItem(STORAGE_KEYS.KHATA);
+      if (khataData) {
+        const kh = JSON.parse(khataData);
+        const filtered = kh.filter((k) => !['kh-1', 'kh-2'].includes(k.id));
+        this.saveKhata(filtered);
+      }
+
+      // Clean dummy events
+      const evData = localStorage.getItem(STORAGE_KEYS.EVENTS);
+      if (evData) {
+        const ev = JSON.parse(evData);
+        const filtered = ev.filter((e) => !['ev-1', 'ev-2'].includes(e.id));
+        this.saveEvents(filtered);
+      }
+
+      // Clean dummy shopping
+      const shopData = localStorage.getItem(STORAGE_KEYS.SHOPPING);
+      if (shopData) {
+        const shop = JSON.parse(shopData);
+        const filtered = shop.filter((s) => !['s-1', 's-2', 's-3', 's-4'].includes(s.id));
+        this.saveShopping(filtered);
+      }
+
+      // Clean dummy accounts (42500, 6800)
+      const accData = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
+      if (accData) {
+        const acc = JSON.parse(accData);
+        if (acc.bankBalance === 42500 && acc.cashBalance === 6800) {
+          this.saveAccounts({ bankBalance: 0, cashBalance: 0 });
+        }
+      }
+
+      // Clean dummy fitness steps (4250)
+      const fitData = localStorage.getItem(STORAGE_KEYS.FITNESS);
+      if (fitData) {
+        const fit = JSON.parse(fitData);
+        if (fit.steps === 4250) {
+          this.saveFitness({ ...fit, steps: 0, distanceKm: 0, calories: 0, workouts: [] });
+        }
+      }
+
+      // Clean dummy water (4)
+      const waterData = localStorage.getItem(STORAGE_KEYS.WATER);
+      if (waterData) {
+        const w = JSON.parse(waterData);
+        if (w.glasses === 4) {
+          this.saveWater({ ...w, glasses: 0 });
+        }
+      }
+
+      // Clean default user mobile '0000000001'
+      const userProfile = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+      if (userProfile) {
+        const u = JSON.parse(userProfile);
+        if (u.mobile === '0000000001') {
+          u.mobile = '';
+          if (u.name === 'પ્રિય યુઝર') u.name = '';
+          this.saveUserProfile(u);
+        }
+      }
+
+      // Disable demo mode
+      this.setDemoMode(false);
+      localStorage.setItem(CLEAN_KEY, 'true');
+    } catch (err) {
+      console.warn('cleanDefaultDummyDataOnce error:', err);
+      localStorage.setItem(CLEAN_KEY, 'true');
+    }
   },
 
   clearAllDemoData() {

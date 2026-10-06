@@ -1018,35 +1018,35 @@ export default function HealthHubTab({
       {activeSubTab === 'fitness' && (
         <div className="space-y-4">
           {/* Main Step Ring & Metrics Card */}
-          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-teal-100 text-teal-700">
+                <div className="p-2 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300">
                   <Footprints size={20} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800">{t('steps_today', lang)}</h3>
-                  <p className="text-[11px] text-slate-500">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t('steps_today', lang)}</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {t('step_goal', lang)}: {stepTarget.toLocaleString()}
                   </p>
                 </div>
               </div>
-              <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-teal-50 text-teal-700 border border-teal-200">
+              <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60">
                 {stepProgress}% {t('completed', lang)}
               </span>
             </div>
 
             {/* Circular / Large Step Display */}
-            <div className="bg-gradient-to-br from-slate-50 to-teal-50/40 rounded-2xl p-4 text-center border border-teal-100/60">
-              <span className="text-4xl font-extrabold text-slate-800 tracking-tight block">
+            <div className="bg-gradient-to-br from-slate-50 to-teal-50/40 dark:from-slate-800/80 dark:to-slate-800 rounded-2xl p-4 text-center border border-teal-100/60 dark:border-slate-700">
+              <span className="text-4xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight block">
                 {steps.toLocaleString()}
               </span>
-              <span className="text-xs font-semibold text-slate-500 block mt-0.5">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mt-0.5">
                 {steps.toLocaleString()} / {stepTarget.toLocaleString()}
               </span>
 
               {/* Progress bar */}
-              <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden mt-3">
+              <div className="w-full bg-slate-200 dark:bg-slate-700 h-3 rounded-full overflow-hidden mt-3">
                 <div
                   className="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${stepProgress}%` }}
@@ -1054,19 +1054,19 @@ export default function HealthHubTab({
               </div>
 
               {/* Sub metrics: Distance & Active Walking Calories */}
-              <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-slate-200/70 text-left">
+              <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-700/80 text-left">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">📏</span>
                   <div>
-                    <span className="text-[10px] text-slate-500 block">{t('distance_walked', lang)}</span>
-                    <span className="text-sm font-bold text-slate-800">{distanceKm} km</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{t('distance_walked', lang)}</span>
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{distanceKm} km</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🔥</span>
                   <div>
-                    <span className="text-[10px] text-slate-500 block">{t('walking_calories', lang)}</span>
-                    <span className="text-sm font-bold text-orange-600">{stepCalories} kcal</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{t('walking_calories', lang)}</span>
+                    <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{stepCalories} kcal</span>
                   </div>
                 </div>
               </div>
@@ -1074,13 +1074,13 @@ export default function HealthHubTab({
 
             {/* Quick Step Buttons */}
             <div>
-              <p className="text-xs font-bold text-slate-700 mb-2">{t('quick_steps', lang)}</p>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">{t('quick_steps', lang)}</p>
               <div className="grid grid-cols-4 gap-2">
                 {[250, 500, 1000, 2000].map((inc) => (
                   <button
                     key={inc}
                     onClick={() => handleAddSteps(inc)}
-                    className="py-2 px-1 rounded-xl bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-300 text-xs font-bold text-slate-700 active:scale-95 transition"
+                    className="py-2 px-1 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-teal-300 text-xs font-bold text-slate-700 dark:text-slate-200 active:scale-95 transition"
                   >
                     +{inc}
                   </button>

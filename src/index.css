@@ -64,8 +64,21 @@
 /* ========================================================= */
 /* DARK THEME SYSTEM-WIDE HIGH CONTRAST & LEGIBILITY OVERHAUL */
 /* ========================================================= */
+html.dark,
+html.dark body,
+html.dark-theme,
+html.dark-theme body,
+body.dark,
+body.dark-theme,
 .dark-theme,
 .dark {
+  background-color: #0b0f19 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark-theme.mobile-app-wrapper,
+.dark .mobile-app-wrapper,
+.mobile-app-wrapper.dark {
   background-color: #0b0f19 !important;
   color: #f1f5f9 !important;
 }

@@ -1099,12 +1099,12 @@ export default function NotesTab({
 
               const fontClass =
                 note.fontFamily === 'handwriting'
-                  ? 'font-handwriting text-slate-800'
+                  ? 'font-handwriting text-slate-800 dark:text-slate-200'
                   : note.fontFamily === 'serif'
-                  ? 'font-serif-diary text-slate-900'
+                  ? 'font-serif-diary text-slate-900 dark:text-slate-100'
                   : note.fontFamily === 'mono'
-                  ? 'font-mono-diary text-slate-800'
-                  : 'font-sans-diary text-slate-700';
+                  ? 'font-mono-diary text-slate-800 dark:text-slate-200'
+                  : 'font-sans-diary text-slate-700 dark:text-slate-300';
 
               const sizeClass =
                 note.fontSize === 'sm'
@@ -1118,8 +1118,10 @@ export default function NotesTab({
               return (
                 <div
                   key={note.id}
-                  className={`bg-white rounded-3xl p-4 sm:p-5 border transition-all shadow-xs space-y-2.5 relative overflow-hidden ${
-                    note.isPinned ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-200 hover:border-slate-300'
+                  className={`bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border transition-all shadow-xs space-y-2.5 relative overflow-hidden ${
+                    note.isPinned
+                      ? 'border-amber-300 ring-2 ring-amber-100 dark:border-amber-500/80 dark:ring-amber-950/60'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
                   {/* Note Card Header */}
@@ -1128,43 +1130,43 @@ export default function NotesTab({
                       <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                         {/* Mood Badge - only show for personal/diary notes */}
                         {note.mood && !['ખરીદી', 'Shopping', 'खरीदारी', 'કામ', 'Work', 'काम'].includes(note.category) && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200/80 font-bold">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300">
                             {note.mood === 'awesome' ? '🤩 ઉત્સાહી' : note.mood === 'neutral' ? '😌 શાંત' : note.mood === 'tired' ? '😔 થાકેલા' : note.mood === 'stressed' ? '😤 તણાવ' : '😊 ખુશ'}
                           </span>
                         )}
 
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                           {note.category}
                         </span>
 
                         {isFuture && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 flex items-center gap-1">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 flex items-center gap-1">
                             <Calendar size={11} />
                             {t('advance_badge', lang)}: {note.date}
                           </span>
                         )}
 
                         {isToday && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300">
                             {t('today_notes', lang)}
                           </span>
                         )}
 
                         {!isToday && !isFuture && note.date && (
-                          <span className="text-[10px] font-semibold text-slate-400">
+                          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                             {note.date}
                           </span>
                         )}
 
                         {note.location && (
-                          <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200/60">
+                          <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200/60 dark:border-rose-900/60">
                             <MapPin size={10} />
                             {note.location}
                           </span>
                         )}
                       </div>
 
-                      <h3 className={`text-sm sm:text-base font-bold text-slate-900 leading-snug ${note.fontFamily === 'serif' ? 'font-serif-diary' : ''}`}>
+                      <h3 className={`text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-snug ${note.fontFamily === 'serif' ? 'font-serif-diary' : ''}`}>
                         {note.title}
                       </h3>
                     </div>
