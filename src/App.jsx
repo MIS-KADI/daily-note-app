@@ -967,6 +967,8 @@ export default function App() {
             onToggleStepSensor={handleToggleStepSensor}
             onStepIncrement={handleStepIncrement}
             onUpdateFitness={handleUpdateFitness}
+            water={water}
+            onUpdateWater={handleUpdateWater}
             lang={lang}
             initialSubTab={activeTab === 'medicine' ? 'medicines' : 'fitness'}
             isDemoMode={isDemoMode}

@@ -16,7 +16,6 @@ import {
   Tag,
   Share2,
   Smile,
-  Keyboard,
   Type,
   Copy,
   Bold,
@@ -71,7 +70,6 @@ export default function NotesTab({
   const [editingNote, setEditingNote] = useState(null);
   const [isMoodModalOpen, setIsMoodModalOpen] = useState(false);
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
-  const [isOnThisDayOpen, setIsOnThisDayOpen] = useState(false);
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
   const [activePhotoPreview, setActivePhotoPreview] = useState(null);
 
@@ -90,7 +88,6 @@ export default function NotesTab({
 
   // Toggles inside Form
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showKeyboardHelper, setShowKeyboardHelper] = useState(false);
   const [showPromptsDrawer, setShowPromptsDrawer] = useState(false);
   const [selectedEmojiCat, setSelectedEmojiCat] = useState('smilies');
   const [copiedNoteId, setCopiedNoteId] = useState(null);
@@ -227,96 +224,6 @@ export default function NotesTab({
 
   const quickShoppingEmojis = ['🛒', '🛍️', '🥬', '🍎', '🥛', '🧀', '🍞', '💊', '🧼', '🧹', '💰', '🧾', '📦', '✅', '❌'];
   const quickWorkEmojis = ['✅', '❌', '⏳', '⏰', '📞', '✉️', '💻', '📁', '📊', '🏦', '🤝', '📌', '🎯', '⚠️', '💼'];
-
-  // Language-Adaptive Keyboard Helper Dataset
-  const keyboardHelpers = {
-    gu: {
-      matras: [
-        { label: 'ા', name: 'કાનો' },
-        { label: 'િ', name: 'હ્રસ્વ ઇ' },
-        { label: 'ી', name: 'દીર્ઘ ઈ' },
-        { label: 'ુ', name: 'હ્રસ્વ ઉ' },
-        { label: 'ૂ', name: 'દીર્ઘ ઊ' },
-        { label: 'ૃ', name: 'ઋ' },
-        { label: 'ે', name: 'એક માત્ર' },
-        { label: 'ૈ', name: 'બે માત્ર' },
-        { label: 'ો', name: 'કાનો-માત્ર' },
-        { label: 'ૌ', name: 'કાનો-બે માત્ર' },
-        { label: 'ં', name: 'અનુસ્વાર' },
-        { label: 'ઃ', name: 'વિસર્ગ' },
-        { label: '્', name: 'હલંત / જોડાક્ષર' },
-        { label: 'ૐ', name: 'ઓમ' },
-        { label: '₹', name: 'રૂપિયો' },
-        { label: '।', name: 'પૂર્ણવિરામ' },
-      ],
-      vowels: ['અ', 'આ', 'ઇ', 'ઈ', 'ઉ', 'ઊ', 'એ', 'ઐ', 'ઓ', 'ઔ', 'ઋ'],
-      conjuncts: ['ક્ષ', 'જ્ઞ', 'શ્ર', 'ત્ર', 'દ્વ', 'દ્ધ', 'દ્ભ', 'હ્મ'],
-      consonants: [
-        'ક', 'ખ', 'ગ', 'ઘ', 'ચ', 'છ', 'જ', 'ઝ',
-        'ટ', 'ઠ', 'ડ', 'ઢ', 'ણ', 'ત', 'થ', 'દ',
-        'ધ', 'ન', 'પ', 'ફ', 'બ', 'ભ', 'મ', 'ય',
-        'ર', 'લ', 'વ', 'શ', 'ષ', 'સ', 'હ', 'ળ',
-      ],
-    },
-    hi: {
-      matras: [
-        { label: 'ा', name: 'आ' },
-        { label: 'ि', name: 'इ' },
-        { label: 'ी', name: 'ई' },
-        { label: 'ु', name: 'उ' },
-        { label: 'ू', name: 'ऊ' },
-        { label: 'ृ', name: 'ऋ' },
-        { label: 'े', name: 'ए' },
-        { label: 'ै', name: 'ऐ' },
-        { label: 'ो', name: 'ओ' },
-        { label: 'ौ', name: 'औ' },
-        { label: 'ं', name: 'अनुस्वार' },
-        { label: 'ँ', name: 'चन्द्रबिन्दु' },
-        { label: 'ः', name: 'विसर्ग' },
-        { label: '्', name: 'हलंत' },
-        { label: 'ॐ', name: 'ओम' },
-        { label: '₹', name: 'रुपया' },
-        { label: '।', name: 'विराम' },
-      ],
-      vowels: ['अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', 'ए', 'ऐ', 'ओ', 'औ', 'ऋ'],
-      conjuncts: ['क्ष', 'त्र', 'ज्ञ', 'श्र', 'ड़', 'ढ़', 'द्व', 'द्ध'],
-      consonants: [
-        'क', 'ख', 'ग', 'घ', 'च', 'छ', 'ज', 'झ',
-        'ट', 'ठ', 'ड', 'ढ', 'ण', 'त', 'थ', 'द',
-        'ध', 'न', 'प', 'फ', 'ब', 'भ', 'म', 'य',
-        'र', 'ल', 'व', 'श', 'ष', 'स', 'ह',
-      ],
-    },
-    en: {
-      symbols: ['“', '”', '‘', '’', '—', '…', '•', '★', '❤️', '₹', '$', '€', '£', '✓', '©', '®', '™'],
-      accents: ['é', 'è', 'ê', 'ë', 'á', 'à', 'ä', 'ñ', 'í', 'ó', 'ö', 'ú', 'ü', 'ß', '¿', '¡'],
-    },
-    es: {
-      symbols: ['¿', '¡', '“', '”', '—', '…', '•', '★', '❤️', '€', '$', '✓'],
-      accents: ['á', 'é', 'í', 'ó', 'ú', 'ñ', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'ü', 'Ü'],
-    },
-    fr: {
-      symbols: ['«', '»', '“', '”', '—', '…', '•', '★', '❤️', '€', '$', '✓'],
-      accents: ['é', 'è', 'ê', 'ë', 'à', 'â', 'ç', 'î', 'ï', 'ô', 'ù', 'û', 'ü', 'œ', 'æ'],
-    },
-    de: {
-      symbols: ['„', '“', '«', '»', '—', '…', '•', '★', '❤️', '€', '$', '✓'],
-      accents: ['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'],
-    },
-    ar: {
-      symbols: ['،', '؛', '؟', '«', '»', '•', '✨', '❤️', 'ﷺ', 'ﷻ', '٪'],
-      matras: [
-        { label: 'َ', name: 'فتحة' },
-        { label: 'ً', name: 'تنوين فتح' },
-        { label: 'ُ', name: 'ضمة' },
-        { label: 'ٌ', name: 'تنوين ضم' },
-        { label: 'ِ', name: 'كسرة' },
-        { label: 'ٍ', name: 'تنوين كسر' },
-        { label: 'ْ', name: 'سكون' },
-        { label: 'ّ', name: 'شدة' },
-      ],
-    },
-  };
 
   const fontOptions = [
     { id: 'handwriting', label: t('font_handwriting', lang), fontClass: 'font-handwriting', preview: '✍️' },
@@ -572,7 +479,6 @@ export default function NotesTab({
     setLocation('');
     setAudio('');
     setShowEmojiPicker(false);
-    setShowKeyboardHelper(false);
     setShowPromptsDrawer(false);
     setIsModalOpen(true);
   };
@@ -592,7 +498,6 @@ export default function NotesTab({
     setLocation(note.location || '');
     setAudio(note.audio || '');
     setShowEmojiPicker(false);
-    setShowKeyboardHelper(false);
     setShowPromptsDrawer(false);
     setIsModalOpen(true);
   };
@@ -681,35 +586,6 @@ export default function NotesTab({
     }
   };
 
-  // Find "On This Day" Memory
-  const getOnThisDayMemory = () => {
-    const [, todayM, todayD] = todayStr.split('-');
-    const pastYearNote = notes.find((n) => {
-      if (!n.date) return false;
-      const [y, m, d] = n.date.split('-');
-      return m === todayM && d === todayD && y !== todayStr.split('-')[0];
-    });
-
-    if (pastYearNote) {
-      const yearsAgo = Number(todayStr.split('-')[0]) - Number(pastYearNote.date.split('-')[0]);
-      return {
-        note: pastYearNote,
-        label: lang === 'gu' ? `✨ ${yearsAgo} વર્ષ પહેલાં આજના દિવસે` : `✨ ${yearsAgo} year(s) ago today`,
-      };
-    }
-
-    if (notes.length > 0) {
-      const oldest = [...notes].sort((a, b) => new Date(a.date) - new Date(b.date))[0];
-      return {
-        note: oldest,
-        label: lang === 'gu' ? '✨ અગાઉની યાદગાર ક્ષણ (Throwback Memory)' : '✨ Memorable Throwback',
-      };
-    }
-    return null;
-  };
-
-  const onThisDay = getOnThisDayMemory();
-
   // Save Reminder Config
   const handleSaveReminderSettings = (e) => {
     e.preventDefault();
@@ -794,9 +670,6 @@ export default function NotesTab({
     return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
   });
 
-  const futureCount = notes.filter((n) => n.date > todayStr).length;
-  const activeHelper = keyboardHelpers[lang] || keyboardHelpers.gu;
-
   // Calendar calculations
   const daysInCalMonth = new Date(calYear, calMonth + 1, 0).getDate();
   const firstDayOfCalMonth = new Date(calYear, calMonth, 1).getDay();
@@ -822,7 +695,7 @@ export default function NotesTab({
             </div>
           </div>
           <button
-            onClick={() => handleOpenAdd(todayStr)}
+            onClick={() => handleOpenAdd(viewMode === 'calendar' || dateFilterMode === 'by_date' ? selectedDate : todayStr)}
             className="flex items-center gap-1 bg-white hover:bg-blue-50 text-blue-700 px-3.5 py-2 rounded-2xl text-xs font-bold shadow-md active:scale-95 transition"
           >
             <Plus size={16} />
@@ -886,42 +759,11 @@ export default function NotesTab({
             <span className="text-sm font-extrabold">{notes.filter((n) => n.date === todayStr).length}</span>
           </div>
           <div className="bg-white/10 rounded-xl p-2 backdrop-blur-xs">
-            <span className="text-[10px] text-cyan-200 block">{t('advance_notes', lang)}</span>
-            <span className="text-sm font-extrabold text-cyan-300">{futureCount}</span>
+            <span className="text-[10px] text-blue-200 block">📌 {t('pinned_notes', lang)}</span>
+            <span className="text-sm font-extrabold">{notes.filter((n) => n.isPinned).length}</span>
           </div>
         </div>
       </div>
-
-      {/* ======================================================= */}
-      {/* "ON THIS DAY" (MEMORIES / સ્મૃતિઓ) BANNER              */}
-      {/* ======================================================= */}
-      {onThisDay && (
-        <div
-          onClick={() => setIsOnThisDayOpen(true)}
-          className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-3xl p-4 text-white shadow-md cursor-pointer hover:shadow-lg transition active:scale-98 flex items-center justify-between gap-3 relative overflow-hidden"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shrink-0">
-              📸
-            </div>
-            <div>
-              <span className="text-[11px] font-extrabold text-amber-100 flex items-center gap-1 uppercase tracking-wider">
-                <Sparkles size={12} className="text-yellow-200" />
-                {onThisDay.label}
-              </span>
-              <h4 className="text-sm font-black text-white line-clamp-1">
-                "{onThisDay.note.title}"
-              </h4>
-              <p className="text-[11px] text-amber-100 line-clamp-1 opacity-90">
-                {onThisDay.note.content}
-              </p>
-            </div>
-          </div>
-          <button className="px-3 py-1.5 bg-white text-amber-800 rounded-xl text-xs font-black shrink-0 shadow-xs">
-            {lang === 'gu' ? 'જુઓ' : 'View'}
-          </button>
-        </div>
-      )}
 
       {/* ======================================================= */}
       {/* VIEW MODE SWITCHER: LIST, CALENDAR, TIMELINE            */}
@@ -1061,16 +903,24 @@ export default function NotesTab({
             })}
           </div>
 
-          {/* Selected Date Summary */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-700">
-              📅 {selectedDate}: {notes.filter((n) => n.date === selectedDate).length} {lang === 'gu' ? 'નોંધ' : 'notes'}
-            </span>
+          {/* Selected Date Summary & Add Note Action Card */}
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800/80 dark:to-slate-800 p-3.5 rounded-2xl border border-blue-100 dark:border-slate-700">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 bg-blue-600 text-white rounded-xl text-base shadow-xs">📅</span>
+              <div>
+                <span className="text-xs font-black text-slate-900 dark:text-slate-100 block">
+                  {selectedDate} {selectedDate === todayStr ? `(${t('filter_today', lang)})` : ''}
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
+                  {notes.filter((n) => n.date === selectedDate).length} {lang === 'gu' ? 'નોંધ લખાયેલી છે' : 'notes written'}
+                </span>
+              </div>
+            </div>
             <button
               onClick={() => handleOpenAdd(selectedDate)}
-              className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition flex items-center justify-center gap-1.5"
             >
-              <Plus size={14} />
+              <Plus size={16} />
               <span>{t('add_note_on_date', lang)}</span>
             </button>
           </div>
@@ -1079,14 +929,14 @@ export default function NotesTab({
 
       {/* Date Filter Tabs for List & Timeline View */}
       {viewMode !== 'calendar' && (
-        <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+        <div className="bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
           <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-none text-xs">
             <button
               onClick={() => setDateFilterMode('all')}
               className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
                 dateFilterMode === 'all'
                   ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               {t('filter_all', lang)} ({notes.length})
@@ -1097,21 +947,10 @@ export default function NotesTab({
               className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
                 dateFilterMode === 'today'
                   ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               {t('filter_today', lang)}
-            </button>
-
-            <button
-              onClick={() => setDateFilterMode('future')}
-              className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
-                dateFilterMode === 'future'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              {t('filter_future', lang)} ({futureCount})
             </button>
 
             <button
@@ -1119,7 +958,7 @@ export default function NotesTab({
               className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition flex items-center gap-1 ${
                 dateFilterMode === 'by_date'
                   ? 'bg-cyan-600 text-white shadow-2xs'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               <Calendar size={13} />
@@ -1128,19 +967,22 @@ export default function NotesTab({
           </div>
 
           {dateFilterMode === 'by_date' && (
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-              <span className="text-xs text-slate-500 font-semibold">{t('select_date_label', lang)}</span>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="text-xs font-bold p-1.5 rounded-xl border border-slate-200 bg-slate-50"
-              />
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-slate-800/80 dark:to-slate-800 p-2.5 rounded-2xl border border-cyan-100 dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-700 dark:text-slate-200 font-bold">{t('select_date_label', lang)}:</span>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="text-xs font-bold p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-2xs"
+                />
+              </div>
               <button
                 onClick={() => handleOpenAdd(selectedDate)}
-                className="text-xs font-bold text-blue-600 hover:underline"
+                className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition flex items-center gap-1.5"
               >
-                {t('add_note_on_date', lang)}
+                <Plus size={14} />
+                <span>{t('add_note_on_date', lang)}</span>
               </button>
             </div>
           )}
@@ -1501,45 +1343,6 @@ export default function NotesTab({
                   </button>
                 </div>
               </div>
-
-              {/* Mood Selector Row - ONLY for Diary / Personal / Thoughts, HIDDEN for Shopping & Work */}
-              {!isShoppingOrWork && (
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                    <span>આજનો મૂડ (Today's Mood):</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const detected = streakService.detectSentimentMood(content);
-                        if (detected) setMood(detected);
-                      }}
-                      className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1"
-                    >
-                      <Sparkles size={11} />
-                      <span>AI મૂડ ઓળખો</span>
-                    </button>
-                  </label>
-                  <div className="grid grid-cols-5 gap-1 text-center">
-                    {MOODS.map((m) => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setMood(m.id)}
-                        className={`p-1.5 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-0.5 ${
-                          mood === m.id
-                            ? 'bg-blue-50 border-blue-400 text-blue-900 ring-2 ring-blue-100'
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="text-base">{m.emoji}</span>
-                        <span className="text-[10px] truncate max-w-full">
-                          {m.id === 'good' ? 'ખુશ' : m.id === 'awesome' ? 'ઉત્સાહી' : m.id === 'neutral' ? 'શાંત' : m.id === 'tired' ? 'થાકેલા' : 'તણાવ'}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Note Title */}
               <div>
@@ -2012,10 +1815,7 @@ export default function NotesTab({
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={() => {
-                          setShowEmojiPicker(!showEmojiPicker);
-                          if (!showEmojiPicker) setShowKeyboardHelper(false);
-                        }}
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition border ${
                           showEmojiPicker
                             ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs'
@@ -2024,22 +1824,6 @@ export default function NotesTab({
                       >
                         <Smile size={14} className="text-amber-500" />
                         <span>{t('quick_emojis', lang)}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowKeyboardHelper(!showKeyboardHelper);
-                          if (!showKeyboardHelper) setShowEmojiPicker(false);
-                        }}
-                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold transition border ${
-                          showKeyboardHelper
-                            ? 'bg-indigo-100 border-indigo-300 text-indigo-900 shadow-2xs'
-                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                        }`}
-                      >
-                        <Keyboard size={14} className="text-indigo-600" />
-                        <span>{t('keyboard_helper', lang)}</span>
                       </button>
                     </div>
 
@@ -2104,98 +1888,6 @@ export default function NotesTab({
                           </button>
                         ))}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Expandable Smart Language Keyboard Bar */}
-                  {showKeyboardHelper && (
-                    <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-200 space-y-2 animate-in fade-in zoom-in-95">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-indigo-900 flex items-center gap-1">
-                          <Keyboard size={13} className="text-indigo-600" />
-                          <span>{t('matra_helper', lang)} ({lang.toUpperCase()}):</span>
-                        </span>
-                        <span className="text-[10px] text-indigo-600 font-semibold">
-                          {lang === 'gu' ? 'અક્ષર પાછળ માત્રા જોડવા ક્લિક કરો' : 'अक्षर के साथ मात्रा जोड़ें'}
-                        </span>
-                      </div>
-
-                      {activeHelper.matras && (
-                        <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
-                          {activeHelper.matras.map((m, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => insertAtCursor(m.label)}
-                              className="min-w-[34px] h-8 px-2 flex items-center justify-center text-sm font-extrabold bg-indigo-50/70 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-100 transition active:scale-90"
-                              title={m.name}
-                            >
-                              {m.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {activeHelper.vowels && (
-                        <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
-                          <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
-                            {lang === 'gu' ? 'મુખ્ય સ્વરો & જોડાક્ષરો:' : 'स्वर व संयुक्त वर्ण:'}
-                          </span>
-                          {activeHelper.vowels.map((v, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => insertAtCursor(v)}
-                              className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-slate-50 hover:bg-blue-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
-                            >
-                              {v}
-                            </button>
-                          ))}
-                          {activeHelper.conjuncts?.map((c, idx) => (
-                            <button
-                              key={'c-' + idx}
-                              type="button"
-                              onClick={() => insertAtCursor(c)}
-                              className="min-w-[32px] h-7 px-1.5 flex items-center justify-center text-xs font-bold bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-900 rounded-lg border border-amber-200 transition active:scale-90"
-                            >
-                              {c}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {activeHelper.consonants && (
-                        <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70 max-h-28 overflow-y-auto">
-                          <span className="text-[10px] font-bold text-slate-400 w-full mb-0.5">
-                            {lang === 'gu' ? 'વ્યંજનો:' : 'व्यंजन:'}
-                          </span>
-                          {activeHelper.consonants.map((k, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => insertAtCursor(k)}
-                              className="w-7 h-7 flex items-center justify-center text-xs font-bold bg-slate-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
-                            >
-                              {k}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {activeHelper.symbols && (
-                        <div className="flex flex-wrap gap-1 bg-white p-2 rounded-xl border border-indigo-200/70">
-                          {activeHelper.symbols.map((s, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => insertAtCursor(s)}
-                              className="min-w-[32px] h-8 px-2 flex items-center justify-center text-sm font-bold bg-slate-50 hover:bg-indigo-600 hover:text-white rounded-lg border border-slate-200 transition active:scale-90"
-                            >
-                              {s}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   )}
                 </>
@@ -2447,54 +2139,6 @@ export default function NotesTab({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================= */}
-      {/* "ON THIS DAY" STORY POPUP MODAL                         */}
-      {/* ======================================================= */}
-      {isOnThisDayOpen && onThisDay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/70 backdrop-blur-xs">
-          <div className="bg-gradient-to-b from-amber-50 to-white rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 border border-amber-200 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b pb-3 border-amber-200/60">
-              <span className="text-xs font-black text-amber-900 flex items-center gap-1.5 uppercase">
-                <Sparkles size={14} className="text-yellow-600" />
-                {onThisDay.label}
-              </span>
-              <button
-                onClick={() => setIsOnThisDayOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              <span className="text-[11px] font-bold text-amber-700 block">
-                📅 {onThisDay.note.date} • {onThisDay.note.category}
-              </span>
-              <h3 className="text-lg font-black text-slate-900 leading-snug">
-                {onThisDay.note.title}
-              </h3>
-              <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-medium">
-                {onThisDay.note.content}
-              </p>
-              {onThisDay.note.photo && (
-                <img
-                  src={onThisDay.note.photo}
-                  alt="Past memory"
-                  className="w-full max-h-56 object-cover rounded-2xl border border-amber-200"
-                />
-              )}
-            </div>
-
-            <button
-              onClick={() => setIsOnThisDayOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs"
-            >
-              {lang === 'gu' ? 'સરસ! બંધ કરો' : 'Wonderful! Close'}
-            </button>
           </div>
         </div>
       )}

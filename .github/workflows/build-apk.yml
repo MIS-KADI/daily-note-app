@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.15.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.16.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.15.apk
+            daily-diary-v1.0.16.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,21 +68,26 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.15
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.15 Interactive Shopping Checklist & Demo Entries)"
+          tag_name: v1.0.16
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.16 Clean UI, Health Hub Water Tracker & Privacy Policy)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.15)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.16)
 
             આ નવા વર્ઝનમાં કરવામાં આવેલા વિશેષ સુધારા:
-            - **ઇન્ટરેક્ટિવ ખરીદી યાદી / ચેકલિસ્ટ (Interactive Shopping Checklist):** નવી ખરીદી યાદી ઉમેર્યા પછી કાર્ડ પર માત્ર વિષય જ દેખાતો હતો અને ખરીદીની વિગત છુપાઈ જતી હતી તે બગ સંપૂર્ણ સોલ્વ કર્યો છે. હવે દરેક વસ્તુ ચેકબોક્સ સાથે સુંદર રીતે દેખાય છે અને તેના પર ક્લિક કરીને ટીક / અનટીક કરી શકાય છે.
-            - **લાઈવ પ્રોગ્રેસ બાર:** કેટલી વસ્તુઓ ખરીદાઈ અને કેટલી બાકી છે તેનો ટકાવારી સાથેનો પ્રોગ્રેસ બાર કાર્ડ પર લાઈવ અપડેટ થશે.
-            - **૩ નવી ડેમો ખરીદી એન્ટ્રીઓ (3 New Demo Shopping Entries):** કરિયાણું, શાકભાજી-ફળો અને ડેરી પ્રોડક્ટ્સની ૩ નવી ડેમો ચેકલિસ્ટ એન્ટ્રીઓ ઉમેરી આપી છે.
-            - **વોટ્સએપ શેરિંગ અપગ્રેડ:** ખરીદીની આખી યાદી ચેકલિસ્ટ સાથે વોટ્સએપ પર એક જ ક્લિકથી શેર કરી શકાશે.
-            - **સુપર લાઇટવેઇટ સાઈઝ (<8 MB) & સ્મૂથ વર્કિંગ.**
+            - **આરોગ્ય વિભાગમાં ફિટનેસ અને વોટર ટ્રેકર (Health Hub):** હોમ પેજ પરથી ફિટનેસ અને વોટર ટ્રેકર હટાવીને સીધા હેલ્થ વિભાગમાં લઈ લીધા છે.
+            - **હોમ ટેબમાંથી ડાયરી સેક્શન રિમૂવ:** ડાયરીનું અલગ ટેબ હોવાથી હોમ પેજ પરથી ડાયરી પ્રિવ્યુ હટાવી દીધો છે.
+            - **ડાયરીમાં તારીખ સિલેક્ટ કરીને નવી નોંધ ઉમેરવાનું ફિક્સ:** કેલેન્ડર કે તારીખ ફિલ્ટરમાંથી કોઈપણ તારીખ સિલેક્ટ કરતી વખતે સીધું "આ તારીખે નવી નોંધ લખો" નું પ્રમોટ બટન ઉપલબ્ધ કર્યું.
+            - **અનાવશ્યક વિગતો દૂર:**
+              1. અગાઉની યાદગાર ક્ષણ (Throwback Memory) કાર્ડ અને પોપઅપ રિમૂવ કર્યું.
+              2. એડવાન્સ નોંધો (Advance Notes) ફિલ્ટર અને કાઉન્ટ રિમૂવ કર્યું.
+              3. નોંધ લખતી વખતે મૂડ સિલેક્ટર (Today's Mood) રિમૂવ કર્યું.
+              4. કીબોર્ડ & માત્રા સહાયક (Keyboard Helper) બટન અને ડ્રોઅર રિમૂવ કર્યું.
+            - **પ્રોફાઇલ ટેબમાં પ્રાઇવસી પોલિસી (Privacy Policy):** ૧૦૦% ઓફલાઇન, લોકલ સ્ટોરેજ અને ડેટા સિક્યોરિટીની સંપૂર્ણ પ્રાઇવસી પોલિસી કાર્ડ અને મોડલ ઉમેરી આપ્યા છે.
+            - **અલ્ટ્રા લાઇટવેઇટ સાઈઝ (<8 MB) & સ્મૂથ ફાસ્ટ પર્ફોર્મન્સ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.15.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.16.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.15.apk
+            daily-diary-v1.0.16.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

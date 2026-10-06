@@ -11,7 +11,6 @@ import {
   Building2,
   Users,
   ChevronRight,
-  Droplets,
   Plus,
   Minus,
   Sparkles,
@@ -20,19 +19,13 @@ import {
   ShieldAlert,
   Activity,
   HeartPulse,
-  Footprints,
-  Flame,
   Heart,
   MessageCircle,
-  Smartphone,
-  Play,
-  Square,
   X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t } from '../../services/i18n';
 import { whatsappService } from '../../services/whatsappService';
-import { pedometerService } from '../../services/pedometerService';
 import MoodTrackerCard from '../MoodTrackerCard';
 
 export default function HomeTab({
@@ -86,29 +79,6 @@ export default function HomeTab({
 
   const balance = totalIncome - totalExpense;
 
-  // Water calculation
-  const glasses = water?.glasses || 0;
-  const targetGlasses = water?.target || 8;
-  const waterPct = Math.min(100, Math.round((glasses / targetGlasses) * 100));
-
-  const handleAddWater = () => {
-    const next = glasses + 1;
-    onUpdateWater({ ...water, glasses: next });
-    if (next === targetGlasses) {
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.7 },
-      });
-    }
-  };
-
-  const handleMinusWater = () => {
-    if (glasses > 0) {
-      onUpdateWater({ ...water, glasses: glasses - 1 });
-    }
-  };
-
   // Locale-formatted date
   const localeMap = { gu: 'gu-IN', hi: 'hi-IN', en: 'en-US' };
   const dateFormatted = new Date().toLocaleDateString(localeMap[lang] || 'gu-IN', {
@@ -118,74 +88,12 @@ export default function HomeTab({
     year: 'numeric',
   });
 
-  // Fitness & Cardio Calculations
-  const fitnessSteps = fitness?.steps || 0;
-  const fitnessTarget = fitness?.stepTarget || 8000;
-  const stepPct = Math.min(100, Math.round((fitnessSteps / fitnessTarget) * 100));
-  const fitnessCalories = fitness?.calories || Math.round(fitnessSteps * 0.045);
-  const fitnessHeartRate = fitness?.heartRate || 74;
-  const fitnessDistance = fitness?.distanceKm || Number(((fitnessSteps * 0.76) / 1000).toFixed(1));
-
   // Events & Celebrations (Birthdays & Anniversaries)
   const todayMMDD = new Date().toISOString().slice(5, 10);
   const tomorrowMMDD = new Date(Date.now() + 86400000).toISOString().slice(5, 10);
 
   const todayEvents = (events || []).filter((e) => (e.date || '').slice(5, 10) === todayMMDD);
   const tomorrowEvents = (events || []).filter((e) => (e.date || '').slice(5, 10) === tomorrowMMDD);
-
-  // Modal & Sync Controls
-  const [isSyncModalOpen, setIsSyncModalOpen] = React.useState(false);
-  const [customStepsInput, setCustomStepsInput] = React.useState('');
-
-  const toggleStepSensor = () => {
-    if (typeof onToggleStepSensor === 'function') {
-      onToggleStepSensor();
-    }
-  };
-
-  const handleApplySyncSteps = (stepsCount) => {
-    const s = Number(stepsCount);
-    if (!isNaN(s) && s >= 0) {
-      const nextKm = Number(((s * 0.76) / 1000).toFixed(2));
-      const workoutCalories = (fitness?.workouts || []).reduce(
-        (sum, w) => sum + Number(w.calories || 0),
-        0
-      );
-      const nextCal = Math.round(s * 0.045) + workoutCalories;
-      onUpdateFitness?.({
-        ...fitness,
-        steps: s,
-        distanceKm: nextKm,
-        calories: nextCal,
-      });
-      setIsSyncModalOpen(false);
-      setCustomStepsInput('');
-      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
-    }
-  };
-
-  const handleAddQuickSteps = () => {
-    if (typeof onStepIncrement === 'function') {
-      onStepIncrement(500);
-    } else {
-      const nextSteps = fitnessSteps + 500;
-      const nextKm = Number(((nextSteps * 0.76) / 1000).toFixed(2));
-      const workoutCalories = (fitness?.workouts || []).reduce(
-        (sum, w) => sum + Number(w.calories || 0),
-        0
-      );
-      const nextCal = Math.round(nextSteps * 0.045) + workoutCalories;
-      onUpdateFitness?.({
-        ...fitness,
-        steps: nextSteps,
-        distanceKm: nextKm,
-        calories: nextCal,
-      });
-    }
-    if (fitnessSteps + 500 >= fitnessTarget && fitnessSteps < fitnessTarget) {
-      confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
-    }
-  };
 
   return (
     <div className="space-y-4 pb-20 animate-in fade-in duration-200">
@@ -471,169 +379,6 @@ export default function HomeTab({
         </button>
       </div>
 
-      {/* Fitness & Cardio Live Daily Card */}
-      <div className="bg-gradient-to-br from-white to-teal-50/40 dark:from-slate-900 dark:to-slate-900/90 rounded-3xl p-4 border border-teal-200/80 dark:border-slate-800 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-teal-600 text-white shadow-xs">
-              <Activity size={18} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t('fitness_card_title', lang)}</h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {fitnessSteps.toLocaleString()} / {fitnessTarget.toLocaleString()} {t('steps', lang)} ({stepPct}%)
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => onNavigate('health')}
-            className="flex items-center gap-0.5 text-xs text-teal-600 dark:text-teal-400 font-bold hover:underline"
-          >
-            <span>{t('view_details', lang)}</span>
-            <ChevronRight size={14} />
-          </button>
-        </div>
-
-        {/* Step Progress Bar */}
-        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-          <div
-            className="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full transition-all duration-500"
-            style={{ width: `${stepPct}%` }}
-          />
-        </div>
-
-        {/* 4 Stats Chips - High Contrast in Light & Dark Mode */}
-        <div className="grid grid-cols-4 gap-2 pt-1 text-center">
-          <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-700 shadow-xs">
-            <Footprints size={16} className="mx-auto text-teal-600 dark:text-teal-400 mb-0.5" />
-            <span className="text-xs font-black text-teal-800 dark:text-teal-300 block">{fitnessSteps.toLocaleString()}</span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mt-0.5">{t('steps_today', lang)}</span>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-700 shadow-xs">
-            <Flame size={16} className="mx-auto text-orange-500 dark:text-orange-400 mb-0.5" />
-            <span className="text-xs font-black text-orange-600 dark:text-orange-400 block">{fitnessCalories}</span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mt-0.5">{t('kcal_burned', lang)}</span>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-700 shadow-xs">
-            <Heart size={16} className="mx-auto text-red-500 dark:text-rose-400 mb-0.5" />
-            <span className="text-xs font-black text-red-600 dark:text-rose-400 block">{fitnessHeartRate}</span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mt-0.5">{t('bpm_pulse', lang)}</span>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-700 shadow-xs">
-            <span className="text-base block mb-0.5">📏</span>
-            <span className="text-xs font-black text-slate-800 dark:text-slate-100 block">{fitnessDistance} km</span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mt-0.5">{t('distance_walked', lang)}</span>
-          </div>
-        </div>
-
-        {/* Live Step Sensor & Direct Sync Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={toggleStepSensor}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition active:scale-95 text-[11px] ${
-                isStepSensorActive
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
-              }`}
-            >
-              {isStepSensorActive ? (
-                <>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                  </span>
-                  <span>{t('live_sensor_active', lang)}</span>
-                </>
-              ) : (
-                <>
-                  <Play size={11} className="text-emerald-600 fill-emerald-600" />
-                  <span>{t('live_sensor_start', lang)}</span>
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => setIsSyncModalOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/70 text-blue-700 dark:text-blue-300 font-bold rounded-xl border border-blue-200 dark:border-blue-800 transition active:scale-95 text-[11px]"
-            >
-              <Smartphone size={12} />
-              <span>{t('sync_health_app', lang)}</span>
-            </button>
-          </div>
-
-          <button
-            onClick={handleAddQuickSteps}
-            className="flex items-center gap-1 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900/70 text-teal-800 dark:text-teal-300 font-bold rounded-xl border border-teal-200 dark:border-teal-800 transition active:scale-95 text-[11px]"
-          >
-            <Plus size={12} />
-            <span>{t('add_500_steps', lang)}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Daily Water Tracker Card */}
-      <div className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-slate-900 dark:to-slate-900/90 rounded-3xl p-4 border border-cyan-200/80 dark:border-slate-800 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-cyan-600 text-white shadow-xs">
-              <Droplets size={18} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t('water_title', lang)}</h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {t('water_target', lang)} • {t('water_drank', lang)}: {glasses} {t('glasses', lang)} ({waterPct}%)
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={handleMinusWater}
-              disabled={glasses === 0}
-              className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition disabled:opacity-30"
-              title="-1"
-            >
-              <Minus size={14} />
-            </button>
-            <button
-              onClick={handleAddWater}
-              className="flex items-center gap-1 py-1.5 px-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition"
-            >
-              <Plus size={14} />
-              {t('water_add', lang)}
-            </button>
-          </div>
-        </div>
-
-
-        {/* Progress Bar & Water Level */}
-        <div className="w-full bg-cyan-100/70 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-          <div
-            className="bg-cyan-600 h-full rounded-full transition-all duration-500"
-            style={{ width: `${waterPct}%` }}
-          />
-        </div>
-
-        {/* Glasses Visual Dots */}
-        <div className="flex justify-between items-center px-1">
-          {Array.from({ length: targetGlasses }).map((_, i) => (
-            <span
-              key={i}
-              className={`text-sm transition-transform ${
-                i < glasses ? 'scale-110 drop-shadow-sm' : 'opacity-35 grayscale contrast-125 dark:opacity-45 dark:brightness-125'
-              }`}
-            >
-              🥛
-            </span>
-          ))}
-        </div>
-      </div>
-
-
       {/* Priority 1: Today's Medicine Routine Tracker */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
@@ -818,127 +563,6 @@ export default function HomeTab({
           </div>
         </div>
       </div>
-
-      {/* Priority 4: Recent Notes */}
-      <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-xs">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold text-slate-800">{t('recent_notes', lang)}</h3>
-          <button
-            onClick={() => onNavigate('notes')}
-            className="text-xs text-blue-600 font-semibold hover:underline"
-          >
-            {t('all_notes', lang)} ({notes.length})
-          </button>
-        </div>
-        {notes.length === 0 ? (
-          <p className="text-xs text-slate-400 py-3 text-center">{t('no_notes_yet', lang)}</p>
-        ) : (
-          <div className="space-y-2">
-            {notes.slice(0, 2).map((note) => (
-              <div
-                key={note.id}
-                onClick={() => onNavigate('notes')}
-                className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 transition cursor-pointer"
-              >
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="font-bold text-slate-800">{note.title}</span>
-                  <span className="text-[10px] text-slate-400">{note.date}</span>
-                </div>
-                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                  {note.content}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Sync Steps Modal (Mobile Health App Sync) */}
-      {isSyncModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b pb-3 border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">📱</span>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-800">{t('sync_health_modal_title', lang)}</h3>
-                  <p className="text-[10px] text-slate-500">Android Step Counter, Google Fit, Samsung Health</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsSyncModalOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Quick One-tap sync with current detected/shown phone widget */}
-            <div className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-2xl p-3 border border-teal-200/80">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold text-teal-800 block">
-                    {lang === 'gu' ? 'તમારા મોબાઈલમાં 612 સ્ટેપ છે?' : '612 steps on your phone?'}
-                  </span>
-                  <span className="text-[10px] text-teal-600">
-                    {lang === 'gu' ? '0.41 કિમી • 1-ક્લિકમાં સેટ કરો' : '0.41 km • 1-click apply'}
-                  </span>
-                </div>
-                <button
-                  onClick={() => handleApplySyncSteps(612)}
-                  className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition"
-                >
-                  612 {t('steps', lang)}
-                </button>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              {t('sync_health_desc', lang)}
-            </p>
-
-            {/* Quick preset step counts */}
-            <div className="grid grid-cols-4 gap-1.5">
-              {[500, 1000, 2000, 5000, 8000, 10000].map((count) => (
-                <button
-                  key={count}
-                  onClick={() => handleApplySyncSteps(count)}
-                  className="py-2 px-1 text-center bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-xl font-bold text-xs border border-teal-200 active:scale-95 transition"
-                >
-                  {count.toLocaleString()}
-                </button>
-              ))}
-            </div>
-
-            {/* Custom input */}
-            <div className="pt-1">
-              <label className="text-xs font-bold text-slate-700 block mb-1">{t('custom_steps_label', lang)}</label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="e.g. 612, 1500"
-                  value={customStepsInput}
-                  onChange={(e) => setCustomStepsInput(e.target.value)}
-                  className="flex-1 text-sm font-bold p-2.5 rounded-xl border border-slate-200 focus:outline-teal-500"
-                />
-                <button
-                  onClick={() => handleApplySyncSteps(customStepsInput)}
-                  disabled={!customStepsInput}
-                  className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition disabled:opacity-40"
-                >
-                  {t('save_steps', lang)}
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 text-[11px] text-slate-600 leading-relaxed">
-              {lang === 'gu'
-                ? '💡 સ્ટેપ સેટ કર્યા પછી લાઇવ સેન્સર તેમાંથી સતત આગળ ગણતરી ચાલુ રાખશે. વારંવાર ક્લિક કરવાની જરૂર નથી!'
-                : '💡 Once steps are synced, the live sensor will continuously count upwards as you walk. No need to click repeatedly!'}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

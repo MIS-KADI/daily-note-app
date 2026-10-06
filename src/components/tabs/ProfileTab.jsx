@@ -14,6 +14,9 @@ import {
   HelpCircle,
   Fingerprint,
   Sparkles,
+  X,
+  Shield,
+  FileText,
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 import { biometricService } from '../../services/biometricService';
@@ -44,6 +47,7 @@ export default function ProfileTab({
   const [isBiometricTesting, setIsBiometricTesting] = useState(false);
   const [isTestingHold, setIsTestingHold] = useState(false);
   const [testHoldProgress, setTestHoldProgress] = useState(0);
+  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
   const testHoldRef = useRef(null);
 
   const handleToggleBiometric = async (enable) => {
@@ -497,23 +501,42 @@ export default function ProfileTab({
         </div>
       )}
 
-      {/* Privacy & Anti-Leak Guarantee */}
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-3xl p-4 border border-emerald-200 shadow-xs space-y-2">
-        <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
-          <ShieldCheck size={18} className="text-emerald-700" />
-          <span>{t('privacy_guarantee', lang)}</span>
+      {/* Privacy Policy Card & Security Guarantee */}
+      <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 dark:from-slate-900 dark:to-slate-900/90 rounded-3xl p-4 border border-emerald-200 dark:border-slate-800 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-xs">
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <h3 className="text-xs font-black text-emerald-950 dark:text-emerald-300">
+                {lang === 'gu' ? '🔒 પ્રાઇવસી પોલિસી & ડેટા સુરક્ષા' : lang === 'hi' ? '🔒 प्राइवेसी पॉलिसी व डेटा सुरक्षा' : '🔒 Privacy Policy & Data Security'}
+              </h3>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                {lang === 'gu' ? '૧૦૦% ઓફલાઇન • સંપૂર્ણ સુરક્ષિત • કોઈ ટ્રેકિંગ નહીં' : '100% Offline • Fully Secure • Zero Tracking'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsPrivacyPolicyOpen(true)}
+            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs active:scale-95 transition flex items-center gap-1"
+          >
+            <FileText size={13} />
+            <span>{lang === 'gu' ? 'વાંચો' : lang === 'hi' ? 'पढ़ें' : 'View Policy'}</span>
+          </button>
         </div>
-        <p className="text-xs text-slate-600 leading-relaxed pl-1">
+        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-1">
           {t('privacy_guarantee_desc', lang)}
         </p>
       </div>
 
       {/* Backup and Restore with Google Drive */}
-      <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-xs space-y-3">
-        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+        <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
           {t('backup_restore_title', lang)}
         </h3>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           {t('backup_restore_desc', lang)}
         </p>
 
@@ -529,13 +552,13 @@ export default function ProfileTab({
         <div className="grid grid-cols-2 gap-2 pt-1">
           <button
             onClick={handleExport}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition active:scale-98"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition active:scale-98"
           >
             <Download size={15} />
             {t('download_backup', lang)}
           </button>
 
-          <label className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition cursor-pointer active:scale-98">
+          <label className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition cursor-pointer active:scale-98">
             <Upload size={15} />
             {t('restore_backup', lang)}
             <input
@@ -547,6 +570,117 @@ export default function ProfileTab({
           </label>
         </div>
       </div>
+
+      {/* ==================================================== */}
+      {/* FULL PRIVACY POLICY MODAL                            */}
+      {/* ==================================================== */}
+      {isPrivacyPolicyOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 bg-slate-900/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
+                    {lang === 'gu' ? 'પ્રાઇવસી પોલિસી (Privacy Policy)' : lang === 'hi' ? 'प्राइवेसी पॉलिसी (Privacy Policy)' : 'Privacy Policy & Terms'}
+                  </h3>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                    {lang === 'gu' ? 'તમારા ડેટાની ૧૦૦% ગોપનીયતા અને સુરક્ષા ગેરંટી' : '100% Privacy & Data Security Protection'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPrivacyPolicyOpen(false)}
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body - Scrollable content */}
+            <div className="p-4 overflow-y-auto space-y-3.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              {/* Point 1: 100% Offline */}
+              <div className="p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60 space-y-1">
+                <span className="font-black text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                  <span>🛡️</span>
+                  <span>{lang === 'gu' ? '૧. ૧૦૦% ઓફલાઇન અને સ્થાનિક સંગ્રહ (Offline Local Storage)' : '1. 100% Offline & Local Storage'}</span>
+                </span>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                  {lang === 'gu'
+                    ? 'તમારી તમામ વ્યક્તિગત ડાયરીની નોંધો, દવાઓનું શિડ્યુલ, રોકડ અને બેંકનો હિસાબ, ખરીદીની યાદી અને દૈનિક પગલાં (Steps) ફક્ત તમારા મોબાઇલ ફોનની મેમરીમાં જ સચવાય છે. અમારું કોઈ કેન્દ્રીય સર્વર તમારા ડેટાને સંગ્રહિત કે વાંચી શકતું નથી.'
+                    : 'All your diary notes, health vitals, finances, shopping lists, and steps are stored exclusively on your own phone storage. No server collects or transmits your private data.'}
+                </p>
+              </div>
+
+              {/* Point 2: Biometrics */}
+              <div className="p-3 rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 space-y-1">
+                <span className="font-black text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                  <span>🔐</span>
+                  <span>{lang === 'gu' ? '૨. ફિંગરપ્રિન્ટ & બાયોમેટ્રિક સુરક્ષા (Biometric Security)' : '2. Biometric Fingerprint & Security'}</span>
+                </span>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                  {lang === 'gu'
+                    ? 'ફિંગરપ્રિન્ટ કે ફેસ લૉક સંપૂર્ણપણે તમારા ફોનના હાર્ડવેર સિક્યુરિટી એન્ક્લેવ દ્વારા જ ચકાસાય છે. અમારી એપ્લિકેશન તમારી ફિંગરપ્રિન્ટ ક્યારેય કોપી કે સેવ કરતી નથી.'
+                    : 'Biometric authorization is handled strictly by your device Android Biometric hardware enclave. The application never stores or has access to your raw biometric fingerprints.'}
+                </p>
+              </div>
+
+              {/* Point 3: Voice / Microphone */}
+              <div className="p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 space-y-1">
+                <span className="font-black text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                  <span>🎙️</span>
+                  <span>{lang === 'gu' ? '૩. માઇક્રોફોન અને વૉઇસ ટાઇપિંગ (Voice Typing)' : '3. Microphone & Voice Recognition'}</span>
+                </span>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                  {lang === 'gu'
+                    ? 'માઇક્રોફોન પરવાનગીનો ઉપયોગ ફક્ત ત્યારે જ થાય છે જ્યારે તમે વૉઇસ ટાઇપિંગ બટન દબાવો છો. અવાજ કોઈપણ સર્વર પર રેકોર્ડ થતો નથી.'
+                    : 'Microphone permission is strictly used in real-time when voice typing is activated by the user. No audio recordings are permanently stored or uploaded.'}
+                </p>
+              </div>
+
+              {/* Point 4: Step Counter Sensors */}
+              <div className="p-3 rounded-2xl bg-cyan-50/60 dark:bg-cyan-950/40 border border-cyan-200/80 dark:border-cyan-900/60 space-y-1">
+                <span className="font-black text-cyan-900 dark:text-cyan-200 flex items-center gap-1.5">
+                  <span>👟</span>
+                  <span>{lang === 'gu' ? '૪. ફિટનેસ & સ્ટેપ સેન્સર (Motion Sensors & Step Counter)' : '4. Fitness & Motion Sensors'}</span>
+                </span>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                  {lang === 'gu'
+                    ? 'દૈનિક ચાલવાના પગલાં ગણવા માટે મોબાઇલના મોશન સેન્સરનો ઉપયોગ થાય છે જેથી તમારી ફિટનેસ સુધારી શકાય. આ ગણતરી ફક્ત તમારા ફોનમાં જ રહે છે.'
+                    : 'Motion sensors are used to calculate daily walking steps and burnt calories locally without sharing movement coordinates.'}
+                </p>
+              </div>
+
+              {/* Point 5: Zero Ads & Complete Data Ownership */}
+              <div className="p-3 rounded-2xl bg-purple-50/60 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-900/60 space-y-1">
+                <span className="font-black text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
+                  <span>🚫</span>
+                  <span>{lang === 'gu' ? '૫. કોઈ જાહેરાતો નહીં & સંપૂર્ણ ડેટા માલિકી (No Ads & Full Ownership)' : '5. Ad-Free & Data Ownership'}</span>
+                </span>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                  {lang === 'gu'
+                    ? 'એપ સંપૂર્ણપણે જાહેરાત મુક્ત (Ad-Free) છે. તમે કોઈપણ સમયે બેકઅપ ડાઉનલોડ કરી શકો છો અથવા એક ક્લિકમાં તમારો તમામ ડેટા ભૂંસી શકો છો.'
+                    : 'This app is 100% ad-free and tracker-free. You have full ownership to export backups or wipe all stored data at any time.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsPrivacyPolicyOpen(false)}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs active:scale-95 transition"
+              >
+                {lang === 'gu' ? 'સમજાઈ ગયું / બંધ કરો' : lang === 'hi' ? 'समझ गया / बंद करें' : 'Understood / Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

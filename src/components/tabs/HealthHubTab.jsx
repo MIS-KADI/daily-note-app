@@ -28,6 +28,7 @@ import {
   Sparkles,
   Zap,
   BarChart3,
+  Droplets,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t } from '../../services/i18n';
@@ -155,6 +156,8 @@ export default function HealthHubTab({
   onToggleStepSensor,
   onStepIncrement,
   onUpdateFitness,
+  water,
+  onUpdateWater,
   lang = 'gu',
   initialSubTab = 'fitness',
   isDemoMode,
@@ -166,6 +169,48 @@ export default function HealthHubTab({
 
   const currentMedicineSlots = MEDICINE_SLOTS[lang] || MEDICINE_SLOTS.en || MEDICINE_SLOTS.gu;
   const currentWorkoutTypes = WORKOUT_TYPES[lang] || WORKOUT_TYPES.en || WORKOUT_TYPES.gu;
+
+  // Water Calculation & Handlers
+  const glasses = water?.glasses || 0;
+  const targetGlasses = water?.target || 8;
+  const waterPct = Math.min(100, Math.round((glasses / targetGlasses) * 100));
+
+  const handleAddWater = (amount = 1) => {
+    const next = glasses + amount;
+    onUpdateWater?.({ ...water, glasses: next });
+    if (next >= targetGlasses && glasses < targetGlasses) {
+      confetti({
+        particleCount: 60,
+        spread: 60,
+        origin: { y: 0.7 },
+      });
+    }
+  };
+
+  const handleMinusWater = () => {
+    if (glasses > 0) {
+      onUpdateWater?.({ ...water, glasses: glasses - 1 });
+    }
+  };
+
+  const handleSetWaterTarget = (newTarget) => {
+    const t = Number(newTarget);
+    if (!isNaN(t) && t > 0) {
+      onUpdateWater?.({ ...water, target: t });
+    }
+  };
+
+  const handleResetWater = () => {
+    const confirmMsg =
+      lang === 'gu'
+        ? 'શું તમે આજના પાણીની ગણતરી ફરીથી 0 કરવા માંગો છો?'
+        : lang === 'hi'
+        ? 'क्या आप आज के पानी की गिनती 0 करना चाहते हैं?'
+        : 'Do you want to reset today water count to 0?';
+    if (window.confirm(confirmMsg)) {
+      onUpdateWater?.({ ...water, glasses: 0 });
+    }
+  };
 
   // ----------------------------------------------------
   // 1. MEDICINES SUB-TAB STATE & LOGIC
@@ -551,52 +596,64 @@ export default function HealthHubTab({
       </div>
 
       {/* Segmented Controller (Sub-tabs) */}
-      <div className="bg-white p-1 rounded-2xl border border-slate-200 grid grid-cols-4 gap-1 shadow-xs">
-        <button
-          onClick={() => setActiveSubTab('medicines')}
-          className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
-            activeSubTab === 'medicines'
-              ? 'bg-teal-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Pill size={14} />
-          <span>{t('subtab_medicines', lang)}</span>
-        </button>
-
+      <div className="bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 grid grid-cols-5 gap-1 shadow-xs">
         <button
           onClick={() => setActiveSubTab('fitness')}
-          className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
+          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
             activeSubTab === 'fitness'
               ? 'bg-teal-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          <Footprints size={14} />
+          <Footprints size={13} />
           <span>{t('subtab_fitness', lang)}</span>
         </button>
 
         <button
-          onClick={() => setActiveSubTab('cardio')}
-          className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
-            activeSubTab === 'cardio'
+          onClick={() => setActiveSubTab('water')}
+          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
+            activeSubTab === 'water'
               ? 'bg-teal-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          <Activity size={14} />
+          <Droplets size={13} />
+          <span>{lang === 'gu' ? 'પાણી' : lang === 'hi' ? 'पानी' : 'Water'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('medicines')}
+          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
+            activeSubTab === 'medicines'
+              ? 'bg-teal-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Pill size={13} />
+          <span>{t('subtab_medicines', lang)}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('cardio')}
+          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
+            activeSubTab === 'cardio'
+              ? 'bg-teal-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Activity size={13} />
           <span>{t('subtab_cardio', lang)}</span>
         </button>
 
         <button
           onClick={() => setActiveSubTab('bmi')}
-          className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
+          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
             activeSubTab === 'bmi'
               ? 'bg-teal-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          <Scale size={14} />
+          <Scale size={13} />
           <span>{t('subtab_bmi', lang)}</span>
         </button>
       </div>
@@ -762,7 +819,201 @@ export default function HealthHubTab({
       )}
 
       {/* ==================================================== */}
-      {/* 2. FITNESS & STEPS SUB-TAB CONTENT                   */}
+      {/* 2. WATER TRACKER SUB-TAB CONTENT                     */}
+      {/* ==================================================== */}
+      {activeSubTab === 'water' && (
+        <div className="space-y-4">
+          {/* Main Hydration Progress Card */}
+          <div className="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 dark:from-slate-900 dark:to-slate-900/95 rounded-3xl p-5 border border-cyan-200/80 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-2xl bg-cyan-600 text-white shadow-xs">
+                  <Droplets size={22} />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100">
+                    {lang === 'gu' ? 'પાણીનું ટ્રેકર (Water Tracker)' : lang === 'hi' ? 'पानी ट्रैकर' : 'Daily Water Tracker'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {lang === 'gu' ? 'દરરોજ પૂરતું પાણી પીઓ અને સ્વસ્થ રહો' : 'Stay fresh, hydrated and energetic everyday'}
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs px-3 py-1 rounded-full font-bold bg-cyan-100 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                {waterPct}%
+              </span>
+            </div>
+
+            {/* Big Water Stats Display */}
+            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 text-center border border-cyan-100 dark:border-slate-700 shadow-xs space-y-1">
+              <div className="flex items-baseline justify-center gap-1.5">
+                <span className="text-4xl font-black text-cyan-700 dark:text-cyan-400">{glasses}</span>
+                <span className="text-lg font-bold text-slate-400 dark:text-slate-500">/ {targetGlasses} {lang === 'gu' ? 'ગ્લાસ' : lang === 'hi' ? 'ग्लास' : 'Glasses'}</span>
+              </div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                💧 {(glasses * 250).toLocaleString()} ml / {(targetGlasses * 250).toLocaleString()} ml {lang === 'gu' ? 'લક્ષ્ય' : 'Target'}
+              </p>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-slate-100 dark:bg-slate-700 h-3 rounded-full overflow-hidden mt-3">
+                <div
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${waterPct}%` }}
+                />
+              </div>
+
+              {/* Visual Glasses Display */}
+              <div className="flex flex-wrap justify-center gap-2 pt-3 px-1">
+                {Array.from({ length: targetGlasses }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => onUpdateWater?.({ ...water, glasses: i + 1 })}
+                    className={`text-xl transition-all p-1 rounded-xl active:scale-90 ${
+                      i < glasses
+                        ? 'scale-110 drop-shadow bg-cyan-100/70 dark:bg-cyan-950/60'
+                        : 'opacity-35 grayscale contrast-125 dark:opacity-45 hover:opacity-75'
+                    }`}
+                    title={`${i + 1} glass`}
+                  >
+                    🥛
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Action Buttons */}
+            <div className="grid grid-cols-4 gap-2 pt-1">
+              <button
+                onClick={handleMinusWater}
+                disabled={glasses === 0}
+                className="py-2.5 px-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition disabled:opacity-40"
+              >
+                <Minus size={14} />
+                <span>-1 {lang === 'gu' ? 'ગ્લાસ' : 'Glass'}</span>
+              </button>
+
+              <button
+                onClick={() => handleAddWater(1)}
+                className="py-2.5 px-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
+              >
+                <Plus size={14} />
+                <span>+1 {lang === 'gu' ? 'ગ્લાસ' : 'Glass'}</span>
+              </button>
+
+              <button
+                onClick={() => handleAddWater(2)}
+                className="py-2.5 px-2 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
+              >
+                <Plus size={14} />
+                <span>+2 {lang === 'gu' ? 'ગ્લાસ' : 'Glasses'}</span>
+              </button>
+
+              <button
+                onClick={() => handleAddWater(2)}
+                className="py-2.5 px-2 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
+              >
+                <span>🧴 500ml</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Target Adjustment Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                  🎯 {lang === 'gu' ? 'દૈનિક લક્ષ્ય સેટ કરો (Daily Goal)' : 'Set Daily Goal'}
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {lang === 'gu' ? 'તમારા શરીર મુજબ યોગ્ય પાણીનું લક્ષ્ય પસંદ કરો' : 'Choose target according to your lifestyle'}
+                </p>
+              </div>
+              <button
+                onClick={handleResetWater}
+                className="text-[11px] text-red-600 dark:text-rose-400 font-bold hover:underline"
+              >
+                {lang === 'gu' ? 'રીસેટ કરો' : 'Reset'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              {[6, 8, 10, 12].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => handleSetWaterTarget(g)}
+                  className={`py-2 px-1 text-center rounded-xl font-bold text-xs border transition active:scale-95 ${
+                    targetGlasses === g
+                      ? 'bg-cyan-600 text-white border-cyan-600 shadow-xs'
+                      : 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {g} {lang === 'gu' ? 'ગ્લાસ' : 'gl'} ({g * 250}ml)
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Hydration Schedule Tips */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2.5">
+            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              <span>⏰</span>
+              <span>{lang === 'gu' ? 'પાણી પીવાનો શ્રેષ્ઠ સમય (Hydration Schedule)' : 'Best Times to Drink Water'}</span>
+            </h4>
+            <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
+              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 flex items-center gap-2">
+                <span className="text-base">🌅</span>
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                    {lang === 'gu' ? 'સવારે જાગીને: ૧-૨ ગ્લાસ' : 'Morning waking up: 1-2 glasses'}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {lang === 'gu' ? 'શરીરના અંગોને સક્રિય કરે છે અને પાચન સુધારે છે' : 'Activates internal organs & cleanses system'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 flex items-center gap-2">
+                <span className="text-base">🥪</span>
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                    {lang === 'gu' ? 'જમવાના ૩૦ મિનિટ પહેલા: ૧ ગ્લાસ' : '30 mins before meals: 1 glass'}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {lang === 'gu' ? 'પાચન ક્રિયા સરળ બને છે (જમતી વખતે વધુ પાણી ન પીવું)' : 'Aids digestion smoothly'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-200 dark:border-cyan-900 flex items-center gap-2">
+                <span className="text-base">🚶</span>
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                    {lang === 'gu' ? 'કસરત / ચાલ્યા પછી: ૧ ગ્લાસ' : 'After walk or exercise: 1 glass'}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {lang === 'gu' ? 'શરીરનું તાપમાન નિયંત્રિત કરે છે' : 'Replaces lost fluids'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 flex items-center gap-2">
+                <span className="text-base">🌙</span>
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                    {lang === 'gu' ? 'રાત્રે સૂતા પહેલા: ૧ ગ્લાસ' : 'Before bed: 1 glass'}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {lang === 'gu' ? 'હૃદય અને બ્લડ પ્રેશર માટે ગુણકારી' : 'Prevents dehydration overnight'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================== */}
+      {/* 3. FITNESS & STEPS SUB-TAB CONTENT                   */}
       {/* ==================================================== */}
       {activeSubTab === 'fitness' && (
         <div className="space-y-4">
