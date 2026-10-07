@@ -76,6 +76,7 @@ export default function App() {
   const [isStepSensorActive, setIsStepSensorActive] = useState(false);
   const [needsSensorPermission, setNeedsSensorPermission] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   // Active Date tracker for Midnight / Daily Health Auto-Reset
   const currentDateRef = useRef(new Date().toISOString().split('T')[0]);
@@ -101,10 +102,8 @@ export default function App() {
       if (user?.isPinRequired || user?.isBiometricEnabled) {
         setIsLocked(true);
       }
-    } else {
-      setIsSignupOpen(true);
     }
-  }, []);
+  }, [user]);
 
   // Detect standalone PWA mode (Add to Home Screen)
   useEffect(() => {
@@ -736,6 +735,8 @@ export default function App() {
       const now = new Date();
       const currentHours = String(now.getHours()).padStart(2, '0');
       const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+      const todayDateStr = now.toISOString().split('T')[0];
+      const currentTimeStr = `${currentHours}:${currentMinutes}`;
       // 0. Daily Health Metrics Auto-Reset on Date Rollover (Midnight / New Day)
       if (currentDateRef.current !== todayDateStr) {
         currentDateRef.current = todayDateStr;

@@ -255,6 +255,7 @@ export const aiAssistantService = {
         let partyName = text.replace(/(પાસેથી|ને|ભાઈ|બેન|પાસે|થી|લેવાના|આપવાના|છે|રૂપિયા|rs|₹|\d+)/gi, '').trim() || 'પાર્ટી';
         const phoneMatch = text.match(/\b[6-9]\d{9}\b/);
         const khataPhone = phoneMatch ? phoneMatch[0] : '';
+        const khataAmount = amount || 500;
         return {
           intent: 'khata',
           type: isToReceive ? 'to_receive' : 'to_pay',

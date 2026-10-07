@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.25.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.26.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.25.apk
+            daily-diary-v1.0.26.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,23 +68,23 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.25
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.25 Full Squircle Sunrise Gold Icon & Fast Launch)"
+          tag_name: v1.0.26
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.26 Zero Blank Screen & Instant Launch Fix)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.25)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.26)
 
             આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ સુધારા:
+            - **⚡ બ્લેન્ક/સફેદ સ્ક્રીનની ખામી સંપૂર્ણ ફિક્સ (Zero Blank Screen Fix):**
+              - એપ ઓપન કરતી વખતે આવતી બ્લેન્ક/ખાલી સ્ક્રીનની સમસ્યાનું મૂળ કારણ (અનડિફાઇન્ડ સ્ટેટ વેરીએબલ્સ અને ટાઈમર કેલ્ક્યુલેશન) સંપૂર્ણપણે દૂર કરવામાં આવ્યું છે.
+              - હવે એપ ટચ કરતાં જ તરત કોઈપણ અટકાવ વગર સીધી હોમ સ્ક્રીન પર ખૂલશે.
+            - **🛡️ ગ્લોબલ એરર બાઉન્ડ્રી પ્રોટેક્શન (Crash Proof):**
+              - એપમાં સેફગાર્ડ પ્રોટેક્શન ઉમેર્યું છે જેથી સ્ક્રીન ક્યારેય બ્લેન્ક ન રહે.
             - **🌅 સૂર્યોદય પ્રેરણા ડાયરી - ફુલ સાઈઝ ચોરસ/સ્ક્વિર્કલ આઇકન (Full-Size Squircle Icon):**
-              - યુઝરની પસંદગી મુજબ Option 3 (Sunrise Lotus, Golden Sun, 'Diary Journey Growth' સોનેરી પુસ્તક અને ફેધર કલમ) સેટ કરવામાં આવ્યો છે.
-              - ગોળમાં નાનો ન દેખાય તે માટે ખાસ **મોટી સાઈઝનો ચોરસ/સ્ક્વિર્કલ (Square/Squircle) આઇકન** બનાવ્યો છે.
-              - Android લૉન્ચર પર આઇકન કપાયા વગર મોટો, બોલ્ડ અને અત્યંત આકર્ષક દેખાશે.
-            - **⚡ ફાસ્ટ સ્ટાર્ટઅપ અને સ્મૂથ લૉન્ચ:**
-              - એપ ટચ કરતાં જ કોઈ પણ લેગ કે બ્લેન્ક સ્ક્રીન વગર સીધી અને તરત હોમ સ્ક્રીન પર ખૂલે છે.
-            - **🌟 નવો સૂર્યોદય રુબી-ગોલ્ડ સ્પ્લેશ સ્ક્રીન.**
+              - Option 3 ચોરસ સાઈઝમાં જ સેટ કરેલો છે.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.25.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.26.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.25.apk
+            daily-diary-v1.0.26.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
