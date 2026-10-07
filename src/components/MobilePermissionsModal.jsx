@@ -356,11 +356,11 @@ export default function MobilePermissionsModal({
 
             <div className="flex items-center gap-2">
               <button
-                onClick={handleTestContactPicker}
+                onClick={handleRequestContacts}
                 className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] shadow-sm active:scale-95 transition flex items-center gap-1.5"
               >
                 <Users size={12} />
-                <span>સંપર્ક ચકાસો / પરવાનગી આપો</span>
+                <span>{contactStatus === 'granted' ? 'પરવાનગી સક્ષમ છે ✓' : 'સંપર્ક પરવાનગી આપો'}</span>
               </button>
             </div>
 

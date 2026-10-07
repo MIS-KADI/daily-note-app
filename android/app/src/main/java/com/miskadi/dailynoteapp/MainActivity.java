@@ -53,7 +53,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
     private SharedPreferences stepPrefs;
     private int currentTodaySteps = 0;
 
-    private String pendingContactContext = "khata";
+    private String pendingContactContext = null;
     private BroadcastReceiver stepUpdateReceiver;
 
     @Override
@@ -127,12 +127,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
             startBackgroundStepService();
             syncHardwareStepsWithJs();
 
-            // Auto-launch contact picker if contact permission was just granted
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-                if (pendingContactContext != null && !pendingContactContext.isEmpty()) {
-                    mainHandler.post(this::launchContactPicker);
-                }
-            }
+            pendingContactContext = null;
 
             mainHandler.post(() -> {
                 if (this.bridge != null && this.bridge.getWebView() != null) {
