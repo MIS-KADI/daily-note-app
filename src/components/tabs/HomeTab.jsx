@@ -359,8 +359,8 @@ export default function HomeTab({
         </div>
       )}
 
-      {/* Quick Action Grid */}
-      <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+      {/* Quick Action Grid (Balanced 4x2 Grid) */}
+      <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
         <button
           onClick={() => onNavigate('notes')}
           className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
@@ -389,6 +389,16 @@ export default function HomeTab({
             ⏰
           </div>
           <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('btn_tasks_meetings', lang)}</span>
+        </button>
+
+        <button
+          onClick={() => onNavigate('finance')}
+          className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 hover:bg-emerald-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-xs flex flex-col items-center gap-1 active:scale-95 transition"
+        >
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
+            💰
+          </div>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{lang === 'gu' ? 'ખાતાવહી' : lang === 'hi' ? 'खाताबही' : 'Finance'}</span>
         </button>
 
         {onOpenPhotoGallery && (

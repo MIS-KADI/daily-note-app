@@ -78,11 +78,55 @@ export const permissionService = {
   },
 
   /**
-   * Safe & Secure Contact Picker
-   * Never uploads contacts anywhere — strictly returns contact name and phone for local use
+   * Safe & Secure Native & Web Contact Picker
+   * Never uploads contacts anywhere — strictly returns contact name and phone for local on-device use
    */
-  async pickContact() {
-    // 1. Modern Web Contacts API (Chrome on Android)
+  async pickContact(context = 'khata') {
+    // 1. Native Android Contact Picker Intent Bridge
+    if (window.AndroidPermissionBridge && typeof window.AndroidPermissionBridge.pickContact === 'function') {
+      return new Promise((resolve) => {
+        let isResolved = false;
+
+        const cleanup = () => {
+          if (window.onNativeContactPicked === handleContact) {
+            window.onNativeContactPicked = null;
+          }
+        };
+
+        const handleContact = (name, mobile, ctx) => {
+          if (isResolved) return;
+          isResolved = true;
+          cleanup();
+          resolve({
+            success: true,
+            name: (name || '').trim(),
+            mobile: (mobile || '').replace(/[^0-9+]/g, '').trim(),
+            context: ctx,
+          });
+        };
+
+        window.onNativeContactPicked = handleContact;
+
+        try {
+          window.AndroidPermissionBridge.pickContact(context);
+        } catch (e) {
+          console.warn('Native contact pick call failed:', e);
+          cleanup();
+          resolve({ success: false });
+        }
+
+        // Safety timeout of 60 seconds
+        setTimeout(() => {
+          if (!isResolved) {
+            isResolved = true;
+            cleanup();
+            resolve({ success: false, timeout: true });
+          }
+        }, 60000);
+      });
+    }
+
+    // 2. Modern Web Contacts API (Chrome on Android / PWA)
     if ('contacts' in navigator && 'ContactsManager' in window) {
       try {
         const props = ['name', 'tel'];
@@ -96,16 +140,12 @@ export const permissionService = {
             success: true,
             name: (name || '').trim(),
             mobile: (phone || '').replace(/[^0-9+]/g, '').trim(),
+            context,
           };
         }
       } catch (err) {
         console.warn('Web contact pick cancelled or error:', err);
       }
-    }
-
-    // 2. Native Contact Request if on native device
-    if (window.AndroidPermissionBridge) {
-      window.AndroidPermissionBridge.requestContactPermission();
     }
 
     return { success: false };

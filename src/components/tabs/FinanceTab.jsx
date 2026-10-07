@@ -202,7 +202,7 @@ export default function FinanceTab({
   };
 
   const handlePickContactForKhata = async () => {
-    const res = await permissionService.pickContact();
+    const res = await permissionService.pickContact('khata');
     if (res.success) {
       if (res.name) setKhPartyName(res.name);
       if (res.mobile) setKhPhone(res.mobile.slice(-10));

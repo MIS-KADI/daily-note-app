@@ -1,18 +1,23 @@
 package com.miskadi.dailynoteapp;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.ContactsContract;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -30,11 +35,13 @@ import java.util.Locale;
 public class MainActivity extends BridgeActivity implements SensorEventListener {
     private static final String TAG = "DailyNoteMainActivity";
     private static final int PERMISSION_REQ_CODE = 1002;
+    private static final int REQ_PICK_CONTACT = 2001;
 
     private static final String PREFS_NAME = "DailyNoteStepPrefs";
     private static final String PREF_BASELINE_STEPS = "baseline_steps";
     private static final String PREF_BASELINE_DATE = "baseline_date";
     private static final String PREF_TODAY_STEPS = "today_steps";
+    private static final String PREF_SAVED_OFFSET = "saved_offset";
 
     private SpeechRecognizer speechRecognizer;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -42,22 +49,61 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
     private SensorManager sensorManager;
     private Sensor stepCounterSensor;
     private Sensor stepDetectorSensor;
+    private Sensor accelerometerSensor;
     private SharedPreferences stepPrefs;
     private int currentTodaySteps = 0;
+
+    private String pendingContactContext = "khata";
+    private BroadcastReceiver stepUpdateReceiver;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestAppPermissions();
+        startBackgroundStepService();
         setupStepSensors();
+        setupStepUpdateReceiver();
         setupNativeSpeechBridge();
         setupNativeStepBridge();
         setupNativePermissionBridge();
     }
 
+    private void startBackgroundStepService() {
+        try {
+            Intent serviceIntent = new Intent(this, StepService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to start StepService: " + t.getMessage());
+        }
+    }
+
+    private void setupStepUpdateReceiver() {
+        stepUpdateReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent != null && StepService.ACTION_STEP_UPDATE.equals(intent.getAction())) {
+                    int steps = intent.getIntExtra(StepService.EXTRA_TODAY_STEPS, 0);
+                    currentTodaySteps = steps;
+                    sendJsStepUpdate(steps);
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter(StepService.ACTION_STEP_UPDATE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(stepUpdateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(stepUpdateReceiver, filter);
+        }
+    }
+
     @Override
     public void onResume() {
         super.onResume();
+        startBackgroundStepService();
         if (sensorManager == null || (stepCounterSensor == null && stepDetectorSensor == null)) {
             setupStepSensors();
         } else {
@@ -78,7 +124,15 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
             Log.d(TAG, "Permissions updated, syncing steps and notifying web layer");
             setupStepSensors();
             registerStepSensors();
+            startBackgroundStepService();
             syncHardwareStepsWithJs();
+
+            // Auto-launch contact picker if contact permission was just granted
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+                if (pendingContactContext != null && !pendingContactContext.isEmpty()) {
+                    mainHandler.post(this::launchContactPicker);
+                }
+            }
 
             mainHandler.post(() -> {
                 if (this.bridge != null && this.bridge.getWebView() != null) {
@@ -137,6 +191,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         if (sensorManager != null) {
             stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
             stepDetectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+            accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             registerStepSensors();
         }
     }
@@ -145,11 +200,13 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         if (sensorManager != null) {
             if (stepCounterSensor != null) {
                 sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_UI);
-                Log.d(TAG, "Hardware STEP_COUNTER registered successfully");
-            }
-            if (stepDetectorSensor != null) {
+                Log.d(TAG, "Hardware STEP_COUNTER registered successfully in MainActivity");
+            } else if (stepDetectorSensor != null) {
                 sensorManager.registerListener(this, stepDetectorSensor, SensorManager.SENSOR_DELAY_UI);
-                Log.d(TAG, "Hardware STEP_DETECTOR registered successfully");
+                Log.d(TAG, "Hardware STEP_DETECTOR registered successfully in MainActivity");
+            } else if (accelerometerSensor != null) {
+                sensorManager.registerListener(this, accelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
+                Log.d(TAG, "Accelerometer fallback registered in MainActivity");
             }
         }
     }
@@ -166,20 +223,38 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
 
             String savedDate = stepPrefs.getString(PREF_BASELINE_DATE, "");
             int baseline = stepPrefs.getInt(PREF_BASELINE_STEPS, 0);
+            int offset = stepPrefs.getInt(PREF_SAVED_OFFSET, 0);
 
-            // If day changed, or no baseline, or device rebooted (hardware counter < baseline)
-            if (!todayDate.equals(savedDate) || baseline <= 0 || totalHardwareSteps < baseline) {
+            // If day changed: reset today's baseline
+            if (!todayDate.equals(savedDate)) {
+                baseline = totalHardwareSteps;
+                offset = 0;
+                currentTodaySteps = 0;
+                stepPrefs.edit()
+                    .putString(PREF_BASELINE_DATE, todayDate)
+                    .putInt(PREF_BASELINE_STEPS, baseline)
+                    .putInt(PREF_SAVED_OFFSET, 0)
+                    .putInt(PREF_TODAY_STEPS, 0)
+                    .apply();
+            } else if (baseline <= 0) {
                 baseline = totalHardwareSteps;
                 stepPrefs.edit()
                     .putString(PREF_BASELINE_DATE, todayDate)
                     .putInt(PREF_BASELINE_STEPS, baseline)
-                    .putInt(PREF_TODAY_STEPS, 0)
                     .apply();
-                currentTodaySteps = 0;
-            } else {
-                currentTodaySteps = totalHardwareSteps - baseline;
-                stepPrefs.edit().putInt(PREF_TODAY_STEPS, currentTodaySteps).apply();
+            } else if (totalHardwareSteps < baseline) {
+                // Device rebooted: preserve previously walked steps
+                offset += stepPrefs.getInt(PREF_TODAY_STEPS, 0);
+                baseline = totalHardwareSteps;
+                stepPrefs.edit()
+                    .putInt(PREF_SAVED_OFFSET, offset)
+                    .putInt(PREF_BASELINE_STEPS, baseline)
+                    .apply();
             }
+
+            currentTodaySteps = offset + (totalHardwareSteps - baseline);
+            if (currentTodaySteps < 0) currentTodaySteps = 0;
+            stepPrefs.edit().putInt(PREF_TODAY_STEPS, currentTodaySteps).apply();
 
             sendJsStepUpdate(currentTodaySteps);
         } else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
@@ -224,9 +299,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
     private void syncHardwareStepsWithJs() {
         if (stepPrefs != null) {
             int saved = stepPrefs.getInt(PREF_TODAY_STEPS, 0);
-            if (saved > 0) {
-                sendJsStepUpdate(saved);
-            }
+            sendJsStepUpdate(saved);
         }
     }
 
@@ -237,7 +310,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
                 webView.addJavascriptInterface(new Object() {
                     @JavascriptInterface
                     public boolean isHardwareStepSupported() {
-                        return stepCounterSensor != null || stepDetectorSensor != null;
+                        return stepCounterSensor != null || stepDetectorSensor != null || accelerometerSensor != null;
                     }
 
                     @JavascriptInterface
@@ -257,6 +330,68 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
                 }, "AndroidStepBridge");
             }
         });
+    }
+
+    // -------------------------------------------------------------
+    // Native Contact Picker
+    // -------------------------------------------------------------
+    private void launchContactPicker() {
+        try {
+            Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+            startActivityForResult(intent, REQ_PICK_CONTACT);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to launch native contact picker", e);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_PICK_CONTACT && resultCode == RESULT_OK && data != null) {
+            Uri contactUri = data.getData();
+            if (contactUri != null) {
+                String name = "";
+                String phone = "";
+                Cursor cursor = null;
+                try {
+                    cursor = getContentResolver().query(
+                        contactUri,
+                        new String[]{
+                            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                            ContactsContract.CommonDataKinds.Phone.NUMBER
+                        },
+                        null, null, null
+                    );
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+                        int phoneIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                        if (nameIdx != -1) name = cursor.getString(nameIdx);
+                        if (phoneIdx != -1) phone = cursor.getString(phoneIdx);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error querying picked contact", e);
+                } finally {
+                    if (cursor != null) cursor.close();
+                }
+
+                final String finalName = (name != null ? name.trim() : "");
+                String cleanNum = (phone != null ? phone.replaceAll("[^0-9+]", "") : "").trim();
+                if (cleanNum.startsWith("+91") && cleanNum.length() == 13) {
+                    cleanNum = cleanNum.substring(3);
+                }
+                final String finalPhone = cleanNum;
+                final String ctx = (pendingContactContext != null) ? pendingContactContext : "khata";
+
+                mainHandler.post(() -> {
+                    if (this.bridge != null && this.bridge.getWebView() != null) {
+                        String escapedName = finalName.replace("\\", "\\\\").replace("'", "\\'").replace("\"", "\\\"").replace("\n", "");
+                        String escapedPhone = finalPhone.replace("\\", "\\\\").replace("'", "\\'");
+                        String js = "if (window.onNativeContactPicked) { window.onNativeContactPicked('" + escapedName + "', '" + escapedPhone + "', '" + ctx + "'); }";
+                        this.bridge.getWebView().evaluateJavascript(js, null);
+                    }
+                });
+            }
+        }
     }
 
     // -------------------------------------------------------------
@@ -301,6 +436,19 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
                         mainHandler.post(() -> {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS}, PERMISSION_REQ_CODE);
+                            }
+                        });
+                    }
+
+                    @JavascriptInterface
+                    public void pickContact(final String context) {
+                        pendingContactContext = (context != null && !context.isEmpty()) ? context : "khata";
+                        mainHandler.post(() -> {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                                ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS}, PERMISSION_REQ_CODE);
+                            } else {
+                                launchContactPicker();
                             }
                         });
                     }
@@ -488,6 +636,12 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
 
     @Override
     public void onDestroy() {
+        if (stepUpdateReceiver != null) {
+            try {
+                unregisterReceiver(stepUpdateReceiver);
+            } catch (Exception ignored) {}
+            stepUpdateReceiver = null;
+        }
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
         }

@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.19.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.20.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.19.apk
+            daily-diary-v1.0.20.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,27 +68,32 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.19
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.19 Photos & Contacts Access with Privacy Vault)"
+          tag_name: v1.0.20
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.20 Native Contact Picker, Background Step Tracker, Photo Filters & Collage)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.19)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.20)
 
             આ નવા વર્ઝનમાં કરવામાં આવેલા વિશેષ સુધારા:
-            - **📸 ફોટો & મીડિયા ઍક્સેસ પરવાનગી (Photos & Media Access):**
-              - Android 13/14+ (`READ_MEDIA_IMAGES`) અને જૂના વર્ઝન (`READ_EXTERNAL_STORAGE`) માટે યોગ્ય રનટાઈમ પરવાનગી વ્યવસ્થા.
-              - **🔒 પ્રાઇવેટ ફોટો વોલ્ટ લૉક (PIN & Biometric Lock):** ફોટો ગેલેરીને તમારા અંગત 4-અંકના PIN અથવા ફિંગરપ્રિન્ટથી લૉક રાખવાની સુવિધા.
-            - **👥 સંપર્કો ઍક્સેસ પરવાનગી (Contacts Access Permission):**
-              - Android `READ_CONTACTS` પરવાનગી અને 1-ટેપ કોન્ટેક્ટ પીકર.
-              - ખાતાવહી (Khata) માં પાર્ટી ઉમેરતી વખતે સીધા તમારા ફોનના સંપર્કોમાંથી નામ અને મોબાઈલ નંબર પસંદ કરવાની સુવિધા.
-            - **🛡️ પ્રાઇવેટ & ૧૦૦% ઓફલાઇન સિક્યોરિટી ગેરંટી (Privacy & Security Guarantee):**
-              - ફોટા કે સંપર્કો ક્યારેય કોઈ બહારના સર્વર પર અપલોડ થતા નથી.
-              - કોઈ ત્રીજી વ્યક્તિ સાથે ડેટા શેર થતો નથી (Zero Cloud Sync, 100% Local).
-              - પરવાનગીઓ મોડલ (`MobilePermissionsModal`) અને પ્રાઇવસી પોલિસીમાં સંપૂર્ણ સ્પષ્ટતા.
-            - **અલ્ટ્રા લાઇટવેઇટ સાઈઝ (<8 MB) અને સ્મૂથ ફાસ્ટ પર્ફોર્મન્સ.**
+            - **👥 નેટિવ કોન્ટેક્ટ પીકર (Native Phone Contacts Picker):**
+              - ખાતાવહી (Khata) અને ઇમરજન્સી મોડલમાં સીધા ફોનના સંપર્કોમાંથી પસંદગી.
+              - પાર્ટીનું નામ અને ૧૦-અંકનો મોબાઈલ નંબર ઓટોમેટિક ભરાઈ જશે.
+            - **👟 બેકગ્રાઉન્ડ સ્ટેપ કાઉન્ટર સર્વિસ (Background Step Tracking 24/7):**
+              - ઍપ બંધ હોય તો પણ સ્ટેપ સતત ગણાતા રહેશે (`StepService`).
+              - હાર્ડવેર ચિપ (`TYPE_STEP_COUNTER`) અને એકસેલરોમીટર ફોલબેક દ્વારા દરેક મોબાઈલમાં ૧૦૦% કામ કરશે.
+              - દરરોજ મધ્યરાત્રિએ (Midnight) ઓટોમેટિક રીસેટ.
+            - **🚨 કસ્ટમ ઇમરજન્સી નંબરો (Add/Remove Custom Emergency Numbers):**
+              - પોતાના પરિવાર/મિત્ર/ડૉક્ટરના નંબરો ઉમેરવા અને કાઢી નાખવાની સુવિધા.
+              - ૧-ક્લિકમાં ડાયલિંગ અને રાષ્ટ્રીય હેલ્પલાઇન (108, 112, 1930, 101, Bank).
+            - **📸 ફોટો ગેલેરી સુધારા + ફિલ્ટર્સ + કોલાઝ મેકર (Filters & Collage Maker):**
+              - મોબાઈલ સ્ક્રીન માટે રિસ્પોન્સિવ હેડર જે ક્યારેય કપાતું નથી.
+              - ફેવરિટ ફોટા ઉમેરતી વખતે આપોઆપ પરિવારમાં જવાની ક્ષતિ દૂર થઈ.
+              - ૮ જબરદસ્ત ફોટો ફિલ્ટર્સ (વિન્ટેજ, B&W, વાર્મ, કૂલ, સેપિયા, વાઇબ્રન્ટ) + Canvas સેવ.
+              - ફોટો કોલાઝ મેકર (૨ થી ૪ ફોટા જોડીને સ્પ્લિટ/ગ્રીડ કોલાઝ બનાવવાની સુવિધા).
+            - **✨ હોમ સ્ક્રીન ૪ x ૨ બેલેન્સ્ડ ગ્રીડ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.19.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.20.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.19.apk
+            daily-diary-v1.0.20.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
