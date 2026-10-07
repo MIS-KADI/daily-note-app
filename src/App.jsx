@@ -14,7 +14,6 @@ import MobilePermissionsModal from './components/MobilePermissionsModal';
 import PhotoGalleryModal from './components/PhotoGalleryModal';
 import DemoModeBanner from './components/DemoModeBanner';
 import DemoModeModal from './components/DemoModeModal';
-import WelcomeSplash from './components/WelcomeSplash';
 import confetti from 'canvas-confetti';
 
 // Tabs
@@ -77,9 +76,6 @@ export default function App() {
   const [isStepSensorActive, setIsStepSensorActive] = useState(false);
   const [needsSensorPermission, setNeedsSensorPermission] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => {
-    return localStorage.getItem('daily_diary_show_welcome_splash') !== 'false';
-  });
 
   // Active Date tracker for Midnight / Daily Health Auto-Reset
   const currentDateRef = useRef(new Date().toISOString().split('T')[0]);
@@ -1197,15 +1193,6 @@ export default function App() {
         onClose={() => setIsPhotoGalleryOpen(false)}
         lang={lang}
       />
-
-      {/* Animated Welcome / Morning Motivation Splash Screen */}
-      {showWelcomeSplash && (
-        <WelcomeSplash
-          user={user}
-          dailyQuote={dailyQuote}
-          onFinish={() => setShowWelcomeSplash(false)}
-        />
-      )}
     </div>
   );
 }

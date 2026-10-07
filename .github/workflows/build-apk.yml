@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.23.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.24.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.23.apk
+            daily-diary-v1.0.24.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,24 +68,22 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.23
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.23 Zero-White-Screen Instant Royal Splash & Daily Suvichar)"
+          tag_name: v1.0.24
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.24 Instant Launch Fix & Fast Startup)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.23)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.24)
 
-            આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ સુધારા:
-            - **⚡ સફેદ સ્ક્રીન સંપૂર્ણપણે બંધ (Zero White Flash Launch):**
-              - એપ ઓપન કરતી વખતે આવતી સફેદ સ્ક્રીન સંપૂર્ણપણે બંધ કરી દેવાઈ છે.
-              - Android 12+ નેટિવ સ્પ્લેશ API (`windowSplashScreenBackground`) અને ઇન્સ્ટન્ટ પ્રિ-લોડર દ્વારા એપ ટચ કરતાં જ ૧ મિલિસેકન્ડમાં રોયલ મિડનાઇટ નેવી (`#070D32`) અને ગોલ્ડન ડાયરી બ્રાન્ડિંગ ડિસ્પ્લે થાય છે.
-            - **🌟 નવું ઇન્ટરેક્ટિવ સ્વાગત & દૈનિક સુવિચાર (Welcome Splash Screen):**
-              - એપ ખૂલતાં જ સમય મુજબ શુભ સવાર / શુભ બપોર / શુભ સાંજ / શુભ રાત્રિનું સોનેરી અભિવાદન.
-              - આજનો ગુજરાતી વાર, તારીખ અને દિવસનો પ્રેરણાદાયી સુવિચાર દર્શાવાય છે.
-              - પ્રોફાઇલ / સેટિંગ્સમાંથી આ સ્ક્રીન ગમે ત્યારે ચાલુ/બંધ (On/Off) કરી શકાય છે.
-            - **✨ નવો રોયલ એપ આઇકન અને પ્રીમિયમ સ્પ્લેશ બ્રાન્ડિંગ.**
+            આ નવા વર્ઝનમાં કરવામાં આવેલા વિશેષ સુધારા:
+            - **⚡ એપ ઓપનિંગ બ્લેન્ક સ્ક્રીન ફિક્સ (Instant Launch Fix):**
+              - એપ ઓપન કરતી વખતે આવતી બ્લેન્ક/અટકી જતી સ્ક્રીનની સમસ્યા સંપૂર્ણપણે ફિક્સ કરી દેવાઈ છે.
+              - હવે એપ ટચ કરતાં જ સીધી સ્મૂથલી અને કોઈ પણ અડચણ વગર હોમ સ્ક્રીન પર ખૂલે છે.
+            - **✨ નવો રોયલ એપ આઇકન (Golden Feather Quill & Luxury Diary):**
+              - મોબાઇલ હોમસ્ક્રીન પર અતિ આકર્ષક ગોલ્ડન કલમ અને પ્રીમિયમ રોયલ ડાયરી આઇકન.
+            - **🚀 ફાસ્ટ અને સુપર સ્મૂથ પરફોર્મન્સ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.23.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.24.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.23.apk
+            daily-diary-v1.0.24.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
