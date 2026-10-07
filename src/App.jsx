@@ -492,7 +492,12 @@ export default function App() {
     });
   };
 
-  const checkCanAdd = () => true;
+  const checkCanAdd = (callback) => {
+    if (typeof callback === 'function') {
+      callback();
+    }
+    return true;
+  };
 
   // Transfer calculated amount directly to finance
   const handleTransferAmount = (amount, type) => {
@@ -964,7 +969,7 @@ export default function App() {
             onStepIncrement={handleStepIncrement}
             onUpdateWater={handleUpdateWater}
             onUpdateFitness={handleUpdateFitness}
-            onOpenShopping={() => checkCanAdd(() => setIsShoppingOpen(true))}
+            onOpenShopping={() => setIsShoppingOpen(true)}
             onOpenEmergency={() => setIsEmergencyOpen(true)}
             onOpenPhotoGallery={() => setIsPhotoGalleryOpen(true)}
             dailyQuote={dailyQuote}
@@ -1003,7 +1008,7 @@ export default function App() {
             events={events}
             onSaveEvents={handleSaveEvents}
             onTriggerAlarm={handleCustomTriggerAlarm}
-            onOpenShopping={() => checkCanAdd(() => setIsShoppingOpen(true))}
+            onOpenShopping={() => setIsShoppingOpen(true)}
             shoppingList={shoppingList}
             onSaveShopping={handleSaveShopping}
             user={user}

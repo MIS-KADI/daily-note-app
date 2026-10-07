@@ -5,7 +5,7 @@ import { t } from '../services/i18n';
 export default function ShoppingModal({
   isOpen,
   onClose,
-  shoppingList,
+  shoppingList = [],
   onSaveShopping,
   onAddExpense,
   lang = 'gu',

@@ -430,7 +430,9 @@ export default function HomeTab({
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
             🛒
           </div>
-          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('btn_shopping', lang)}</span>
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">
+            {lang === 'gu' ? 'ખરીદી' : t('btn_shopping', lang)}
+          </span>
         </button>
 
         <button

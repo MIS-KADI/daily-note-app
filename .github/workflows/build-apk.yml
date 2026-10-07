@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.26.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.27.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.26.apk
+            daily-diary-v1.0.27.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,23 +68,23 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.26
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.26 Zero Blank Screen & Instant Launch Fix)"
+          tag_name: v1.0.27
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.27 Shopping List & Quick Actions Fix)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.26)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.27)
 
             આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ સુધારા:
-            - **⚡ બ્લેન્ક/સફેદ સ્ક્રીનની ખામી સંપૂર્ણ ફિક્સ (Zero Blank Screen Fix):**
-              - એપ ઓપન કરતી વખતે આવતી બ્લેન્ક/ખાલી સ્ક્રીનની સમસ્યાનું મૂળ કારણ (અનડિફાઇન્ડ સ્ટેટ વેરીએબલ્સ અને ટાઈમર કેલ્ક્યુલેશન) સંપૂર્ણપણે દૂર કરવામાં આવ્યું છે.
-              - હવે એપ ટચ કરતાં જ તરત કોઈપણ અટકાવ વગર સીધી હોમ સ્ક્રીન પર ખૂલશે.
-            - **🛡️ ગ્લોબલ એરર બાઉન્ડ્રી પ્રોટેક્શન (Crash Proof):**
-              - એપમાં સેફગાર્ડ પ્રોટેક્શન ઉમેર્યું છે જેથી સ્ક્રીન ક્યારેય બ્લેન્ક ન રહે.
-            - **🌅 સૂર્યોદય પ્રેરણા ડાયરી - ફુલ સાઈઝ ચોરસ/સ્ક્વિર્કલ આઇકન (Full-Size Squircle Icon):**
-              - Option 3 ચોરસ સાઈઝમાં જ સેટ કરેલો છે.
+            - **🛒 ખરીદી યાદી બટન સંપૂર્ણ સક્રિય (Shopping List Button Fixed & Fully Working):**
+              - હોમ સ્ક્રીન પર આવેલ 'ખરીદી' (🛒) બટન ક્લિક કરતાં ખરીદી યાદીનું મોડલ તાત્કાલિક ખૂલે છે.
+              - નામ કપાઈ જતું હતું (ખ...) તેની જગ્યાએ હવે સ્વચ્છ અને સ્પષ્ટ 'ખરીદી' ડિસ્પ્લે થાય છે.
+              - ખરીદી યાદીમાં વસ્તુ ઉમેરો, ભાવ લખો, ચેકમાર્ક કરો અને સીધો ખર્ચ હિસાબમાં ટ્રાન્સફર કરી શકો છો.
+            - **⚡ ફાસ્ટ સ્ટાર્ટઅપ અને સ્મૂથ લૉન્ચ:**
+              - કોઈ બ્લેન્ક સ્ક્રીન વગર સીધી હોમ સ્ક્રીન પર ખૂલે છે.
+            - **🌅 સૂર્યોદય પ્રેરણા ડાયરી - ફુલ સાઈઝ ચોરસ/સ્ક્વિર્કલ આઇકન.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.26.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.27.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.26.apk
+            daily-diary-v1.0.27.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
