@@ -43,6 +43,9 @@ export default function ProfileTab({
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(user?.isBiometricEnabled ?? true);
   const [isNightDiaryReminder, setIsNightDiaryReminder] = useState(user?.isNightDiaryReminder ?? true);
   const [isWaterReminder, setIsWaterReminder] = useState(user?.isWaterReminder ?? true);
+  const [isWelcomeSplashEnabled, setIsWelcomeSplashEnabled] = useState(() => {
+    return localStorage.getItem('daily_diary_show_welcome_splash') !== 'false';
+  });
   const [savedNotice, setSavedNotice] = useState(false);
   const [biometricNotice, setBiometricNotice] = useState('');
   const [isBiometricTesting, setIsBiometricTesting] = useState(false);
@@ -331,6 +334,26 @@ export default function ProfileTab({
                   className="sr-only peer"
                 />
                 <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-600"></div>
+              </label>
+            </div>
+
+            {/* Animated Welcome / Suvichar Screen on App Launch */}
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-800 block">✨ એપ ઓપનિંગ સ્વાગત સ્ક્રીન & સુવિચાર</span>
+                <span className="text-[10px] text-slate-500 block">એપ શરૂ થતાં રોયલ ગોલ્ડન સ્વાગત અને પ્રેરણાદાયી સુવિચાર દર્શાવો</span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isWelcomeSplashEnabled}
+                  onChange={(e) => {
+                    setIsWelcomeSplashEnabled(e.target.checked);
+                    localStorage.setItem('daily_diary_show_welcome_splash', e.target.checked ? 'true' : 'false');
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
               </label>
             </div>
           </div>

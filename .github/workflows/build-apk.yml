@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.22.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.23.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.22.apk
+            daily-diary-v1.0.23.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,25 +68,24 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.22
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.22 Beautiful New App Launcher Icon & Branding)"
+          tag_name: v1.0.23
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.23 Zero-White-Screen Instant Royal Splash & Daily Suvichar)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.22)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.23)
 
-            આ નવા વર્ઝનમાં કરવામાં આવેલા વિશેષ સુધારા:
-            - **✨ આકર્ષક અને પ્રીમિયમ એપ આઇકન (Stunning New App Launcher Icon):**
-              - જૂનો ડિફોલ્ટ કેપેસિટર વાદળી આઇકન સંપૂર્ણપણે બદલી નાખવામાં આવ્યો છે.
-              - હવે રોયલ મિડનાઇટ નેવી બ્લુ બેકગ્રાઉન્ડ પર ગોલ્ડન ફેધર કલમ (Quill), ચમકતા સોનેરી તારલા અને પ્રીમિયમ 3D ડેઇલી ડાયરી બુક સાથે અતિ આકર્ષક નવો આઇકન સેટ કર્યો છે.
-              - ગોળ (Round), સ્ક્વિર્કલ (Squircle), અને એડેપ્ટિવ (Adaptive Foreground & Background) તમામ એન્ડ્રોઇડ ફોન સ્ક્રીન સાઇઝ (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi) માટે હાઇ-ડેફિનેશનમાં બનાવ્યો છે.
-            - **🌟 નવો પ્રીમિયમ સ્પ્લેશ સ્ક્રીન (Branded Splash Screen):**
-              - એપ ઓપન કરતી વખતે આવતી સ્પ્લેશ સ્ક્રીન પણ નવા ડાર્ક રોયલ નેવી અને ગોલ્ડન ડાયરી બ્રાન્ડિંગ સાથે સુંદર બનાવી દીધી છે.
-            - **🚀 પરમિશન આપ્યા પછી સીધી ઍપ ઓપન થાય છે (Fixed Startup Flow):**
-              - પરમિશન Allow કર્યા પછી સીધું સંપર્ક ડિરેક્ટરી ખૂલવાની જગ્યાએ સીધી એપની હોમ સ્ક્રીન જ ખૂલશે.
-            - **👥 નેટિવ કોન્ટેક્ટ પીકર (Native Phone Contacts Picker) અને 24/7 સ્ટેપ ટ્રેકિંગ સર્વિસ.**
+            આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ સુધારા:
+            - **⚡ સફેદ સ્ક્રીન સંપૂર્ણપણે બંધ (Zero White Flash Launch):**
+              - એપ ઓપન કરતી વખતે આવતી સફેદ સ્ક્રીન સંપૂર્ણપણે બંધ કરી દેવાઈ છે.
+              - Android 12+ નેટિવ સ્પ્લેશ API (`windowSplashScreenBackground`) અને ઇન્સ્ટન્ટ પ્રિ-લોડર દ્વારા એપ ટચ કરતાં જ ૧ મિલિસેકન્ડમાં રોયલ મિડનાઇટ નેવી (`#070D32`) અને ગોલ્ડન ડાયરી બ્રાન્ડિંગ ડિસ્પ્લે થાય છે.
+            - **🌟 નવું ઇન્ટરેક્ટિવ સ્વાગત & દૈનિક સુવિચાર (Welcome Splash Screen):**
+              - એપ ખૂલતાં જ સમય મુજબ શુભ સવાર / શુભ બપોર / શુભ સાંજ / શુભ રાત્રિનું સોનેરી અભિવાદન.
+              - આજનો ગુજરાતી વાર, તારીખ અને દિવસનો પ્રેરણાદાયી સુવિચાર દર્શાવાય છે.
+              - પ્રોફાઇલ / સેટિંગ્સમાંથી આ સ્ક્રીન ગમે ત્યારે ચાલુ/બંધ (On/Off) કરી શકાય છે.
+            - **✨ નવો રોયલ એપ આઇકન અને પ્રીમિયમ સ્પ્લેશ બ્રાન્ડિંગ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.22.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.23.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.22.apk
+            daily-diary-v1.0.23.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
