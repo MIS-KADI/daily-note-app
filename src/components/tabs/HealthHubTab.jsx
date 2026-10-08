@@ -29,6 +29,12 @@ import {
   Zap,
   BarChart3,
   Droplets,
+  Wind,
+  Play,
+  Pause,
+  RotateCcw,
+  ShieldCheck,
+  Award,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t } from '../../services/i18n';
@@ -558,6 +564,195 @@ export default function HealthHubTab({
     );
   };
 
+  // ----------------------------------------------------
+  // 5. LUNGS & BREATHING EXERCISE STATE & LOGIC
+  // ----------------------------------------------------
+  const [breathMode, setBreathMode] = useState('478'); // '478' | 'box' | 'anulom' | 'deep'
+  const [breathPhaseIndex, setBreathPhaseIndex] = useState(0);
+  const [breathSecondsLeft, setBreathSecondsLeft] = useState(4);
+  const [breathRound, setBreathRound] = useState(1);
+  const [isBreathingActive, setIsBreathingActive] = useState(false);
+
+  // Lung Capacity Breath-Hold Test
+  const [isTestActive, setIsTestActive] = useState(false);
+  const [testTime, setTestTime] = useState(0);
+  const [testCompleted, setTestCompleted] = useState(false);
+  const [bestTestTime, setBestTestTime] = useState(() => {
+    try {
+      return Number(localStorage.getItem('daily_note_lung_best') || 0);
+    } catch {
+      return 0;
+    }
+  });
+
+  const BREATH_MODES = {
+    '478': {
+      title: '૪-૭-૮ પદ્ધતિ (4-7-8 Deep Lung Expansion)',
+      sub: 'ઓક્સિજન વિસ્તરણ & માનસિક શાંતિ',
+      badge: 'ડો. વેઇલ પદ્ધતિ',
+      phases: [
+        { name: 'inhale', duration: 4, label: 'ઊંડો શ્વાસ અંદર લો 🌬️', color: 'from-cyan-500 to-teal-500' },
+        { name: 'hold', duration: 7, label: 'શ્વાસ રોકી રાખો ⏸️', color: 'from-amber-500 to-orange-500' },
+        { name: 'exhale', duration: 8, label: 'ધીમેથી શ્વાસ બહાર કાઢો 💨', color: 'from-indigo-500 to-blue-500' },
+      ],
+    },
+    'box': {
+      title: 'બોક્સ બ્રિધિંગ (Box 4-4-4-4)',
+      sub: 'ફેફસાંના વાયુકોષો સક્રિય & મજબૂત',
+      badge: 'સમવૃત્તિ પ્રાણાયામ',
+      phases: [
+        { name: 'inhale', duration: 4, label: 'શ્વાસ અંદર લો 🌬️', color: 'from-cyan-500 to-teal-500' },
+        { name: 'hold', duration: 4, label: 'શ્વાસ રોકી રાખો ⏸️', color: 'from-amber-500 to-orange-500' },
+        { name: 'exhale', duration: 4, label: 'શ્વાસ બહાર કાઢો 💨', color: 'from-indigo-500 to-blue-500' },
+        { name: 'hold_empty', duration: 4, label: 'ખાલી ફેફસાં રોકો 🧘', color: 'from-purple-500 to-pink-500' },
+      ],
+    },
+    'anulom': {
+      title: 'અનુલોમ-વિલોમ (નાડીશોધન)',
+      sub: 'બંને ફેફસાંનું સંતુલિત શુદ્ધિકરણ',
+      badge: 'યોગિક શ્વાસ',
+      phases: [
+        { name: 'inhale_left', duration: 4, label: 'ડાબા નસકોરેથી શ્વાસ લો 👈', color: 'from-emerald-500 to-teal-500' },
+        { name: 'hold', duration: 4, label: 'બંને નસકોરાં બંધ કરી રોકો ⏸️', color: 'from-amber-500 to-orange-500' },
+        { name: 'exhale_right', duration: 4, label: 'જમણા નસકોરેથી બહાર કાઢો 👉', color: 'from-blue-500 to-cyan-500' },
+        { name: 'inhale_right', duration: 4, label: 'જમણા નસકોરેથી શ્વાસ લો 👉', color: 'from-emerald-500 to-teal-500' },
+        { name: 'hold_2', duration: 4, label: 'બંને નસકોરાં બંધ કરી રોકો ⏸️', color: 'from-amber-500 to-orange-500' },
+        { name: 'exhale_left', duration: 4, label: 'ડાબા નસકોરેથી બહાર કાઢો 👈', color: 'from-blue-500 to-cyan-500' },
+      ],
+    },
+    'deep': {
+      title: 'ડીપ લંગ એક્સ્પાન્શન (5-10-5)',
+      sub: 'મહત્તમ ફેફસાં ક્ષમતા & પાવર',
+      badge: 'હાર્ડ ટ્રેઇનિંગ',
+      phases: [
+        { name: 'inhale', duration: 5, label: 'ફેફસાં પૂરા ભરીને શ્વાસ લો 🌬️', color: 'from-teal-500 to-emerald-500' },
+        { name: 'hold', duration: 10, label: 'ઓક્સિજન રોકી રાખો (૧૦ સે.) ⏸️', color: 'from-amber-500 to-rose-500' },
+        { name: 'exhale', duration: 5, label: 'ધીમેથી પૂર્ણ શ્વાસ ખાલી કરો 💨', color: 'from-blue-500 to-indigo-500' },
+      ],
+    },
+  };
+
+  const currentPattern = BREATH_MODES[breathMode] || BREATH_MODES['478'];
+  const currentPhase = currentPattern.phases[breathPhaseIndex] || currentPattern.phases[0];
+
+  const playSoftChime = (frequency = 520) => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.45);
+    } catch {}
+  };
+
+  // Breathing Interval
+  useEffect(() => {
+    if (!isBreathingActive) return;
+
+    const interval = setInterval(() => {
+      setBreathSecondsLeft((prev) => {
+        if (prev <= 1) {
+          const nextIndex = (breathPhaseIndex + 1) % currentPattern.phases.length;
+          setBreathPhaseIndex(nextIndex);
+          if (nextIndex === 0) {
+            setBreathRound((r) => r + 1);
+          }
+          const nextDuration = currentPattern.phases[nextIndex].duration;
+          playSoftChime(nextIndex === 0 ? 587 : 440);
+          return nextDuration;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isBreathingActive, breathPhaseIndex, breathMode, currentPattern]);
+
+  // Breath Hold Test Stopwatch
+  useEffect(() => {
+    if (!isTestActive) return;
+    const timer = setInterval(() => {
+      setTestTime((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isTestActive]);
+
+  const handleStartBreath = () => {
+    setIsBreathingActive(true);
+    setBreathPhaseIndex(0);
+    setBreathSecondsLeft(currentPattern.phases[0].duration);
+    playSoftChime(587);
+  };
+
+  const handlePauseBreath = () => {
+    setIsBreathingActive(false);
+  };
+
+  const handleResetBreath = () => {
+    setIsBreathingActive(false);
+    setBreathPhaseIndex(0);
+    setBreathRound(1);
+    setBreathSecondsLeft(currentPattern.phases[0].duration);
+  };
+
+  const handleStartLungTest = () => {
+    setIsTestActive(true);
+    setTestTime(0);
+    setTestCompleted(false);
+  };
+
+  const handleStopLungTest = () => {
+    setIsTestActive(false);
+    setTestCompleted(true);
+    if (testTime > bestTestTime) {
+      setBestTestTime(testTime);
+      try {
+        localStorage.setItem('daily_note_lung_best', String(testTime));
+      } catch {}
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    }
+  };
+
+  const getLungTestScore = (sec) => {
+    if (sec < 20) {
+      return {
+        badge: 'સામાન્ય / સુધારો જરૂરી',
+        badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+        desc: 'તમારા ફેફસાંને તાલીમની જરૂર છે. દરરોજ સવારે ૫ મિનિટ ૪-૭-૮ અથવા અનુલોમ-વિલોમ પ્રાણાયામ કરો.',
+        icon: '⚠️',
+      };
+    } else if (sec < 40) {
+      return {
+        badge: 'સરેરાશ સ્વસ્થ ફેફસાં',
+        badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        desc: 'તમારા ફેફસાં સારા અને સામાન્ય કાર્યક્ષમ છે. નિયમિત વૉક અને પ્રાણાયામથી ક્ષમતા ૬૦ સેકન્ડ સુધી લઈ જઈ શકો છો.',
+        icon: '👍',
+      };
+    } else if (sec < 60) {
+      return {
+        badge: 'ખૂબ મજબૂત ફેફસાં!',
+        badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+        desc: 'વાહ! તમારા ફેફસાંની ઓક્સિજન ક્ષમતા ઉત્કૃષ્ટ છે. તમારા શ્વસનતંત્રની શક્તિ ઘણી ઊંચી છે.',
+        icon: '💪',
+      };
+    } else {
+      return {
+        badge: 'અલ્ટ્રા-સ્ટ્રોંગ એથ્લેટ લેવલ! 🏆',
+        badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
+        desc: 'અદ્ભુત! ૧ મિનિટથી વધુ શ્વાસ રોકવો એ રમતવીરો (Athletes) અને યોગી જેવી લોખંડી ફેફસાં ક્ષમતા દર્શાવે છે!',
+        icon: '🌟',
+      };
+    }
+  };
+
   return (
     <div className="space-y-4 pb-20 animate-in fade-in duration-200">
       {/* Top Header Card */}
@@ -595,67 +790,63 @@ export default function HealthHubTab({
         </div>
       </div>
 
-      {/* Segmented Controller (Sub-tabs) */}
-      <div className="bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 grid grid-cols-5 gap-1 shadow-xs">
-        <button
-          onClick={() => setActiveSubTab('fitness')}
-          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
-            activeSubTab === 'fitness'
-              ? 'bg-teal-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Footprints size={13} />
-          <span>{t('subtab_fitness', lang)}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('water')}
-          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
-            activeSubTab === 'water'
-              ? 'bg-teal-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Droplets size={13} />
-          <span>{lang === 'gu' ? 'પાણી' : lang === 'hi' ? 'पानी' : 'Water'}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('medicines')}
-          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
-            activeSubTab === 'medicines'
-              ? 'bg-teal-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Pill size={13} />
-          <span>{t('subtab_medicines', lang)}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('cardio')}
-          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
-            activeSubTab === 'cardio'
-              ? 'bg-teal-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Activity size={13} />
-          <span>{t('subtab_cardio', lang)}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('bmi')}
-          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 ${
-            activeSubTab === 'bmi'
-              ? 'bg-teal-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Scale size={13} />
-          <span>{t('subtab_bmi', lang)}</span>
-        </button>
+      {/* Segmented Controller (Sub-tabs) - Clean, scrollable, single-icon pill design */}
+      <div className="bg-slate-100/90 dark:bg-slate-900/90 p-1.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xs">
+        {[
+          {
+            id: 'fitness',
+            label: lang === 'gu' ? 'સ્ટેપ્સ & જીમ' : lang === 'hi' ? 'स्टेप्स & जिम' : 'Steps & Gym',
+            icon: Footprints,
+            color: 'text-emerald-500',
+          },
+          {
+            id: 'lungs',
+            label: t('subtab_lungs', lang) || (lang === 'gu' ? 'ફેફસાં & કસરત' : lang === 'hi' ? 'फेफड़े और कसरत' : 'Lungs & Breath'),
+            icon: Wind,
+            color: 'text-cyan-500',
+          },
+          {
+            id: 'water',
+            label: lang === 'gu' ? 'પાણી ટ્રેકર' : lang === 'hi' ? 'पानी ट्रैकर' : 'Water Tracker',
+            icon: Droplets,
+            color: 'text-blue-500',
+          },
+          {
+            id: 'medicines',
+            label: lang === 'gu' ? 'દવાઓ' : lang === 'hi' ? 'दवाइयाँ' : 'Medicines',
+            icon: Pill,
+            color: 'text-rose-500',
+          },
+          {
+            id: 'cardio',
+            label: lang === 'gu' ? 'કાર્ડિયો & પલ્સ' : lang === 'hi' ? 'कार्डियो & पल्स' : 'Cardio & Pulse',
+            icon: Activity,
+            color: 'text-pink-500',
+          },
+          {
+            id: 'bmi',
+            label: lang === 'gu' ? 'BMI કેલ્ક્યુલેટર' : lang === 'hi' ? 'BMI कैलकुलेटर' : 'BMI Calc',
+            icon: Scale,
+            color: 'text-purple-500',
+          },
+        ].map((tab) => {
+          const isActive = activeSubTab === tab.id;
+          const IconComp = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSubTab(tab.id)}
+              className={`py-2 px-3.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-95 cursor-pointer ${
+                isActive
+                  ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30 ring-1 ring-teal-500'
+                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200/70 dark:border-slate-700/70'
+              }`}
+            >
+              <IconComp size={15} className={isActive ? 'text-white' : tab.color} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* ==================================================== */}
@@ -1457,6 +1648,277 @@ export default function HealthHubTab({
             >
               {t('save_vitals', lang)}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================== */}
+      {/* 5. LUNGS & BREATHING SUB-TAB CONTENT                 */}
+      {/* ==================================================== */}
+      {activeSubTab === 'lungs' && (
+        <div className="space-y-4">
+          {/* Main Breathing Trainer Card */}
+          <div className="bg-gradient-to-br from-cyan-900 via-teal-900 to-slate-900 rounded-3xl p-5 text-white shadow-xl relative overflow-hidden border border-teal-500/20">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-2xl bg-cyan-500/20 backdrop-blur-md text-cyan-300">
+                  <Wind size={22} className="animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold flex items-center gap-1.5">
+                    <span>ફેફસાં વિસ્તરણ & પ્રાણાયામ</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 font-semibold border border-cyan-400/30">
+                      {currentPattern.badge}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-cyan-200/80">{currentPattern.sub}</p>
+                </div>
+              </div>
+              {isBreathingActive && (
+                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-500/30 text-teal-200 border border-teal-400/30 animate-pulse">
+                  રાઉન્ડ {breathRound}
+                </span>
+              )}
+            </div>
+
+            {/* Pattern Mode Selector Pills */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-5">
+              {[
+                { id: '478', label: '૪-૭-૮ પદ્ધતિ', icon: '🌬️' },
+                { id: 'box', label: 'બોક્સ ૪-૪-૪-૪', icon: '📦' },
+                { id: 'anulom', label: 'અનુલોમ-વિલોમ', icon: '🧘' },
+                { id: 'deep', label: 'ડીપ લંગ (૫-૧૦-૫)', icon: '💪' },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    setBreathMode(m.id);
+                    setIsBreathingActive(false);
+                    setBreathPhaseIndex(0);
+                    setBreathRound(1);
+                    setBreathSecondsLeft(BREATH_MODES[m.id].phases[0].duration);
+                  }}
+                  className={`py-2 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border active:scale-95 cursor-pointer ${
+                    breathMode === m.id
+                      ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-cyan-400 shadow-md shadow-cyan-500/25'
+                      : 'bg-white/10 text-cyan-100 hover:bg-white/15 border-white/10'
+                  }`}
+                >
+                  <span>{m.icon}</span>
+                  <span>{m.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Visual Breathing Circle & Live Countdown */}
+            <div className="py-6 flex flex-col items-center justify-center relative">
+              {/* Outer Pulsing Glow */}
+              <div
+                className={`w-52 h-52 rounded-full flex flex-col items-center justify-center transition-all duration-700 relative shadow-2xl ${
+                  isBreathingActive
+                    ? currentPhase.name === 'inhale' || currentPhase.name.startsWith('inhale')
+                      ? 'scale-115 ring-8 ring-cyan-400/40 bg-gradient-to-tr from-cyan-600/90 to-teal-500/90 shadow-cyan-500/50'
+                      : currentPhase.name === 'hold' || currentPhase.name.startsWith('hold')
+                      ? 'scale-115 ring-10 ring-amber-400/50 bg-gradient-to-tr from-amber-600/90 to-orange-500/90 shadow-orange-500/50 animate-pulse'
+                      : 'scale-90 ring-4 ring-blue-400/30 bg-gradient-to-tr from-blue-700/80 to-indigo-600/80 shadow-blue-500/40'
+                    : 'bg-gradient-to-tr from-slate-800 to-slate-700 ring-4 ring-white/10'
+                }`}
+              >
+                {/* Countdown & Phase Indicator */}
+                <div className="text-center z-10 space-y-1">
+                  <span className="text-5xl font-black tracking-tight text-white drop-shadow-md">
+                    {isBreathingActive ? breathSecondsLeft : '૪'}
+                  </span>
+                  <span className="text-xs font-extrabold uppercase tracking-widest block text-white/90">
+                    સેકન્ડ
+                  </span>
+                  <div className="mt-1 px-3 py-1 rounded-full bg-black/30 backdrop-blur-md text-[11px] font-bold text-white shadow-xs">
+                    {isBreathingActive ? currentPhase.label : 'તૈયાર થાઓ'}
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-cyan-200 mt-5 font-medium text-center max-w-xs">
+                {isBreathingActive
+                  ? currentPhase.name === 'inhale' || currentPhase.name.startsWith('inhale')
+                    ? 'નાક વાટે ધીમે-ધીમે પૂરા ફેફસાં ભરીને ઊંડો શ્વાસ અંદર ખેંચો...'
+                    : currentPhase.name === 'hold' || currentPhase.name.startsWith('hold')
+                    ? 'ફેફસાંમાં ભરેલો ઓક્સિજન સ્થિર રોકી રાખો...'
+                    : 'મોં અથવા નાક વાટે ધીમેથી સંપૂર્ણ શ્વાસ બહાર કાઢો...'
+                  : 'બેસો, કરોડરજ્જુ સીધી રાખો અને કસરત શરૂ કરવા નીચે બટન દબાવો.'}
+              </p>
+            </div>
+
+            {/* Breathing Control Buttons */}
+            <div className="flex gap-2.5 pt-2">
+              {!isBreathingActive ? (
+                <button
+                  type="button"
+                  onClick={handleStartBreath}
+                  className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer"
+                >
+                  <Play size={16} fill="white" />
+                  <span>પ્રાણાયામ શરૂ કરો (Start Breathing)</span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePauseBreath}
+                    className="flex-1 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer"
+                  >
+                    <Pause size={16} fill="white" />
+                    <span>થોભો (Pause)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResetBreath}
+                    className="py-3 px-4 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-98 transition cursor-pointer"
+                  >
+                    <RotateCcw size={16} />
+                    <span>રીસેટ</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Lung Capacity Breath-Hold Test Stopwatch Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+                  <ShieldCheck size={22} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    ફેફસાંની ક્ષમતા ટેસ્ટ (Lung Breath-Hold Test)
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    તમે કેટલી સેકન્ડ શ્વાસ રોકી શકો છો તે માપો
+                  </p>
+                </div>
+              </div>
+
+              {bestTestTime > 0 && (
+                <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2.5 py-1 rounded-xl text-amber-700 dark:text-amber-300 text-xs font-bold">
+                  <Award size={14} />
+                  <span>શ્રેષ્ઠ: {bestTestTime}s</span>
+                </div>
+              )}
+            </div>
+
+            {/* Live Stopwatch Display */}
+            <div className="text-center py-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
+              <span className="text-4xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+                {String(Math.floor(testTime / 60)).padStart(2, '0')}:{String(testTime % 60).padStart(2, '0')}
+              </span>
+              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                {isTestActive ? '🌬️ શ્વાસ રોકી રાખો... તમારો સમય ગણાઈ રહ્યો છે' : 'ઊંડો શ્વાસ ભરીને શરૂ કરો'}
+              </p>
+            </div>
+
+            {/* Test Action Buttons */}
+            <div>
+              {!isTestActive ? (
+                <button
+                  type="button"
+                  onClick={handleStartLungTest}
+                  className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer"
+                >
+                  <Play size={16} fill="white" />
+                  <span>ઊંડો શ્વાસ લઈ ટેસ્ટ શરૂ કરો</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleStopLungTest}
+                  className="w-full py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-600/30 flex items-center justify-center gap-2 animate-pulse active:scale-98 transition cursor-pointer"
+                >
+                  <Pause size={16} fill="white" />
+                  <span>હવે શ્વાસ બહાર કાઢો (ટેસ્ટ પૂર્ણ કરો)</span>
+                </button>
+              )}
+            </div>
+
+            {/* Test Evaluation Result Card */}
+            {testCompleted && (
+              <div className="animate-in fade-in space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                {(() => {
+                  const score = getLungTestScore(testTime);
+                  return (
+                    <div className="bg-gradient-to-br from-slate-50 to-indigo-50/50 dark:from-slate-800 dark:to-slate-800/80 p-4 rounded-2xl border border-indigo-200/60 dark:border-slate-700 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          તમારો સ્કોર: <strong>{testTime} સેકન્ડ</strong>
+                        </span>
+                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${score.badgeColor}`}>
+                          {score.badge}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                        {score.desc}
+                      </p>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* 4 Golden Lung Health Ayurvedic Tips */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🌿</span>
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  ફેફસાં મજબૂત રાખવાના ૪ ઉત્તમ આયુર્વેદિક ઉપાયો
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  રોજિંદા જીવનમાં આ નિયમો પાળવાથી ફેફસાં સ્વસ્થ રહે છે
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              {[
+                {
+                  icon: '☕',
+                  title: 'તુલસી & આદુનો ઉકાળો',
+                  desc: 'તુલસી, આદુ અને કાળા મરીનો ઉકાળો પીવાથી ફેફસાંમાંથી કફ નીકળી જાય છે અને શ્વાસનળીઓ સાફ રહે છે.',
+                  bg: 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/60',
+                },
+                {
+                  icon: '💨',
+                  title: 'ગરમ પાણીની વરાળ (Steam)',
+                  desc: 'અઠવાડિયામાં ૨-૩ વાર અજમો કે ફુદીનો નાખીને વરાળ લેવાથી ફેફસાંના વાયુકોષો તરત ખૂલી જાય છે.',
+                  bg: 'bg-cyan-50/80 dark:bg-cyan-950/30 border-cyan-200/80 dark:border-cyan-800/60',
+                },
+                {
+                  icon: '🌅',
+                  title: 'વહેલી સવારે તાજી હવામાં વૉક',
+                  desc: 'સૂર્યોદય સમયે ઝાડ-પાન વચ્ચે ૧૫ મિનિટ ઊંડા શ્વાસ સાથે ચાલવાથી ફેફસાંને શુદ્ધ ઓક્સિજન મળે છે.',
+                  bg: 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-800/60',
+                },
+                {
+                  icon: '🥛',
+                  title: 'હળદરવાળું નવશેકું દૂધ',
+                  desc: 'રાત્રે હળદર અને સહેજ સૂંઠ વાળું દૂધ પીવાથી ફેફસાંનું ઇન્ફેક્શન અટકે છે અને રોગપ્રતિકારક શક્તિ વધે છે.',
+                  bg: 'bg-purple-50/80 dark:bg-purple-950/30 border-purple-200/80 dark:border-purple-800/60',
+                },
+              ].map((tip, idx) => (
+                <div key={idx} className={`p-3 rounded-2xl border ${tip.bg} space-y-1`}>
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800 dark:text-slate-100">
+                    <span className="text-base">{tip.icon}</span>
+                    <span>{tip.title}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
+                    {tip.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

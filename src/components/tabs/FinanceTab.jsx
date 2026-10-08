@@ -162,6 +162,28 @@ export default function FinanceTab({
 
   const handleDeleteTx = (id) => {
     if (window.confirm(t('delete_tx_confirm', lang))) {
+      const target = finance.find((f) => f.id === id);
+      if (target) {
+        const amt = Number(target.amount || 0);
+        const pMode = target.paymentMode || '';
+        const isCash =
+          pMode.includes('રોકડ') ||
+          pMode.includes('Cash') ||
+          pMode.includes('નકદ') ||
+          pMode.includes('Efectivo') ||
+          pMode.includes('Espèces') ||
+          pMode.includes('Bargeld') ||
+          pMode.includes('نقداً');
+
+        // Revert: if deleted was expense, add back to balance; if income, deduct
+        if (isCash) {
+          const nextCash = target.type === 'expense' ? cashBalance + amt : cashBalance - amt;
+          onSaveAccounts({ ...accounts, cashBalance: nextCash });
+        } else {
+          const nextBank = target.type === 'expense' ? bankBalance + amt : bankBalance - amt;
+          onSaveAccounts({ ...accounts, bankBalance: nextBank });
+        }
+      }
       onSaveFinance(finance.filter((f) => f.id !== id));
     }
   };

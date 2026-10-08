@@ -396,16 +396,24 @@ export default function App() {
   // Direct transfer shopping to expenses
   const handleAddShoppingExpense = (amount, description) => {
     setActiveTab('finance');
+    const num = Number(amount || 0);
     const newEntry = {
       id: 'fin-' + Date.now(),
       type: 'expense',
-      amount,
+      amount: num,
       category: 'કરિયાણું / ઘરખર્ચ',
       description,
       paymentMode: 'UPI (GPay/PhonePe)',
       date: new Date().toISOString().split('T')[0],
     };
     handleSaveFinance([newEntry, ...finance]);
+
+    // Deduct from bank balance
+    if (num > 0) {
+      const currentBank = Number(accounts?.bankBalance || 0);
+      const nextBank = currentBank - num;
+      handleSaveAccounts({ ...accounts, bankBalance: nextBank });
+    }
   };
 
   // Theme toggle handler
@@ -506,31 +514,72 @@ export default function App() {
   // Transfer calculated amount directly to finance
   const handleTransferAmount = (amount, type) => {
     setActiveTab('finance');
+    const num = Number(amount || 0);
     const newEntry = {
       id: 'fin-' + Date.now(),
       type,
-      amount,
+      amount: num,
       category: type === 'expense' ? 'કરિયાણું / ઘરખર્ચ' : 'પગાર / આવક',
       description: 'કેલ્ક્યુલેટરમાંથી ગણેલ રકમ',
       paymentMode: 'UPI (GPay/PhonePe)',
       date: new Date().toISOString().split('T')[0],
     };
     handleSaveFinance([newEntry, ...finance]);
+
+    if (num > 0) {
+      const currentBank = Number(accounts?.bankBalance || 0);
+      const nextBank = type === 'income' ? currentBank + num : currentBank - num;
+      handleSaveAccounts({ ...accounts, bankBalance: nextBank });
+    }
   };
 
   // Smart Voice Assistant & Bank SMS Handlers
   const handleAddParsedFinance = (tx) => {
     setActiveTab('finance');
+    const amt = Number(tx.amount || 0);
+    const txType = tx.type || 'expense';
+    const pMode = tx.paymentMode || 'UPI (GPay/PhonePe)';
+
     const newEntry = {
       id: 'fin-' + Date.now(),
-      type: tx.type || 'expense',
-      amount: Number(tx.amount || 0),
-      category: tx.category || (tx.type === 'income' ? 'પગાર / આવક' : 'અન્ય ખર્ચ'),
+      type: txType,
+      amount: amt,
+      category: tx.category || (txType === 'income' ? 'પગાર / આવક' : 'અન્ય ખર્ચ'),
       description: tx.description || '',
-      paymentMode: tx.paymentMode || 'UPI (GPay/PhonePe)',
+      paymentMode: pMode,
       date: tx.date || new Date().toISOString().split('T')[0],
     };
     handleSaveFinance([newEntry, ...finance]);
+
+    // Update Accounts Balance (Bank or Cash)
+    if (tx.closingBalance !== null && tx.closingBalance !== undefined && tx.closingBalance > 0) {
+      // Direct closing balance provided by Bank SMS (e.g. Avl Bal Rs. 44,800)
+      handleSaveAccounts({
+        ...accounts,
+        bankBalance: Number(tx.closingBalance),
+      });
+    } else if (amt > 0) {
+      const isCash =
+        pMode.includes('રોકડ') ||
+        pMode.includes('Cash') ||
+        pMode.includes('નકદ') ||
+        pMode.includes('Efectivo') ||
+        pMode.includes('Espèces') ||
+        pMode.includes('Bargeld') ||
+        pMode.includes('نقداً');
+
+      const currentBank = Number(accounts?.bankBalance || 0);
+      const currentCash = Number(accounts?.cashBalance || 0);
+
+      if (isCash) {
+        const nextCash = txType === 'income' ? currentCash + amt : currentCash - amt;
+        handleSaveAccounts({ ...accounts, cashBalance: nextCash });
+      } else {
+        const nextBank = txType === 'income' ? currentBank + amt : currentBank - amt;
+        handleSaveAccounts({ ...accounts, bankBalance: nextBank });
+      }
+    }
+
     streakService.recordActivityToday();
   };
 

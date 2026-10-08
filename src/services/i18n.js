@@ -1430,6 +1430,15 @@ export const translations = {
     de: '🏃 Schritte & Fitness',
     ar: '🏃 الخطوات والجيم',
   },
+  subtab_lungs: {
+    gu: 'ફેફસાં & કસરત',
+    hi: 'फेफड़े और कसरत',
+    en: 'Lungs & Breath',
+    es: 'Pulmones y Respiración',
+    fr: 'Poumons et Respiration',
+    de: 'Lunge & Atmung',
+    ar: 'الرئتان والتنفس',
+  },
   subtab_cardio: {
     gu: '💓 કાર્ડિયો & વાઇટલ્સ',
     hi: '💓 कार्डियो और वाइटल्स',

@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.28.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.29.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.28.apk
+            daily-diary-v1.0.29.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,27 +68,29 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.28
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.28 Task, SMS Parser & Contact Picker Fixes)"
+          tag_name: v1.0.29
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.29 Balance Sync, Clean Health UI & Lung Workout)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.28)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.29)
 
-            આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ ઊંડાણપૂર્વકના સુધારા:
-            - **📝 રીમાઇન્ડર/કામ એડ કરવાનો પ્રશ્ન ઉકેલાયો (Add Task Issue Fixed):**
-              - "+ નવું કામ" બટન દબાવતાં તરત જ વિન્ડો ખૂલે છે (હવે કોઈ અટકાવ કે લૂપ નથી).
-              - "no_tasks_sub" વાળી ટેક્સ્ટ સાચી ગુજરાતી ભાષામાં સુધારી દેવાઈ છે.
-              - સ્ક્રીન પર નીચે નવું ઝડપી 1-ટેપ એક્શન બટન (FAB) પણ ઉમેરાયું છે.
-            - **💳 બેંક SMS ઓટો-ખર્ચ સુધારો (Bank SMS Parser Overhaul):**
-              - "BOB 150 DR" જેવા ટૂંકા મેસેજમાંથી પણ રકમ (₹150) તરત પકડી લે છે.
-              - રકમ (Amount), કેટેગરી (Category), ખાતું/બેંક અને પ્રકાર (ખર્ચ/આવક) બધું જ એડિટ કરી શકાય છે.
-              - "આ એન્ટ્રી હિસાબમાં ઉમેરો" ક્લિક કરતાની સાથે જ હિસાબ ટેબમાં રેકોર્ડ સેવ થઈ જાય છે.
-            - **🎂 જન્મદિવસ અને એનિવર્સરીમાં કોન્ટેક્ટ સિલેક્શન (Contact Picker Added):**
-              - નવો જન્મદિવસ કે એનિવર્સરી ઉમેરતી વખતે "📱 ફોનમાંથી સંપર્ક પસંદ કરો" બટન દ્વારા સીધા તમારા મોબાઈલ કોન્ટેક્ટ લિસ્ટમાંથી નામ અને મોબાઈલ નંબર ઓટોમેટિક ભરાઈ જાય છે.
-            - **⚡ સુપર સ્મૂથ અને અલ્ટ્રા ફાસ્ટ પરફોર્મન્સ.**
+            આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ ઊંડાણપૂર્વકના સુધારાઓ:
+            - **💰 સિલક (બેલેન્સ) આપોઆપ અપડેટ (Real-time Balance Auto-Sync):**
+              - SMS થી ખર્ચ કે આવક ઉમેરતાં જ બેંક સિલક (બેંક બેલેન્સ / રોકડ) માંથી આપોઆપ રકમ બાદ કે જમા થઈ જાય છે.
+              - SMS માં બેંક દ્વારા મોકલાયેલ આખરી સિલક (Avl Bal) આપોઆપ પકડીને બેંક બેલેન્સ સાથે સેટ કરી દેવાય છે.
+              - કેલ્ક્યુલેટર કે ખરીદી યાદીમાંથી ખર્ચ ઉમેરતાં પણ બેંક બેલેન્સ રિયલ-ટાઇમમાં અપડેટ થાય છે.
+              - ભૂલથી થયેલ એન્ટ્રી ડિલીટ કરતાં સિલક પાછી પુનઃસ્થાપિત (Restore) થઈ જાય છે.
+            - **✨ હેલ્થ હબ નેવિગેશન બારનું આકર્ષક એરેન્જમેન્ટ (Clean Single-Icon Health Tabs):**
+              - ડબલ આઇકન અને ક્રેમ્પ્ડ ટેક્સ્ટની ખામી દૂર કરી.
+              - હવે સિંગલ સ્પષ્ટ આઇકન સાથે સ્મૂથ હોરિઝોન્ટલ પિલ સ્લાઇડર ગોઠવ્યું છે, જે મોબાઇલમાં અત્યંત સુંદર અને આધુનિક દેખાય છે.
+            - **🫁 ફેફસાં મજબૂત કરવા માટેની શાનદાર કસરત અને ટેસ્ટ (Lung Strengthening & Breath Trainer):**
+              - **લાઈવ એનિમેટેડ પ્રાણાયામ:** ૪-૭-૮ ફેફસાં વિસ્તરણ પદ્ધતિ, બોક્સ બ્રિધિંગ (૪-૪-૪-૪), અનુલોમ-વિલોમ અને ડીપ લંગ એક્સ્પાન્શન (૫-૧૦-૫).
+              - **ફેફસાં ક્ષમતા સ્ટોપવોચ ટેસ્ટ (Breath-Hold Test):** તમારા ફેફસાં કેટલી સેકન્ડ શ્વાસ રોકી શકે છે તેનું લાઈવ માપન, મેડિકલ સ્કોરિંગ અને પર્સનલ બેસ્ટ રેકોર્ડ સેવિંગ.
+              - **૪ સુવર્ણ આયુર્વેદિક ટિપ્સ:** તુલસી-આદુ ઉકાળો, ગરમ પાણીની વરાળ, સવારની તાજી હવા અને હળદરવાળું દૂધ.
+            - **⚡ સુપર સ્મૂથ અને અલ્ટ્રા ફાસ્ટ લૉન્ચ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.28.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.29.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.28.apk
+            daily-diary-v1.0.29.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

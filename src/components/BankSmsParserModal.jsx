@@ -74,6 +74,17 @@ export default function BankSmsParserModal({
     return 0;
   };
 
+  const extractClosingBalance = (text) => {
+    if (!text) return null;
+    const clean = text.replace(/,/g, '');
+    const balMatch = clean.match(/(?:avl(?:ailable)?\s*(?:ac|a\/c)?\s*bal(?:ance)?|net\s*bal(?:ance)?|total\s*bal(?:ance)?|bal(?:ance)?)\s*(?:is|:)?\s*(?:inr|rs\.?|₹)?\s*(\d+(?:\.\d+)?)/i);
+    if (balMatch && balMatch[1]) {
+      const val = parseFloat(balMatch[1]);
+      if (!isNaN(val) && val >= 0) return val;
+    }
+    return null;
+  };
+
   const parseBankSms = (text) => {
     if (!text || !text.trim()) {
       setParsed(null);
@@ -82,6 +93,7 @@ export default function BankSmsParserModal({
 
     const t = text.toLowerCase();
     const amount = extractSmsAmount(text);
+    const closingBalance = extractClosingBalance(text);
 
     // Detect Type
     const isCredited =
@@ -137,6 +149,7 @@ export default function BankSmsParserModal({
       paymentMode: t.includes('upi') ? 'UPI (GPay/PhonePe)' : 'બેંક ટ્રાન્સફર',
       date: new Date().toISOString().split('T')[0],
       raw: text,
+      closingBalance,
     });
   };
 
@@ -161,6 +174,7 @@ export default function BankSmsParserModal({
       description: `${parsed.merchant || 'SMS એન્ટ્રી'} (${parsed.bank || 'બેંક'})`.trim(),
       paymentMode: parsed.paymentMode || 'UPI (GPay/PhonePe)',
       date: parsed.date || new Date().toISOString().split('T')[0],
+      closingBalance: parsed.closingBalance || null,
     });
 
     confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
@@ -344,6 +358,19 @@ export default function BankSmsParserModal({
                   />
                 </div>
               </div>
+
+              {/* Balance Update Notice */}
+              {parsed.closingBalance ? (
+                <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl p-2.5 text-[11px] font-bold flex items-center gap-1.5">
+                  <span className="text-base">🏦</span>
+                  <span>બેંક SMS મુજબ નવી સિલક: <strong>₹{Number(parsed.closingBalance).toLocaleString()}</strong> (ખાતાની સિલક આપમેળે સેટ થશે)</span>
+                </div>
+              ) : (
+                <div className="bg-blue-50 text-blue-800 border border-blue-200 rounded-xl p-2.5 text-[11px] font-semibold flex items-center gap-1.5">
+                  <span className="text-base">💡</span>
+                  <span>આ એન્ટ્રી સેવ કરતાં બેંક સિલકમાંથી <strong>₹{Number(parsed.amount || 0).toLocaleString()}</strong> {parsed.type === 'income' ? 'ઉમેરાશે (+)' : 'બાદ થશે (-)'}.</span>
+                </div>
+              )}
 
               {/* Submit Button */}
               <button
