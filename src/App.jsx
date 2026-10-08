@@ -492,9 +492,13 @@ export default function App() {
     });
   };
 
-  const checkCanAdd = (callback) => {
-    if (typeof callback === 'function') {
-      callback();
+  const checkCanAdd = (actionCallback) => {
+    if (isDemoMode) {
+      if (typeof actionCallback === 'function') {
+        setPendingDemoAction(() => actionCallback);
+      }
+      setIsDemoModalOpen(true);
+      return false;
     }
     return true;
   };
@@ -1173,6 +1177,7 @@ export default function App() {
         isOpen={isSmsParserOpen}
         onClose={() => setIsSmsParserOpen(false)}
         lang={lang}
+        onAddFinance={handleAddParsedFinance}
         onAddTransaction={handleAddParsedFinance}
       />
 

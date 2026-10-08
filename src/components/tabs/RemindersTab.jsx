@@ -32,11 +32,13 @@ import {
   Search as SearchIcon,
   VolumeX as VolumeXIcon,
   Smartphone as SmartphoneIcon,
+  UserPlus as UserPlusIcon,
 } from 'lucide-react';
 import { t } from '../../services/i18n';
 import { whatsappService } from '../../services/whatsappService';
 import { storageService } from '../../services/storageService';
 import { soundAlarm, RINGTONE_OPTIONS } from '../../services/audioService';
+import { permissionService } from '../../services/permissionService';
 
 const getTaskTypes = (lang) => [
   { id: 'all', label: t('filter_all', lang), icon: null },
@@ -426,6 +428,24 @@ export default function RemindersTab({
   // -------------------------------------------------------------
   // Event Handlers (Birthday & Anniversary)
   // -------------------------------------------------------------
+  const handlePickContactForEvent = async () => {
+    try {
+      const res = await permissionService.pickContact('event');
+      if (res && res.success) {
+        if (res.name) {
+          setEvName(res.name.trim());
+        }
+        if (res.mobile) {
+          let clean = res.mobile.replace(/[^0-9+]/g, '');
+          if (clean.length > 10) clean = clean.slice(-10);
+          setEvPhone(clean);
+        }
+      }
+    } catch (err) {
+      console.warn('Pick contact for event failed:', err);
+    }
+  };
+
   const handleOpenAddEvent = () => {
     if (typeof checkCanAdd === 'function') {
       if (!checkCanAdd(() => handleOpenAddEvent())) {
@@ -2035,13 +2055,40 @@ export default function RemindersTab({
             </div>
 
             <form onSubmit={handleSaveEvent} className="space-y-3">
+              {/* Quick Contact Picker Button */}
+              <button
+                type="button"
+                onClick={handlePickContactForEvent}
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white rounded-xl text-xs font-bold shadow-md shadow-pink-500/20 active:scale-98 transition"
+              >
+                <UserPlusIcon size={15} />
+                <span>
+                  {lang === 'gu'
+                    ? '📱 ફોનમાંથી સંપર્ક પસંદ કરો (નામ & નંબર)'
+                    : lang === 'hi'
+                    ? '📱 कॉन्टैक्ट से चुनें (नाम और नंबर)'
+                    : '📱 Pick from Contacts (Name & Phone)'}
+                </span>
+              </button>
+
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  {t('person_couple_name', lang)}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700">
+                    {t('person_couple_name', lang)} *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handlePickContactForEvent}
+                    className="text-pink-600 hover:text-pink-700 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition"
+                  >
+                    <UserPlusIcon size={12} />
+                    <span>{lang === 'gu' ? 'સંપર્ક પસંદ કરો' : 'Pick Contact'}</span>
+                  </button>
+                </div>
                 <input
                   type="text"
                   required
+                  placeholder={lang === 'gu' ? 'દા.ત. રાહુલ ભાઈ / પ્રિયા & અમિત' : 'Enter name'}
                   value={evName}
                   onChange={(e) => setEvName(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-pink-500 font-bold"
@@ -2088,6 +2135,7 @@ export default function RemindersTab({
                   <label className="text-xs font-bold text-slate-700 block mb-1">{t('relation', lang)}</label>
                   <input
                     type="text"
+                    placeholder={lang === 'gu' ? 'દા.ત. મિત્ર, ભાઈ' : 'Relation'}
                     value={evRelation}
                     onChange={(e) => setEvRelation(e.target.value)}
                     className="w-full text-xs p-2 rounded-xl border border-slate-200 font-bold"
@@ -2096,22 +2144,43 @@ export default function RemindersTab({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  {t('phone_number', lang)}
-                </label>
-                <input
-                  type="tel"
-                  placeholder="+91..."
-                  value={evPhone}
-                  onChange={(e) => setEvPhone(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 font-bold"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700">
+                    {t('phone_number', lang)}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handlePickContactForEvent}
+                    className="text-pink-600 hover:text-pink-700 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition"
+                  >
+                    <UserPlusIcon size={12} />
+                    <span>{lang === 'gu' ? 'કોન્ટેક્ટમાંથી લાવો' : 'From Contacts'}</span>
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type="tel"
+                    placeholder="9876543210"
+                    value={evPhone}
+                    onChange={(e) => setEvPhone(e.target.value)}
+                    className="w-full text-xs p-2.5 pr-10 rounded-xl border border-slate-200 font-bold focus:outline-pink-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handlePickContactForEvent}
+                    title="Select Contact"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-pink-600 hover:text-pink-700 hover:bg-pink-50 rounded-lg transition"
+                  >
+                    <UserPlusIcon size={16} />
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">{t('notes', lang)}</label>
                 <textarea
                   rows={2}
+                  placeholder={lang === 'gu' ? 'કોઈ નોંધ લખો...' : 'Any notes...'}
                   value={evNotes}
                   onChange={(e) => setEvNotes(e.target.value)}
                   className="w-full text-xs p-2 rounded-xl border border-slate-200 focus:outline-pink-500"
@@ -2137,6 +2206,27 @@ export default function RemindersTab({
           </div>
         </div>
       )}
+
+      {/* Floating Action Button for 1-Tap Add */}
+      <div className="fixed bottom-20 right-4 z-40">
+        <button
+          onClick={() => {
+            if (activeSubView === 'tasks') {
+              handleOpenAddTask(todayStr);
+            } else {
+              handleOpenAddEvent();
+            }
+          }}
+          className={`h-12 w-12 rounded-2xl shadow-xl flex items-center justify-center text-white transition transform active:scale-90 hover:scale-105 ${
+            activeSubView === 'tasks'
+              ? 'bg-gradient-to-r from-indigo-600 to-blue-600 shadow-indigo-600/30 ring-4 ring-indigo-100'
+              : 'bg-gradient-to-r from-pink-600 to-rose-600 shadow-pink-600/30 ring-4 ring-pink-100'
+          }`}
+          title={activeSubView === 'tasks' ? t('new_task', lang) : t('add_event', lang)}
+        >
+          <PlusIcon size={24} className="stroke-[2.5]" />
+        </button>
+      </div>
     </div>
   );
 }

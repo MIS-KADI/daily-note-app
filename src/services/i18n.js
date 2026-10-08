@@ -810,6 +810,15 @@ export const translations = {
     de: 'Tippen Sie auf "+ Neue Aufgabe", um Termine oder Aufgaben hinzuzufügen.',
     ar: 'اضغط على "+ مهمة جديدة" لإضافة اجتماع أو عمل بنكي.',
   },
+  no_tasks_sub: {
+    gu: 'તમારા આજના કામો અને રિમાઇન્ડર ઉમેરવા માટે નીચે આપેલ "+ નવું કામ" બટન દબાવો.',
+    hi: 'अपने आज के कार्य और रिमाइंडर जोड़ने के लिए नीचे दिए "+ नया कार्य" बटन दबाएं।',
+    en: 'Tap "+ New Task" below to add your meetings and reminders.',
+    es: 'Toca "+ Nueva Tarea" abajo para agregar tus reuniones y recordatorios.',
+    fr: 'Appuyez sur "+ Nouvelle Tâche" ci-dessous pour ajouter vos réunions et rappels.',
+    de: 'Tippen Sie unten auf "+ Neue Aufgabe", um Ihre Termine hinzuzufügen.',
+    ar: 'اضغط على "+ مهمة جديدة" أدناه لإضافة مواعيدك وتذكيراتك.',
+  },
   upcoming_advance: {
     gu: '🚀 એડવાન્સ',
     hi: '🚀 आगामी',

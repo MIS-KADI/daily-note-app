@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.27.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.28.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.27.apk
+            daily-diary-v1.0.28.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,23 +68,27 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.27
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.27 Shopping List & Quick Actions Fix)"
+          tag_name: v1.0.28
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.28 Task, SMS Parser & Contact Picker Fixes)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.27)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.28)
 
-            આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ સુધારા:
-            - **🛒 ખરીદી યાદી બટન સંપૂર્ણ સક્રિય (Shopping List Button Fixed & Fully Working):**
-              - હોમ સ્ક્રીન પર આવેલ 'ખરીદી' (🛒) બટન ક્લિક કરતાં ખરીદી યાદીનું મોડલ તાત્કાલિક ખૂલે છે.
-              - નામ કપાઈ જતું હતું (ખ...) તેની જગ્યાએ હવે સ્વચ્છ અને સ્પષ્ટ 'ખરીદી' ડિસ્પ્લે થાય છે.
-              - ખરીદી યાદીમાં વસ્તુ ઉમેરો, ભાવ લખો, ચેકમાર્ક કરો અને સીધો ખર્ચ હિસાબમાં ટ્રાન્સફર કરી શકો છો.
-            - **⚡ ફાસ્ટ સ્ટાર્ટઅપ અને સ્મૂથ લૉન્ચ:**
-              - કોઈ બ્લેન્ક સ્ક્રીન વગર સીધી હોમ સ્ક્રીન પર ખૂલે છે.
-            - **🌅 સૂર્યોદય પ્રેરણા ડાયરી - ફુલ સાઈઝ ચોરસ/સ્ક્વિર્કલ આઇકન.**
+            આ નવા વર્ઝનમાં કરવામાં આવેલા ખાસ ઊંડાણપૂર્વકના સુધારા:
+            - **📝 રીમાઇન્ડર/કામ એડ કરવાનો પ્રશ્ન ઉકેલાયો (Add Task Issue Fixed):**
+              - "+ નવું કામ" બટન દબાવતાં તરત જ વિન્ડો ખૂલે છે (હવે કોઈ અટકાવ કે લૂપ નથી).
+              - "no_tasks_sub" વાળી ટેક્સ્ટ સાચી ગુજરાતી ભાષામાં સુધારી દેવાઈ છે.
+              - સ્ક્રીન પર નીચે નવું ઝડપી 1-ટેપ એક્શન બટન (FAB) પણ ઉમેરાયું છે.
+            - **💳 બેંક SMS ઓટો-ખર્ચ સુધારો (Bank SMS Parser Overhaul):**
+              - "BOB 150 DR" જેવા ટૂંકા મેસેજમાંથી પણ રકમ (₹150) તરત પકડી લે છે.
+              - રકમ (Amount), કેટેગરી (Category), ખાતું/બેંક અને પ્રકાર (ખર્ચ/આવક) બધું જ એડિટ કરી શકાય છે.
+              - "આ એન્ટ્રી હિસાબમાં ઉમેરો" ક્લિક કરતાની સાથે જ હિસાબ ટેબમાં રેકોર્ડ સેવ થઈ જાય છે.
+            - **🎂 જન્મદિવસ અને એનિવર્સરીમાં કોન્ટેક્ટ સિલેક્શન (Contact Picker Added):**
+              - નવો જન્મદિવસ કે એનિવર્સરી ઉમેરતી વખતે "📱 ફોનમાંથી સંપર્ક પસંદ કરો" બટન દ્વારા સીધા તમારા મોબાઈલ કોન્ટેક્ટ લિસ્ટમાંથી નામ અને મોબાઈલ નંબર ઓટોમેટિક ભરાઈ જાય છે.
+            - **⚡ સુપર સ્મૂથ અને અલ્ટ્રા ફાસ્ટ પરફોર્મન્સ.**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.27.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.28.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.27.apk
+            daily-diary-v1.0.28.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
