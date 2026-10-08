@@ -384,11 +384,16 @@ export const storageService = {
   },
 
   getLanguage() {
-    return localStorage.getItem(STORAGE_KEYS.LANGUAGE) || 'gu';
+    const saved = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
+    if (saved === 'gu' || saved === 'hi' || saved === 'en') {
+      return saved;
+    }
+    return 'gu';
   },
 
   saveLanguage(lang) {
-    localStorage.setItem(STORAGE_KEYS.LANGUAGE, lang);
+    const safeLang = (lang === 'hi' || lang === 'en') ? lang : 'gu';
+    localStorage.setItem(STORAGE_KEYS.LANGUAGE, safeLang);
   },
 
   getFitness() {

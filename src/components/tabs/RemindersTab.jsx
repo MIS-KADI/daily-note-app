@@ -49,26 +49,25 @@ const getTaskTypes = (lang) => [
   { id: 'work', label: t('work_task', lang) || '💼 ઓફિસ / કામ', icon: BriefcaseIcon },
 ];
 
-const quickShoppingItems = [
-  '🛒 કરિયાણું',
-  '🥬 શાકભાજી',
-  '🥛 દૂધ / ડેરી',
-  '💊 દવાઓ',
-  '🍞 નાસ્તો / બેકરી',
-  '🧽 ઘરવપરાશ',
-  '🍎 ફળો',
-  '🧴 તેલ / મસાલા',
-];
+const getQuickShoppingItems = (lang) => {
+  if (lang === 'hi') {
+    return ['🛒 किराना', '🥬 सब्जियां', '🥛 दूध / डेयरी', '💊 दवाइयां', '🍞 नाश्ता / बेकरी', '🧽 घरेलू सामान', '🍎 फल', '🧴 तेल / मसाले'];
+  }
+  if (lang === 'en') {
+    return ['🛒 Grocery', '🥬 Vegetables', '🥛 Milk / Dairy', '💊 Medicines', '🍞 Bakery / Snacks', '🧽 Household', '🍎 Fruits', '🧴 Oil & Spices'];
+  }
+  return ['🛒 કરિયાણું', '🥬 શાકભાજી', '🥛 દૂધ / ડેરી', '💊 દવાઓ', '🍞 નાસ્તો / બેકરી', '🧽 ઘરવપરાશ', '🍎 ફળો', '🧴 તેલ / મસાલા'];
+};
 
-const quickWorkItems = [
-  '⭐ અગત્યનું કામ',
-  '📞 કોલ કરવો',
-  '📁 ફાઇલ સબમિશન',
-  '🤝 મીટિંગ',
-  '⏳ ફોલોઅપ',
-  '✉️ ઈમેલ / મેસેજ',
-  '💰 પેમેન્ટ હિસાબ',
-];
+const getQuickWorkItems = (lang) => {
+  if (lang === 'hi') {
+    return ['⭐ जरूरी काम', '📞 कॉल करना', '📁 फाइल सबमिशन', '🤝 मीटिंग', '⏳ फॉलोअप', '✉️ ईमेल / मैसेज', '💰 पेमेंट हिसाब'];
+  }
+  if (lang === 'en') {
+    return ['⭐ Important Task', '📞 Call Party', '📁 File Submission', '🤝 Meeting', '⏳ Follow-up', '✉️ Email / Message', '💰 Payment Accounts'];
+  }
+  return ['⭐ અગત્યનું કામ', '📞 કોલ કરવો', '📁 ફાઇલ સબમિશન', '🤝 મીટિંગ', '⏳ ફોલોઅપ', '✉️ ઈમેલ / મેસેજ', '💰 પેમેન્ટ હિસાબ'];
+};
 
 // Calculate days remaining until next birthday or anniversary occurrence
 export const getDaysUntilEvent = (dateStr) => {
@@ -1944,21 +1943,21 @@ export default function RemindersTab({
                     className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-md flex items-center gap-1 transition"
                   >
                     <CheckSquareIcon size={11} />
-                    {lang === 'gu' ? '+ નવી આઇટમ (☐)' : '+ New Item (☐)'}
+                    {lang === 'gu' ? '+ નવી આઇટમ (☐)' : lang === 'hi' ? '+ नया आइटम (☐)' : '+ New Item (☐)'}
                   </button>
                 </div>
 
                 {/* Quick Suggestion Chips */}
                 {type === 'shopping' && (
                   <div className="flex gap-1 overflow-x-auto pb-1.5 mb-1.5 no-scrollbar">
-                    {quickShoppingItems.map((item, idx) => (
+                    {getQuickShoppingItems(lang).map((item, idx) => (
                       <button
                         type="button"
                         key={idx}
                         onClick={() => {
                           setDescription((prev) => (prev ? `${prev}\n☐ ${item}` : `☐ ${item}`));
                         }}
-                        className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[10px] font-semibold whitespace-nowrap transition active:scale-95"
+                        className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[10px] font-semibold whitespace-nowrap transition active:scale-95 cursor-pointer"
                       >
                         + {item}
                       </button>
@@ -1968,14 +1967,14 @@ export default function RemindersTab({
 
                 {type === 'work' && (
                   <div className="flex gap-1 overflow-x-auto pb-1.5 mb-1.5 no-scrollbar">
-                    {quickWorkItems.map((item, idx) => (
+                    {getQuickWorkItems(lang).map((item, idx) => (
                       <button
                         type="button"
                         key={idx}
                         onClick={() => {
                           setDescription((prev) => (prev ? `${prev}\n☐ ${item}` : `☐ ${item}`));
                         }}
-                        className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-[10px] font-semibold whitespace-nowrap transition active:scale-95"
+                        className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-[10px] font-semibold whitespace-nowrap transition active:scale-95 cursor-pointer"
                       >
                         + {item}
                       </button>

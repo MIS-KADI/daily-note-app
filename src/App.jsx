@@ -549,34 +549,27 @@ export default function App() {
       paymentMode: pMode,
       date: tx.date || new Date().toISOString().split('T')[0],
     };
-    handleSaveFinance([newEntry, ...finance]);
+    const latestFinance = storageService.getFinance() || finance || [];
+    handleSaveFinance([newEntry, ...latestFinance]);
 
-    // Update Accounts Balance (Bank or Cash)
-    if (tx.closingBalance !== null && tx.closingBalance !== undefined && tx.closingBalance > 0) {
-      // Direct closing balance provided by Bank SMS (e.g. Avl Bal Rs. 44,800)
-      handleSaveAccounts({
-        ...accounts,
-        bankBalance: Number(tx.closingBalance),
-      });
-    } else if (amt > 0) {
+    // Update Accounts Balance (Bank or Cash) reliably for every transaction
+    if (amt > 0) {
+      const latestAccounts = storageService.getAccounts() || accounts || { bankBalance: 0, cashBalance: 0 };
+      const currentBank = Number(latestAccounts?.bankBalance || 0);
+      const currentCash = Number(latestAccounts?.cashBalance || 0);
+
       const isCash =
         pMode.includes('રોકડ') ||
         pMode.includes('Cash') ||
         pMode.includes('નકદ') ||
-        pMode.includes('Efectivo') ||
-        pMode.includes('Espèces') ||
-        pMode.includes('Bargeld') ||
-        pMode.includes('نقداً');
-
-      const currentBank = Number(accounts?.bankBalance || 0);
-      const currentCash = Number(accounts?.cashBalance || 0);
+        pMode.includes('नकद');
 
       if (isCash) {
         const nextCash = txType === 'income' ? currentCash + amt : currentCash - amt;
-        handleSaveAccounts({ ...accounts, cashBalance: nextCash });
+        handleSaveAccounts({ ...latestAccounts, cashBalance: nextCash });
       } else {
         const nextBank = txType === 'income' ? currentBank + amt : currentBank - amt;
-        handleSaveAccounts({ ...accounts, bankBalance: nextBank });
+        handleSaveAccounts({ ...latestAccounts, bankBalance: nextBank });
       }
     }
 

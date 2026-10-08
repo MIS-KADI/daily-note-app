@@ -84,7 +84,7 @@ export default function Navbar({
           <button
             onClick={onOpenPhotoGallery}
             className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 transition active:scale-95"
-            title={lang === 'gu' ? '📸 ફોટો ગેલેરી' : '📸 Photo Gallery'}
+            title={lang === 'gu' ? '📸 ફોટો ગેલેરી' : lang === 'hi' ? '📸 फ़ोटो गैलरी' : '📸 Photo Gallery'}
           >
             <ImageIcon size={15} />
           </button>
@@ -120,7 +120,7 @@ export default function Navbar({
           <button
             onClick={onTestAlarm}
             className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 transition active:scale-95"
-            title="Alarm Ringtone"
+            title={lang === 'gu' ? 'એલાર્મ રિંગટોન ચેક કરો' : lang === 'hi' ? 'अलार्म रिंगटोन चेक करें' : 'Alarm Ringtone Test'}
           >
             <Volume2 size={15} />
           </button>
@@ -133,7 +133,7 @@ export default function Navbar({
                 ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
                 : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
             }`}
-            title="Notifications"
+            title={lang === 'gu' ? 'નોટિફિકેશન સેટિંગ્સ' : lang === 'hi' ? 'सूचनाएं सेटिंग्स' : 'Notification Settings'}
           >
             <Bell size={15} />
             {activeAlarmCount > 0 && (
@@ -147,7 +147,7 @@ export default function Navbar({
           <button
             onClick={onLockApp}
             className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition active:scale-95"
-            title="Lock App"
+            title={lang === 'gu' ? 'એપ લૉક કરો' : lang === 'hi' ? 'ऐप लॉक करें' : 'Lock App'}
           >
             <Lock size={15} />
           </button>

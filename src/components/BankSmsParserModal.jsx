@@ -74,17 +74,6 @@ export default function BankSmsParserModal({
     return 0;
   };
 
-  const extractClosingBalance = (text) => {
-    if (!text) return null;
-    const clean = text.replace(/,/g, '');
-    const balMatch = clean.match(/(?:avl(?:ailable)?\s*(?:ac|a\/c)?\s*bal(?:ance)?|net\s*bal(?:ance)?|total\s*bal(?:ance)?|bal(?:ance)?)\s*(?:is|:)?\s*(?:inr|rs\.?|₹)?\s*(\d+(?:\.\d+)?)/i);
-    if (balMatch && balMatch[1]) {
-      const val = parseFloat(balMatch[1]);
-      if (!isNaN(val) && val >= 0) return val;
-    }
-    return null;
-  };
-
   const parseBankSms = (text) => {
     if (!text || !text.trim()) {
       setParsed(null);
@@ -93,7 +82,6 @@ export default function BankSmsParserModal({
 
     const t = text.toLowerCase();
     const amount = extractSmsAmount(text);
-    const closingBalance = extractClosingBalance(text);
 
     // Detect Type
     const isCredited =
@@ -101,12 +89,13 @@ export default function BankSmsParserModal({
       t.includes('deposited') ||
       t.includes('received') ||
       t.includes('જમા') ||
+      t.includes('जमा') ||
       t.includes('cr') ||
       t.includes('credit');
     const type = isCredited ? 'income' : 'expense';
 
     // Detect Bank
-    let bank = 'બેંક';
+    let bank = lang === 'hi' ? 'बैंक' : lang === 'en' ? 'Bank' : 'બેંક';
     if (t.includes('sbi')) bank = 'State Bank of India (SBI)';
     else if (t.includes('bob') || t.includes('baroda')) bank = 'Bank of Baroda (BOB)';
     else if (t.includes('hdfc')) bank = 'HDFC Bank';
@@ -122,22 +111,24 @@ export default function BankSmsParserModal({
     if (transferMatch && transferMatch[1] && transferMatch[1].trim().length > 1) {
       merchant = transferMatch[1].trim();
     } else {
-      merchant = isCredited ? 'પગાર / આવક' : 'ઓનલાઇન પેમેન્ટ / ખર્ચ';
+      merchant = isCredited
+        ? (lang === 'hi' ? 'वेतन / आय' : lang === 'en' ? 'Salary / Income' : 'પગાર / આવક')
+        : (lang === 'hi' ? 'ऑनलाइन भुगतान / खर्च' : lang === 'en' ? 'Online Payment / Expense' : 'ઓનલાઇન પેમેન્ટ / ખર્ચ');
     }
 
     // Detect Category
     let category = isCredited ? incomeCategories[0] : expenseCategories[0];
     const mLower = merchant.toLowerCase() + ' ' + t;
     if (mLower.includes('petrol') || mLower.includes('hpcl') || mLower.includes('bpcl') || mLower.includes('fuel')) {
-      category = 'પેટ્રોલ / મુસાફરી';
+      category = expenseCategories.find((c) => c.includes('પેટ્રોલ') || c.includes('पेट्रोल') || c.includes('Fuel')) || expenseCategories[0];
     } else if (mLower.includes('swiggy') || mLower.includes('zomato') || mLower.includes('food') || mLower.includes('restaurant')) {
-      category = 'દૂધ અને ચા-નાસ્તો';
+      category = expenseCategories.find((c) => c.includes('ચા-નાસ્તો') || c.includes('चाय') || c.includes('Milk')) || expenseCategories[0];
     } else if (mLower.includes('dmart') || mLower.includes('supermarket') || mLower.includes('grocery') || mLower.includes('store')) {
-      category = 'કરિયાણું / ઘરખર્ચ';
+      category = expenseCategories.find((c) => c.includes('કરિયાણું') || c.includes('किराना') || c.includes('Grocery')) || expenseCategories[0];
     } else if (mLower.includes('medical') || mLower.includes('pharmacy') || mLower.includes('hospital')) {
-      category = 'દવાઓ / હેલ્થ';
+      category = expenseCategories.find((c) => c.includes('દવાઓ') || c.includes('दवाइयाँ') || c.includes('Medicines')) || expenseCategories[0];
     } else if (mLower.includes('recharge') || mLower.includes('airtel') || mLower.includes('jio') || mLower.includes('electricity') || mLower.includes('bill')) {
-      category = 'લાઇટ બિલ / રિચાર્જ';
+      category = expenseCategories.find((c) => c.includes('બિલ') || c.includes('बिल') || c.includes('Bills')) || expenseCategories[0];
     }
 
     setParsed({
@@ -146,10 +137,11 @@ export default function BankSmsParserModal({
       bank,
       merchant,
       category,
-      paymentMode: t.includes('upi') ? 'UPI (GPay/PhonePe)' : 'બેંક ટ્રાન્સફર',
+      paymentMode: t.includes('upi')
+        ? 'UPI (GPay/PhonePe)'
+        : (lang === 'hi' ? 'बैंक ट्रांसफर' : lang === 'en' ? 'Bank Transfer' : 'બેંક ટ્રાન્સફર'),
       date: new Date().toISOString().split('T')[0],
       raw: text,
-      closingBalance,
     });
   };
 
@@ -162,7 +154,13 @@ export default function BankSmsParserModal({
 
     const finalAmount = parseFloat(parsed?.amount);
     if (!finalAmount || isNaN(finalAmount) || finalAmount <= 0) {
-      alert(lang === 'gu' ? 'કૃપા કરીને માન્ય રકમ દાખલ કરો.' : 'Please enter a valid amount.');
+      alert(
+        lang === 'gu'
+          ? 'કૃપા કરીને માન્ય રકમ દાખલ કરો.'
+          : lang === 'hi'
+          ? 'कृपया मान्य राशि दर्ज करें।'
+          : 'Please enter a valid amount.'
+      );
       return;
     }
 
@@ -170,11 +168,10 @@ export default function BankSmsParserModal({
       id: 'fin-' + Date.now(),
       type: parsed.type || 'expense',
       amount: finalAmount,
-      category: parsed.category || (parsed.type === 'income' ? 'પગાર / આવક' : 'સામાન્ય ખર્ચ'),
-      description: `${parsed.merchant || 'SMS એન્ટ્રી'} (${parsed.bank || 'બેંક'})`.trim(),
+      category: parsed.category || (parsed.type === 'income' ? incomeCategories[0] : expenseCategories[0]),
+      description: `${parsed.merchant || (lang === 'hi' ? 'SMS एंट्री' : lang === 'en' ? 'SMS Entry' : 'SMS એન્ટ્રી')} (${parsed.bank || (lang === 'hi' ? 'बैंक' : lang === 'en' ? 'Bank' : 'બેંક')})`.trim(),
       paymentMode: parsed.paymentMode || 'UPI (GPay/PhonePe)',
       date: parsed.date || new Date().toISOString().split('T')[0],
-      closingBalance: parsed.closingBalance || null,
     });
 
     confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
@@ -195,13 +192,17 @@ export default function BankSmsParserModal({
               <MessageSquare size={20} />
             </span>
             <div>
-              <h3 className="font-bold text-base leading-tight">SMS દ્વારા ઓટો-હિસાબ</h3>
-              <p className="text-xs text-blue-100">બેંકનો મેસેજ પેસ્ટ કરો, એપ આપમેળે એન્ટ્રી કરશે</p>
+              <h3 className="font-bold text-base leading-tight">
+                {lang === 'hi' ? 'SMS से ऑटो-हिसाब' : lang === 'en' ? 'Auto-Expense from SMS' : 'SMS દ્વારા ઓટો-હિસાબ'}
+              </h3>
+              <p className="text-xs text-blue-100">
+                {lang === 'hi' ? 'बैंक का मैसेज पेस्ट करें, ऐप अपने-आप एंट्री करेगा' : lang === 'en' ? 'Paste bank SMS, app will automatically log entry' : 'બેંકનો મેસેજ પેસ્ટ કરો, એપ આપમેળે એન્ટ્રી કરશે'}
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white transition active:scale-95"
+            className="p-1.5 rounded-full hover:bg-white/20 text-white transition active:scale-95 cursor-pointer"
           >
             <X size={20} />
           </button>
@@ -212,7 +213,7 @@ export default function BankSmsParserModal({
           {/* Sample Chips */}
           <div>
             <span className="text-[11px] text-slate-500 font-semibold block mb-1.5">
-              ઉદાહરણ માટે ક્લિક કરો (Sample SMS):
+              {lang === 'hi' ? 'उदाहरण के लिए क्लिक करें (Sample SMS):' : lang === 'en' ? 'Click to try sample SMS:' : 'ઉદાહરણ માટે ક્લિક કરો (Sample SMS):'}
             </span>
             <div className="flex flex-col gap-1.5 max-h-36 overflow-y-auto pr-1">
               {SAMPLE_SMS.map((sample, idx) => (
@@ -222,7 +223,7 @@ export default function BankSmsParserModal({
                     setSmsText(sample);
                     parseBankSms(sample);
                   }}
-                  className="text-left text-[11px] bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-xl p-2 text-slate-700 transition leading-snug"
+                  className="text-left text-[11px] bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-xl p-2 text-slate-700 transition leading-snug cursor-pointer"
                 >
                   "{sample}"
                 </button>
@@ -233,7 +234,7 @@ export default function BankSmsParserModal({
           {/* SMS Paste Textarea */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              તમારા ફોનમાંથી બેંક SMS અહીં પેસ્ટ કરો:
+              {lang === 'hi' ? 'अपने फोन से बैंक SMS यहाँ पेस्ट करें:' : lang === 'en' ? 'Paste your Bank SMS here:' : 'તમારા ફોનમાંથી બેંક SMS અહીં પેસ્ટ કરો:'}
             </label>
             <textarea
               rows={3}
@@ -242,7 +243,7 @@ export default function BankSmsParserModal({
                 setSmsText(e.target.value);
                 parseBankSms(e.target.value);
               }}
-              placeholder="દા.ત. BOB 150 DR અથવા Dear SBI user, A/C debited by Rs 450..."
+              placeholder={lang === 'hi' ? 'उदा. BOB 150 DR या SBI A/C debited by Rs 450...' : lang === 'en' ? 'e.g. BOB 150 DR or Dear SBI user, A/C debited by Rs 450...' : 'દા.ત. BOB 150 DR અથવા Dear SBI user, A/C debited by Rs 450...'}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
@@ -253,7 +254,7 @@ export default function BankSmsParserModal({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                   <Sparkles size={14} className="text-blue-600" />
-                  ઓટો-ડિટેક્ટ થયેલ વિગત:
+                  {lang === 'hi' ? 'ऑटो-डिटेक्ट की गई जानकारी:' : lang === 'en' ? 'Auto-detected details:' : 'ઓટો-ડિટેક્ટ થયેલ વિગત:'}
                 </span>
                 {/* Type Switcher: Debit vs Credit */}
                 <button
@@ -272,15 +273,15 @@ export default function BankSmsParserModal({
                       ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       : 'bg-red-100 text-red-800 border border-red-300'
                   }`}
-                  title="ક્લિક કરીને ખર્ચ/આવક બદલો"
+                  title={lang === 'hi' ? 'क्लिक करके आय/खर्च बदलें' : lang === 'en' ? 'Click to toggle income/expense' : 'ક્લિક કરીને ખર્ચ/આવક બદલો'}
                 >
                   {parsed.type === 'income' ? (
                     <>
-                      <ArrowDownLeft size={12} /> + આવક (Credit)
+                      <ArrowDownLeft size={12} /> {lang === 'hi' ? '+ आय (Credit)' : lang === 'en' ? '+ Income (Credit)' : '+ આવક (Credit)'}
                     </>
                   ) : (
                     <>
-                      <ArrowUpRight size={12} /> - ખર્ચ (Debit)
+                      <ArrowUpRight size={12} /> {lang === 'hi' ? '- खर्च (Debit)' : lang === 'en' ? '- Expense (Debit)' : '- ખર્ચ (Debit)'}
                     </>
                   )}
                 </button>
@@ -291,7 +292,7 @@ export default function BankSmsParserModal({
                 {/* Editable Amount */}
                 <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                   <label className="text-[10px] text-slate-500 font-bold block mb-1">
-                    રકમ (Amount) *
+                    {lang === 'hi' ? 'राशि (Amount) *' : lang === 'en' ? 'Amount *' : 'રકમ (Amount) *'}
                   </label>
                   <div className="flex items-center gap-1">
                     <span className="text-blue-600 font-bold text-sm">₹</span>
@@ -313,7 +314,7 @@ export default function BankSmsParserModal({
                 {/* Editable Category Dropdown */}
                 <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                   <label className="text-[10px] text-slate-500 font-bold block mb-1">
-                    કેટેગરી (Category) *
+                    {lang === 'hi' ? 'श्रेणी (Category) *' : lang === 'en' ? 'Category *' : 'કેટેગરી (Category) *'}
                   </label>
                   <select
                     value={parsed.category}
@@ -334,19 +335,23 @@ export default function BankSmsParserModal({
               {/* Editable Party & Bank */}
               <div className="text-xs bg-white p-2.5 rounded-xl border border-slate-200 space-y-2 shadow-2xs">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-500 text-[11px] shrink-0 font-medium">પાર્ટી / વિગત:</span>
+                  <span className="text-slate-500 text-[11px] shrink-0 font-medium">
+                    {lang === 'hi' ? 'पार्टी / विवरण:' : lang === 'en' ? 'Party / Details:' : 'પાર્ટી / વિગત:'}
+                  </span>
                   <input
                     type="text"
                     value={parsed.merchant}
                     onChange={(e) =>
                       setParsed({ ...parsed, merchant: e.target.value })
                     }
-                    placeholder="ઓનલાઇન પેમેન્ટ / ખર્ચ"
+                    placeholder={lang === 'hi' ? 'ऑनलाइन भुगतान / खर्च' : lang === 'en' ? 'Online payment / Expense' : 'ઓનલાઇન પેમેન્ટ / ખર્ચ'}
                     className="flex-1 text-xs font-semibold text-slate-800 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 focus:outline-blue-500"
                   />
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-500 text-[11px] shrink-0 font-medium">બેંક એકાઉન્ટ:</span>
+                  <span className="text-slate-500 text-[11px] shrink-0 font-medium">
+                    {lang === 'hi' ? 'बैंक खाता:' : lang === 'en' ? 'Bank Account:' : 'બેંક એકાઉન્ટ:'}
+                  </span>
                   <input
                     type="text"
                     value={parsed.bank}
@@ -360,17 +365,16 @@ export default function BankSmsParserModal({
               </div>
 
               {/* Balance Update Notice */}
-              {parsed.closingBalance ? (
-                <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl p-2.5 text-[11px] font-bold flex items-center gap-1.5">
-                  <span className="text-base">🏦</span>
-                  <span>બેંક SMS મુજબ નવી સિલક: <strong>₹{Number(parsed.closingBalance).toLocaleString()}</strong> (ખાતાની સિલક આપમેળે સેટ થશે)</span>
-                </div>
-              ) : (
-                <div className="bg-blue-50 text-blue-800 border border-blue-200 rounded-xl p-2.5 text-[11px] font-semibold flex items-center gap-1.5">
-                  <span className="text-base">💡</span>
-                  <span>આ એન્ટ્રી સેવ કરતાં બેંક સિલકમાંથી <strong>₹{Number(parsed.amount || 0).toLocaleString()}</strong> {parsed.type === 'income' ? 'ઉમેરાશે (+)' : 'બાદ થશે (-)'}.</span>
-                </div>
-              )}
+              <div className="bg-blue-50 text-blue-900 border border-blue-200 rounded-xl p-2.5 text-[11px] font-semibold flex items-center gap-1.5">
+                <span className="text-base">💡</span>
+                <span>
+                  {lang === 'hi'
+                    ? `यह एंट्री सेव करने पर बैंक बैलेंस में ₹${Number(parsed.amount || 0).toLocaleString()} ${parsed.type === 'income' ? 'जुड़ेगा (+)' : 'घटेगा (-)'}।`
+                    : lang === 'en'
+                    ? `Saving this entry will ${parsed.type === 'income' ? 'add (+)' : 'deduct (-)'} ₹${Number(parsed.amount || 0).toLocaleString()} to your bank balance.`
+                    : `આ એન્ટ્રી સેવ કરતાં બેંક સિલકમાંથી ₹${Number(parsed.amount || 0).toLocaleString()} ${parsed.type === 'income' ? 'ઉમેરાશે (+)' : 'બાદ થશે (-)'}.`}
+                </span>
+              </div>
 
               {/* Submit Button */}
               <button
@@ -380,7 +384,13 @@ export default function BankSmsParserModal({
                 className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 active:scale-98 transition disabled:opacity-50 cursor-pointer"
               >
                 <CheckCircle2 size={16} />
-                <span>આ એન્ટ્રી હિસાબમાં ઉમેરો (₹{Number(parsed.amount || 0).toLocaleString()})</span>
+                <span>
+                  {lang === 'hi'
+                    ? `यह एंट्री हिसाब में जोड़ें (₹${Number(parsed.amount || 0).toLocaleString()})`
+                    : lang === 'en'
+                    ? `Add Entry to Finance (₹${Number(parsed.amount || 0).toLocaleString()})`
+                    : `આ એન્ટ્રી હિસાબમાં ઉમેરો (₹${Number(parsed.amount || 0).toLocaleString()})`}
+                </span>
               </button>
             </div>
           )}

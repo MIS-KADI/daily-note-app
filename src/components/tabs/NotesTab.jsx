@@ -62,6 +62,10 @@ export default function NotesTab({
   const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
   const [selectedCat, setSelectedCat] = useState(noteCategories[0]);
+
+  useEffect(() => {
+    setSelectedCat(noteCategories[0]);
+  }, [lang]);
   const [dateFilterMode, setDateFilterMode] = useState('all'); // 'all', 'today', 'future', 'by_date'
   const [selectedDate, setSelectedDate] = useState(todayStr);
 
@@ -649,8 +653,15 @@ export default function NotesTab({
       n.content?.toLowerCase().includes(search.toLowerCase()) ||
       n.location?.toLowerCase().includes(search.toLowerCase());
 
-    const isAll = selectedCat === noteCategories[0] || selectedCat === 'All' || selectedCat === 'બધા';
-    const matchesCategory = isAll || n.category === selectedCat;
+    const isAll = selectedCat === noteCategories[0] || selectedCat === 'All' || selectedCat === 'બધા' || selectedCat === 'सभी';
+    const selectedCatIdx = noteCategories.indexOf(selectedCat);
+    const matchesCategory = isAll || n.category === selectedCat || (
+      selectedCatIdx > 0 && (
+        n.category === getNoteCategories('gu')[selectedCatIdx] ||
+        n.category === getNoteCategories('hi')[selectedCatIdx] ||
+        n.category === getNoteCategories('en')[selectedCatIdx]
+      )
+    );
 
     let matchesDate = true;
     if (dateFilterMode === 'today') {

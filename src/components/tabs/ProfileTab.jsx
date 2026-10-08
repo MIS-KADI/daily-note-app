@@ -54,7 +54,13 @@ export default function ProfileTab({
   const handleToggleBiometric = async (enable) => {
     if (enable) {
       setIsBiometricTesting(true);
-      setBiometricNotice(lang === 'gu' ? '👆 ફિંગરપ્રિન્ટ સેન્સર ચકાસી રહ્યા છીએ...' : 'Checking biometric sensor...');
+      setBiometricNotice(
+        lang === 'gu'
+          ? '👆 ફિંગરપ્રિન્ટ સેન્સર ચકાસી રહ્યા છીએ...'
+          : lang === 'hi'
+          ? '👆 फ़िंगरप्रिंट सेंसर की जांच हो रही है...'
+          : 'Checking biometric sensor...'
+      );
       
       const res = await biometricService.register(name || user?.name || 'Daily User');
       setIsBiometricTesting(false);
@@ -66,15 +72,34 @@ export default function ProfileTab({
           isBiometricEnabled: true,
         };
         onUpdateUser(updated);
-        setBiometricNotice(lang === 'gu' ? '✅ ફિંગરપ્રિન્ટ લૉક સફળતાપૂર્વક સક્ષમ થયું!' : '✅ Biometrics Enabled!');
+        setBiometricNotice(
+          lang === 'gu'
+            ? '✅ ફિંગરપ્રિન્ટ લૉક સફળતાપૂર્વક સક્ષમ થયું!'
+            : lang === 'hi'
+            ? '✅ फ़िंगरप्रिंट लॉक सफलतापूर्वक सक्षम हो गया!'
+            : '✅ Biometrics Enabled!'
+        );
         setTimeout(() => setBiometricNotice(''), 3500);
       } else if (res.cancelled) {
         setIsBiometricEnabled(false);
-        setBiometricNotice(lang === 'gu' ? '❌ બાયોમેટ્રિક ચકાસણી કેન્સલ થઈ.' : 'Biometric cancelled.');
+        setBiometricNotice(
+          lang === 'gu'
+            ? '❌ બાયોમેટ્રિક ચકાસણી કેન્સલ થઈ.'
+            : lang === 'hi'
+            ? '❌ बायोमेट्रिक सत्यापन रद्द हुआ।'
+            : 'Biometric cancelled.'
+        );
         setTimeout(() => setBiometricNotice(''), 3000);
       } else {
         setIsBiometricEnabled(false);
-        setBiometricNotice(res.error || (lang === 'gu' ? 'સેન્સર ઉપલબ્ધ નથી.' : 'Sensor not available.'));
+        setBiometricNotice(
+          res.error ||
+            (lang === 'gu'
+              ? 'સેન્સર ઉપલબ્ધ નથી.'
+              : lang === 'hi'
+              ? 'सेंसर उपलब्ध नहीं है।'
+              : 'Sensor not available.')
+        );
         setTimeout(() => setBiometricNotice(''), 3500);
       }
     } else {
@@ -85,24 +110,44 @@ export default function ProfileTab({
         isBiometricEnabled: false,
       };
       onUpdateUser(updated);
-      setBiometricNotice(lang === 'gu' ? 'બાયોમેટ્રિક લૉક બંધ કરવામાં આવ્યું.' : 'Biometrics disabled.');
+      setBiometricNotice(
+        lang === 'gu'
+          ? 'બાયોમેટ્રિક લૉક બંધ કરવામાં આવ્યું.'
+          : lang === 'hi'
+          ? 'बायोमेट्रिक लॉक बंद किया गया।'
+          : 'Biometrics disabled.'
+      );
       setTimeout(() => setBiometricNotice(''), 2500);
     }
   };
 
   const handleTestBiometric = async () => {
     setIsBiometricTesting(true);
-    setBiometricNotice(lang === 'gu' ? '👆 ફિંગરપ્રિન્ટ સેન્સર પર ટચ કરો...' : 'Touch fingerprint sensor...');
+    setBiometricNotice(
+      lang === 'gu'
+        ? '👆 ફિંગરપ્રિન્ટ સેન્સર પર ટચ કરો...'
+        : lang === 'hi'
+        ? '👆 फ़िंगरप्रिंट सेंसर पर टच करें...'
+        : 'Touch fingerprint sensor...'
+    );
     const res = await biometricService.authenticate();
     setIsBiometricTesting(false);
 
     if (res.success) {
-      setBiometricNotice(lang === 'gu' ? '✅ ફિંગરપ્રિન્ટ સફળતાપૂર્વક પ્રમાણિત થઈ!' : '✅ Biometric Verified!');
+      setBiometricNotice(
+        lang === 'gu'
+          ? '✅ ફિંગરપ્રિન્ટ સફળતાપૂર્વક પ્રમાણિત થઈ!'
+          : lang === 'hi'
+          ? '✅ फ़िंगरप्रिंट सफलतापूर्वक सत्यापित हुआ!'
+          : '✅ Biometric Verified!'
+      );
       setTimeout(() => setBiometricNotice(''), 3500);
     } else {
       setBiometricNotice(
         lang === 'gu'
           ? '👇 નીચે આપેલ ફિંગરપ્રિન્ટ સેન્સર પર આંગળી ૨ સેકન્ડ દબાવી રાખો'
+          : lang === 'hi'
+          ? '👇 नीचे दिए गए फ़िंगरप्रिंट सेंसर पर उंगली 2 सेकंड दबाकर रखें'
           : '👇 Press and hold the sensor below for 2s'
       );
     }

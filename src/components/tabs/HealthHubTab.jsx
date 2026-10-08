@@ -585,52 +585,152 @@ export default function HealthHubTab({
     }
   });
 
-  const BREATH_MODES = {
-    '478': {
-      title: '૪-૭-૮ પદ્ધતિ (4-7-8 Deep Lung Expansion)',
-      sub: 'ઓક્સિજન વિસ્તરણ & માનસિક શાંતિ',
-      badge: 'ડો. વેઇલ પદ્ધતિ',
-      phases: [
-        { name: 'inhale', duration: 4, label: 'ઊંડો શ્વાસ અંદર લો 🌬️', color: 'from-cyan-500 to-teal-500' },
-        { name: 'hold', duration: 7, label: 'શ્વાસ રોકી રાખો ⏸️', color: 'from-amber-500 to-orange-500' },
-        { name: 'exhale', duration: 8, label: 'ધીમેથી શ્વાસ બહાર કાઢો 💨', color: 'from-indigo-500 to-blue-500' },
-      ],
-    },
-    'box': {
-      title: 'બોક્સ બ્રિધિંગ (Box 4-4-4-4)',
-      sub: 'ફેફસાંના વાયુકોષો સક્રિય & મજબૂત',
-      badge: 'સમવૃત્તિ પ્રાણાયામ',
-      phases: [
-        { name: 'inhale', duration: 4, label: 'શ્વાસ અંદર લો 🌬️', color: 'from-cyan-500 to-teal-500' },
-        { name: 'hold', duration: 4, label: 'શ્વાસ રોકી રાખો ⏸️', color: 'from-amber-500 to-orange-500' },
-        { name: 'exhale', duration: 4, label: 'શ્વાસ બહાર કાઢો 💨', color: 'from-indigo-500 to-blue-500' },
-        { name: 'hold_empty', duration: 4, label: 'ખાલી ફેફસાં રોકો 🧘', color: 'from-purple-500 to-pink-500' },
-      ],
-    },
-    'anulom': {
-      title: 'અનુલોમ-વિલોમ (નાડીશોધન)',
-      sub: 'બંને ફેફસાંનું સંતુલિત શુદ્ધિકરણ',
-      badge: 'યોગિક શ્વાસ',
-      phases: [
-        { name: 'inhale_left', duration: 4, label: 'ડાબા નસકોરેથી શ્વાસ લો 👈', color: 'from-emerald-500 to-teal-500' },
-        { name: 'hold', duration: 4, label: 'બંને નસકોરાં બંધ કરી રોકો ⏸️', color: 'from-amber-500 to-orange-500' },
-        { name: 'exhale_right', duration: 4, label: 'જમણા નસકોરેથી બહાર કાઢો 👉', color: 'from-blue-500 to-cyan-500' },
-        { name: 'inhale_right', duration: 4, label: 'જમણા નસકોરેથી શ્વાસ લો 👉', color: 'from-emerald-500 to-teal-500' },
-        { name: 'hold_2', duration: 4, label: 'બંને નસકોરાં બંધ કરી રોકો ⏸️', color: 'from-amber-500 to-orange-500' },
-        { name: 'exhale_left', duration: 4, label: 'ડાબા નસકોરેથી બહાર કાઢો 👈', color: 'from-blue-500 to-cyan-500' },
-      ],
-    },
-    'deep': {
-      title: 'ડીપ લંગ એક્સ્પાન્શન (5-10-5)',
-      sub: 'મહત્તમ ફેફસાં ક્ષમતા & પાવર',
-      badge: 'હાર્ડ ટ્રેઇનિંગ',
-      phases: [
-        { name: 'inhale', duration: 5, label: 'ફેફસાં પૂરા ભરીને શ્વાસ લો 🌬️', color: 'from-teal-500 to-emerald-500' },
-        { name: 'hold', duration: 10, label: 'ઓક્સિજન રોકી રાખો (૧૦ સે.) ⏸️', color: 'from-amber-500 to-rose-500' },
-        { name: 'exhale', duration: 5, label: 'ધીમેથી પૂર્ણ શ્વાસ ખાલી કરો 💨', color: 'from-blue-500 to-indigo-500' },
-      ],
-    },
+  const getBreathModes = (l) => {
+    if (l === 'hi') {
+      return {
+        '478': {
+          title: '4-7-8 विधि (Deep Lung Expansion)',
+          sub: 'ऑक्सीजन विस्तार और मानसिक शांति',
+          badge: 'डॉ. वेल विधि',
+          phases: [
+            { name: 'inhale', duration: 4, label: 'गहरी सांस अंदर लें 🌬️', color: 'from-cyan-500 to-teal-500' },
+            { name: 'hold', duration: 7, label: 'सांस रोकें ⏸️', color: 'from-amber-500 to-orange-500' },
+            { name: 'exhale', duration: 8, label: 'धीरे-धीरे सांस छोड़ें 💨', color: 'from-indigo-500 to-blue-500' },
+          ],
+        },
+        'box': {
+          title: 'बॉक्स ब्रीदिंग (Box 4-4-4-4)',
+          sub: 'फेफड़ों के वायुकोष सक्रिय व मजबूत',
+          badge: 'समवृत्ति प्राणायाम',
+          phases: [
+            { name: 'inhale', duration: 4, label: 'सांस अंदर लें 🌬️', color: 'from-cyan-500 to-teal-500' },
+            { name: 'hold', duration: 4, label: 'सांस रोकें ⏸️', color: 'from-amber-500 to-orange-500' },
+            { name: 'exhale', duration: 4, label: 'सांस बाहर छोड़ें 💨', color: 'from-indigo-500 to-blue-500' },
+            { name: 'hold_empty', duration: 4, label: 'खाली फेफड़े रोकें 🧘', color: 'from-purple-500 to-pink-500' },
+          ],
+        },
+        'anulom': {
+          title: 'अनुलोम-विलोम (नाड़ीशोधन)',
+          sub: 'दोनों फेफड़ों का संतुलित शुद्धिकरण',
+          badge: 'योगिक श्वास',
+          phases: [
+            { name: 'inhale_left', duration: 4, label: 'बाएं नथुने से सांस लें 👈', color: 'from-emerald-500 to-teal-500' },
+            { name: 'hold', duration: 4, label: 'दोनों नथुने बंद कर रोकें ⏸️', color: 'from-amber-500 to-orange-500' },
+            { name: 'exhale_right', duration: 4, label: 'दाएं नथुने से बाहर छोड़ें 👉', color: 'from-blue-500 to-cyan-500' },
+            { name: 'inhale_right', duration: 4, label: 'दाएं नथुने से सांस लें 👉', color: 'from-emerald-500 to-teal-500' },
+            { name: 'hold_2', duration: 4, label: 'दोनों नथुने बंद कर रोकें ⏸️', color: 'from-amber-500 to-orange-500' },
+            { name: 'exhale_left', duration: 4, label: 'बाएं नथुने से बाहर छोड़ें 👈', color: 'from-blue-500 to-cyan-500' },
+          ],
+        },
+        'deep': {
+          title: 'डीप लंग एक्सपेंशन (5-10-5)',
+          sub: 'अधिकतम फेफड़ों की क्षमता व शक्ति',
+          badge: 'उन्नत प्रशिक्षण',
+          phases: [
+            { name: 'inhale', duration: 5, label: 'फेफड़े भरकर सांस लें 🌬️', color: 'from-teal-500 to-emerald-500' },
+            { name: 'hold', duration: 10, label: 'ऑक्सीजन रोकें (१० से.) ⏸️', color: 'from-amber-500 to-rose-500' },
+            { name: 'exhale', duration: 5, label: 'धीरे-धीरे सांस खाली करें 💨', color: 'from-blue-500 to-indigo-500' },
+          ],
+        },
+      };
+    }
+    if (l === 'en') {
+      return {
+        '478': {
+          title: '4-7-8 Technique (Deep Lung Expansion)',
+          sub: 'Oxygen expansion & mental calmness',
+          badge: 'Dr. Weil Method',
+          phases: [
+            { name: 'inhale', duration: 4, label: 'Inhale deeply 🌬️', color: 'from-cyan-500 to-teal-500' },
+            { name: 'hold', duration: 7, label: 'Hold your breath ⏸️', color: 'from-amber-500 to-orange-500' },
+            { name: 'exhale', duration: 8, label: 'Exhale slowly 💨', color: 'from-indigo-500 to-blue-500' },
+          ],
+        },
+        'box': {
+          title: 'Box Breathing (Box 4-4-4-4)',
+          sub: 'Activate & strengthen lung alveoli',
+          badge: 'Samavritti Pranayama',
+          phases: [
+            { name: 'inhale', duration: 4, label: 'Inhale 🌬️', color: 'from-cyan-500 to-teal-500' },
+            { name: 'hold', duration: 4, label: 'Hold breath ⏸️', color: 'from-amber-500 to-orange-500' },
+            { name: 'exhale', duration: 4, label: 'Exhale 💨', color: 'from-indigo-500 to-blue-500' },
+            { name: 'hold_empty', duration: 4, label: 'Hold lungs empty 🧘', color: 'from-purple-500 to-pink-500' },
+          ],
+        },
+        'anulom': {
+          title: 'Anulom Vilom (Nadi Shodhana)',
+          sub: 'Balanced purification of both lungs',
+          badge: 'Yogic Breath',
+          phases: [
+            { name: 'inhale_left', duration: 4, label: 'Inhale left nostril 👈', color: 'from-emerald-500 to-teal-500' },
+            { name: 'hold', duration: 4, label: 'Hold both closed ⏸️', color: 'from-amber-500 to-orange-500' },
+            { name: 'exhale_right', duration: 4, label: 'Exhale right nostril 👉', color: 'from-blue-500 to-cyan-500' },
+            { name: 'inhale_right', duration: 4, label: 'Inhale right nostril 👉', color: 'from-emerald-500 to-teal-500' },
+            { name: 'hold_2', duration: 4, label: 'Hold both closed ⏸️', color: 'from-amber-500 to-orange-500' },
+            { name: 'exhale_left', duration: 4, label: 'Exhale left nostril 👈', color: 'from-blue-500 to-cyan-500' },
+          ],
+        },
+        'deep': {
+          title: 'Deep Lung Expansion (5-10-5)',
+          sub: 'Maximum lung stamina & power',
+          badge: 'Hard Training',
+          phases: [
+            { name: 'inhale', duration: 5, label: 'Fill lungs completely 🌬️', color: 'from-teal-500 to-emerald-500' },
+            { name: 'hold', duration: 10, label: 'Hold oxygen (10s) ⏸️', color: 'from-amber-500 to-rose-500' },
+            { name: 'exhale', duration: 5, label: 'Slowly empty lungs 💨', color: 'from-blue-500 to-indigo-500' },
+          ],
+        },
+      };
+    }
+    return {
+      '478': {
+        title: '૪-૭-૮ પદ્ધતિ (4-7-8 Deep Lung Expansion)',
+        sub: 'ઓક્સિજન વિસ્તરણ & માનસિક શાંતિ',
+        badge: 'ડો. વેઇલ પદ્ધતિ',
+        phases: [
+          { name: 'inhale', duration: 4, label: 'ઊંડો શ્વાસ અંદર લો 🌬️', color: 'from-cyan-500 to-teal-500' },
+          { name: 'hold', duration: 7, label: 'શ્વાસ રોકી રાખો ⏸️', color: 'from-amber-500 to-orange-500' },
+          { name: 'exhale', duration: 8, label: 'ધીમેથી શ્વાસ બહાર કાઢો 💨', color: 'from-indigo-500 to-blue-500' },
+        ],
+      },
+      'box': {
+        title: 'બોક્સ બ્રિધિંગ (Box 4-4-4-4)',
+        sub: 'ફેફસાંના વાયુકોષો સક્રિય & મજબૂત',
+        badge: 'સમવૃત્તિ પ્રાણાયામ',
+        phases: [
+          { name: 'inhale', duration: 4, label: 'શ્વાસ અંદર લો 🌬️', color: 'from-cyan-500 to-teal-500' },
+          { name: 'hold', duration: 4, label: 'શ્વાસ રોકી રાખો ⏸️', color: 'from-amber-500 to-orange-500' },
+          { name: 'exhale', duration: 4, label: 'શ્વાસ બહાર કાઢો 💨', color: 'from-indigo-500 to-blue-500' },
+          { name: 'hold_empty', duration: 4, label: 'ખાલી ફેફસાં રોકો 🧘', color: 'from-purple-500 to-pink-500' },
+        ],
+      },
+      'anulom': {
+        title: 'અનુલોમ-વિલોમ (નાડીશોધન)',
+        sub: 'બંને ફેફસાંનું સંતુલિત શુદ્ધિકરણ',
+        badge: 'યોગિક શ્વાસ',
+        phases: [
+          { name: 'inhale_left', duration: 4, label: 'ડાબા નસકોરેથી શ્વાસ લો 👈', color: 'from-emerald-500 to-teal-500' },
+          { name: 'hold', duration: 4, label: 'બંને નસકોરાં બંધ કરી રોકો ⏸️', color: 'from-amber-500 to-orange-500' },
+          { name: 'exhale_right', duration: 4, label: 'જમણા નસકોરેથી બહાર કાઢો 👉', color: 'from-blue-500 to-cyan-500' },
+          { name: 'inhale_right', duration: 4, label: 'જમણા નસકોરેથી શ્વાસ લો 👉', color: 'from-emerald-500 to-teal-500' },
+          { name: 'hold_2', duration: 4, label: 'બંને નસકોરાં બંધ કરી રોકો ⏸️', color: 'from-amber-500 to-orange-500' },
+          { name: 'exhale_left', duration: 4, label: 'ડાબા નસકોરેથી બહાર કાઢો 👈', color: 'from-blue-500 to-cyan-500' },
+        ],
+      },
+      'deep': {
+        title: 'ડીપ લંગ એક્સ્પાન્શન (5-10-5)',
+        sub: 'મહત્તમ ફેફસાં ક્ષમતા & પાવર',
+        badge: 'હાર્ડ ટ્રેઇનિંગ',
+        phases: [
+          { name: 'inhale', duration: 5, label: 'ફેફસાં પૂરા ભરીને શ્વાસ લો 🌬️', color: 'from-teal-500 to-emerald-500' },
+          { name: 'hold', duration: 10, label: 'ઓક્સિજન રોકી રાખો (૧૦ સે.) ⏸️', color: 'from-amber-500 to-rose-500' },
+          { name: 'exhale', duration: 5, label: 'ધીમેથી પૂર્ણ શ્વાસ ખાલી કરો 💨', color: 'from-blue-500 to-indigo-500' },
+        ],
+      },
+    };
   };
+
+  const BREATH_MODES = getBreathModes(lang);
 
   const currentPattern = BREATH_MODES[breathMode] || BREATH_MODES['478'];
   const currentPhase = currentPattern.phases[breathPhaseIndex] || currentPattern.phases[0];
@@ -724,30 +824,46 @@ export default function HealthHubTab({
   const getLungTestScore = (sec) => {
     if (sec < 20) {
       return {
-        badge: 'સામાન્ય / સુધારો જરૂરી',
+        badge: lang === 'hi' ? 'सामान्य / सुधार आवश्यक' : lang === 'en' ? 'Needs Improvement' : 'સામાન્ય / સુધારો જરૂરી',
         badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
-        desc: 'તમારા ફેફસાંને તાલીમની જરૂર છે. દરરોજ સવારે ૫ મિનિટ ૪-૭-૮ અથવા અનુલોમ-વિલોમ પ્રાણાયામ કરો.',
+        desc: lang === 'hi'
+          ? 'आपके फेफड़ों को अभ्यास की आवश्यकता है। प्रतिदिन 5 मिनट 4-7-8 या अनुलोम-विलोम प्राणायाम करें।'
+          : lang === 'en'
+          ? 'Your lungs need exercise. Practice 5 minutes of 4-7-8 or deep breathing daily.'
+          : 'તમારા ફેફસાંને તાલીમની જરૂર છે. દરરોજ સવારે ૫ મિનિટ ૪-૭-૮ અથવા અનુલોમ-વિલોમ પ્રાણાયામ કરો.',
         icon: '⚠️',
       };
     } else if (sec < 40) {
       return {
-        badge: 'સરેરાશ સ્વસ્થ ફેફસાં',
+        badge: lang === 'hi' ? 'औसत स्वस्थ फेफड़े' : lang === 'en' ? 'Healthy & Average' : 'સરેરાશ સ્વસ્થ ફેફસાં',
         badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-        desc: 'તમારા ફેફસાં સારા અને સામાન્ય કાર્યક્ષમ છે. નિયમિત વૉક અને પ્રાણાયામથી ક્ષમતા ૬૦ સેકન્ડ સુધી લઈ જઈ શકો છો.',
+        desc: lang === 'hi'
+          ? 'आपके फेफड़े अच्छे और सामान्य रूप से कार्य कर रहे हैं। नियमित वॉक और प्राणायाम जारी रखें।'
+          : lang === 'en'
+          ? 'Your lungs are in good healthy condition. Regular brisk walks and breathwork will keep them sharp.'
+          : 'તમારા ફેફસાં સારા અને સામાન્ય કાર્યક્ષમ છે. નિયમિત વૉક અને પ્રાણાયામથી ક્ષમતા ૬૦ સેકન્ડ સુધી લઈ જઈ શકો છો.',
         icon: '👍',
       };
     } else if (sec < 60) {
       return {
-        badge: 'ખૂબ મજબૂત ફેફસાં!',
+        badge: lang === 'hi' ? 'बहुत मजबूत फेफड़े!' : lang === 'en' ? 'Very Strong Lungs!' : 'ખૂબ મજબૂત ફેફસાં!',
         badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
-        desc: 'વાહ! તમારા ફેફસાંની ઓક્સિજન ક્ષમતા ઉત્કૃષ્ટ છે. તમારા શ્વસનતંત્રની શક્તિ ઘણી ઊંચી છે.',
+        desc: lang === 'hi'
+          ? 'वाह! आपके फेफड़ों की ऑक्सीजन क्षमता उत्कृष्ट है। श्वसन तंत्र बहुत मजबूत है।'
+          : lang === 'en'
+          ? 'Impressive! Your lungs have great oxygen holding capacity and stamina.'
+          : 'વાહ! તમારા ફેફસાંની ઓક્સિજન ક્ષમતા ઉત્કૃષ્ટ છે. તમારા શ્વસનતંત્રની શક્તિ ઘણી ઊંચી છે.',
         icon: '💪',
       };
     } else {
       return {
-        badge: 'અલ્ટ્રા-સ્ટ્રોંગ એથ્લેટ લેવલ! 🏆',
+        badge: lang === 'hi' ? 'अल्ट्रा-स्ट्रांग एथलीट स्तर! 🏆' : lang === 'en' ? 'Ultra Strong Athlete Level! 🏆' : 'અલ્ટ્રા-સ્ટ્રોંગ એથ્લેટ લેવલ! 🏆',
         badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
-        desc: 'અદ્ભુત! ૧ મિનિટથી વધુ શ્વાસ રોકવો એ રમતવીરો (Athletes) અને યોગી જેવી લોખંડી ફેફસાં ક્ષમતા દર્શાવે છે!',
+        desc: lang === 'hi'
+          ? 'अद्भुत! 1 मिनट से अधिक सांस रोकना खिलाड़ियों (Athletes) जैसी मजबूत फेफड़ों की क्षमता दर्शाता है!'
+          : lang === 'en'
+          ? 'Outstanding! Holding breath over 60 seconds indicates elite athletic respiratory strength!'
+          : 'અદ્ભુત! ૧ મિનિટથી વધુ શ્વાસ રોકવો એ રમતવીરો (Athletes) અને યોગી જેવી લોખંડી ફેફસાં ક્ષમતા દર્શાવે છે!',
         icon: '🌟',
       };
     }
@@ -1731,10 +1847,10 @@ export default function HealthHubTab({
                     {isBreathingActive ? breathSecondsLeft : '૪'}
                   </span>
                   <span className="text-xs font-extrabold uppercase tracking-widest block text-white/90">
-                    સેકન્ડ
+                    {lang === 'hi' ? 'सेकंड' : lang === 'en' ? 'seconds' : 'સેકન્ડ'}
                   </span>
                   <div className="mt-1 px-3 py-1 rounded-full bg-black/30 backdrop-blur-md text-[11px] font-bold text-white shadow-xs">
-                    {isBreathingActive ? currentPhase.label : 'તૈયાર થાઓ'}
+                    {isBreathingActive ? currentPhase.label : (lang === 'hi' ? 'तैयार हो जाएं' : lang === 'en' ? 'Get Ready' : 'તૈયાર થાઓ')}
                   </div>
                 </div>
               </div>
@@ -1742,11 +1858,11 @@ export default function HealthHubTab({
               <p className="text-xs text-cyan-200 mt-5 font-medium text-center max-w-xs">
                 {isBreathingActive
                   ? currentPhase.name === 'inhale' || currentPhase.name.startsWith('inhale')
-                    ? 'નાક વાટે ધીમે-ધીમે પૂરા ફેફસાં ભરીને ઊંડો શ્વાસ અંદર ખેંચો...'
+                    ? (lang === 'hi' ? 'नाक से धीरे-धीरे पूरे फेफड़े भरकर गहरी सांस अंदर लें...' : lang === 'en' ? 'Inhale deeply through your nose, filling lungs completely...' : 'નાક વાટે ધીમે-ધીમે પૂરા ફેફસાં ભરીને ઊંડો શ્વાસ અંદર ખેંચો...')
                     : currentPhase.name === 'hold' || currentPhase.name.startsWith('hold')
-                    ? 'ફેફસાંમાં ભરેલો ઓક્સિજન સ્થિર રોકી રાખો...'
-                    : 'મોં અથવા નાક વાટે ધીમેથી સંપૂર્ણ શ્વાસ બહાર કાઢો...'
-                  : 'બેસો, કરોડરજ્જુ સીધી રાખો અને કસરત શરૂ કરવા નીચે બટન દબાવો.'}
+                    ? (lang === 'hi' ? 'फेफड़ों में भरी ऑक्सीजन को शांत भाव से रोक कर रखें...' : lang === 'en' ? 'Hold the oxygen gently inside your lungs...' : 'ફેફસાંમાં ભરેલો ઓક્સિજન સ્થિર રોકી રાખો...')
+                    : (lang === 'hi' ? 'मुंह या नाक से धीरे-धीरे पूरी सांस बाहर छोड़ें...' : lang === 'en' ? 'Exhale slowly and completely through mouth or nose...' : 'મોં અથવા નાક વાટે ધીમેથી સંપૂર્ણ શ્વાસ બહાર કાઢો...')
+                  : (lang === 'hi' ? 'रीढ़ सीधी रखकर बैठें और अभ्यास शुरू करने के लिए नीचे बटन दबाएं।' : lang === 'en' ? 'Sit upright with relaxed shoulders and tap the button below.' : 'બેસો, કરોડરજ્જુ સીધી રાખો અને કસરત શરૂ કરવા નીચે બટન દબાવો.')}
               </p>
             </div>
 
@@ -1759,7 +1875,7 @@ export default function HealthHubTab({
                   className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer"
                 >
                   <Play size={16} fill="white" />
-                  <span>પ્રાણાયામ શરૂ કરો (Start Breathing)</span>
+                  <span>{lang === 'hi' ? 'प्राणायाम शुरू करें (Start Breathing)' : lang === 'en' ? 'Start Breathing Exercise' : 'પ્રાણાયામ શરૂ કરો (Start Breathing)'}</span>
                 </button>
               ) : (
                 <>
@@ -1769,7 +1885,7 @@ export default function HealthHubTab({
                     className="flex-1 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer"
                   >
                     <Pause size={16} fill="white" />
-                    <span>થોભો (Pause)</span>
+                    <span>{lang === 'hi' ? 'रोकें (Pause)' : lang === 'en' ? 'Pause' : 'થોભો (Pause)'}</span>
                   </button>
                   <button
                     type="button"
@@ -1777,7 +1893,7 @@ export default function HealthHubTab({
                     className="py-3 px-4 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-98 transition cursor-pointer"
                   >
                     <RotateCcw size={16} />
-                    <span>રીસેટ</span>
+                    <span>{lang === 'hi' ? 'रीसेट' : lang === 'en' ? 'Reset' : 'રીસેટ'}</span>
                   </button>
                 </>
               )}
@@ -1793,10 +1909,10 @@ export default function HealthHubTab({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                    ફેફસાંની ક્ષમતા ટેસ્ટ (Lung Breath-Hold Test)
+                    {lang === 'hi' ? 'फेफड़ों की क्षमता टेस्ट (Lung Breath-Hold Test)' : lang === 'en' ? 'Lung Capacity Breath-Hold Test' : 'ફેફસાંની ક્ષમતા ટેસ્ટ (Lung Breath-Hold Test)'}
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    તમે કેટલી સેકન્ડ શ્વાસ રોકી શકો છો તે માપો
+                    {lang === 'hi' ? 'मापें कि आप कितनी सेकंड सांस रोक सकते हैं' : lang === 'en' ? 'Measure how many seconds you can hold your breath' : 'તમે કેટલી સેકન્ડ શ્વાસ રોકી શકો છો તે માપો'}
                   </p>
                 </div>
               </div>
@@ -1804,7 +1920,7 @@ export default function HealthHubTab({
               {bestTestTime > 0 && (
                 <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2.5 py-1 rounded-xl text-amber-700 dark:text-amber-300 text-xs font-bold">
                   <Award size={14} />
-                  <span>શ્રેષ્ઠ: {bestTestTime}s</span>
+                  <span>{lang === 'hi' ? 'सर्वश्रेष्ठ: ' : lang === 'en' ? 'Best: ' : 'શ્રેષ્ઠ: '}{bestTestTime}s</span>
                 </div>
               )}
             </div>
@@ -1815,7 +1931,9 @@ export default function HealthHubTab({
                 {String(Math.floor(testTime / 60)).padStart(2, '0')}:{String(testTime % 60).padStart(2, '0')}
               </span>
               <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                {isTestActive ? '🌬️ શ્વાસ રોકી રાખો... તમારો સમય ગણાઈ રહ્યો છે' : 'ઊંડો શ્વાસ ભરીને શરૂ કરો'}
+                {isTestActive
+                  ? (lang === 'hi' ? '🌬️ सांस रोक कर रखें... समय गिना जा रहा है' : lang === 'en' ? '🌬️ Hold breath... timer is running' : '🌬️ શ્વાસ રોકી રાખો... તમારો સમય ગણાઈ રહ્યો છે')
+                  : (lang === 'hi' ? 'गहरी सांस भरकर शुरू करें' : lang === 'en' ? 'Take a deep breath and start' : 'ઊંડો શ્વાસ ભરીને શરૂ કરો')}
               </p>
             </div>
 
@@ -1828,7 +1946,7 @@ export default function HealthHubTab({
                   className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer"
                 >
                   <Play size={16} fill="white" />
-                  <span>ઊંડો શ્વાસ લઈ ટેસ્ટ શરૂ કરો</span>
+                  <span>{lang === 'hi' ? 'गहरी सांस लेकर टेस्ट शुरू करें' : lang === 'en' ? 'Inhale Deeply & Start Test' : 'ઊંડો શ્વાસ લઈ ટેસ્ટ શરૂ કરો'}</span>
                 </button>
               ) : (
                 <button
@@ -1837,7 +1955,7 @@ export default function HealthHubTab({
                   className="w-full py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-600/30 flex items-center justify-center gap-2 animate-pulse active:scale-98 transition cursor-pointer"
                 >
                   <Pause size={16} fill="white" />
-                  <span>હવે શ્વાસ બહાર કાઢો (ટેસ્ટ પૂર્ણ કરો)</span>
+                  <span>{lang === 'hi' ? 'अब सांस बाहर छोड़ें (टेस्ट पूरा करें)' : lang === 'en' ? 'Exhale Now (Finish Test)' : 'હવે શ્વાસ બહાર કાઢો (ટેસ્ટ પૂર્ણ કરો)'}</span>
                 </button>
               )}
             </div>
@@ -1851,7 +1969,8 @@ export default function HealthHubTab({
                     <div className="bg-gradient-to-br from-slate-50 to-indigo-50/50 dark:from-slate-800 dark:to-slate-800/80 p-4 rounded-2xl border border-indigo-200/60 dark:border-slate-700 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                          તમારો સ્કોર: <strong>{testTime} સેકન્ડ</strong>
+                          {lang === 'hi' ? 'आपका स्कोर: ' : lang === 'en' ? 'Your Score: ' : 'તમારો સ્કોર: '}
+                          <strong>{testTime} {lang === 'hi' ? 'सेकंड' : lang === 'en' ? 'seconds' : 'સેકન્ડ'}</strong>
                         </span>
                         <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${score.badgeColor}`}>
                           {score.badge}
@@ -1873,10 +1992,10 @@ export default function HealthHubTab({
               <span className="text-lg">🌿</span>
               <div>
                 <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                  ફેફસાં મજબૂત રાખવાના ૪ ઉત્તમ આયુર્વેદિક ઉપાયો
+                  {lang === 'hi' ? 'फेफड़े मजबूत रखने के 4 उत्तम आयुर्वेदिक उपाय' : lang === 'en' ? '4 Golden Ayurvedic Tips for Stronger Lungs' : 'ફેફસાં મજબૂત રાખવાના ૪ ઉત્તમ આયુર્વેદિક ઉપાયો'}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  રોજિંદા જીવનમાં આ નિયમો પાળવાથી ફેફસાં સ્વસ્થ રહે છે
+                  {lang === 'hi' ? 'दैनिक जीवन में इन नियमों का पालन करने से फेફસાં स्वस्थ रहते हैं' : lang === 'en' ? 'Simple daily habits to keep your respiratory health optimal' : 'રોજિંદા જીવનમાં આ નિયમો પાળવાથી ફેફસાં સ્વસ્થ રહે છે'}
                 </p>
               </div>
             </div>
@@ -1885,26 +2004,42 @@ export default function HealthHubTab({
               {[
                 {
                   icon: '☕',
-                  title: 'તુલસી & આદુનો ઉકાળો',
-                  desc: 'તુલસી, આદુ અને કાળા મરીનો ઉકાળો પીવાથી ફેફસાંમાંથી કફ નીકળી જાય છે અને શ્વાસનળીઓ સાફ રહે છે.',
+                  title: lang === 'hi' ? 'तुलसी और अदरक का काढ़ा' : lang === 'en' ? 'Tulsi & Ginger Decoction' : 'તુલસી & આદુનો ઉકાળો',
+                  desc: lang === 'hi'
+                    ? 'तुलसी, अदरक और काली मिर्च का काढ़ा पीने से कफ दूर होता है और श्वासनलियां साफ रहती हैं।'
+                    : lang === 'en'
+                    ? 'Drinking tulsi, ginger and pepper brew expels mucus and clears the respiratory airways.'
+                    : 'તુલસી, આદુ અને કાળા મરીનો ઉકાળો પીવાથી ફેફસાંમાંથી કફ નીકળી જાય છે અને શ્વાસનળીઓ સાફ રહે છે.',
                   bg: 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/60',
                 },
                 {
                   icon: '💨',
-                  title: 'ગરમ પાણીની વરાળ (Steam)',
-                  desc: 'અઠવાડિયામાં ૨-૩ વાર અજમો કે ફુદીનો નાખીને વરાળ લેવાથી ફેફસાંના વાયુકોષો તરત ખૂલી જાય છે.',
+                  title: lang === 'hi' ? 'गर्म पानी की भाप (Steam)' : lang === 'en' ? 'Warm Steam Inhalation' : 'ગરમ પાણીની વરાળ (Steam)',
+                  desc: lang === 'hi'
+                    ? 'सप्ताह में 2-3 बार अजवाइन या पुदीना डालकर भाप लेने से फेफड़ों के वायुकोष तुरंत खुल जाते हैं।'
+                    : lang === 'en'
+                    ? 'Taking steam with carom seeds or mint 2-3 times a week opens congested lung air sacs.'
+                    : 'અઠવાડિયામાં ૨-૩ વાર અજમો કે ફુદીનો નાખીને વરાળ લેવાથી ફેફસાંના વાયુકોષો તરત ખૂલી જાય છે.',
                   bg: 'bg-cyan-50/80 dark:bg-cyan-950/30 border-cyan-200/80 dark:border-cyan-800/60',
                 },
                 {
                   icon: '🌅',
-                  title: 'વહેલી સવારે તાજી હવામાં વૉક',
-                  desc: 'સૂર્યોદય સમયે ઝાડ-પાન વચ્ચે ૧૫ મિનિટ ઊંડા શ્વાસ સાથે ચાલવાથી ફેફસાંને શુદ્ધ ઓક્સિજન મળે છે.',
+                  title: lang === 'hi' ? 'सुबह ताजी हवा में वॉक' : lang === 'en' ? 'Morning Fresh Air Walk' : 'વહેલી સવારે તાજી હવામાં વૉક',
+                  desc: lang === 'hi'
+                    ? 'सूर्योदय के समय पेड़ों के बीच 15 मिनट गहरी सांस के साथ टहलने से फेफड़ों को शुद्ध ऑक्सीजन मिलती है।'
+                    : lang === 'en'
+                    ? 'Walking 15 minutes during sunrise amidst greenery supplies abundant pure oxygen to lungs.'
+                    : 'સૂર્યોદય સમયે ઝાડ-પાન વચ્ચે ૧૫ મિનિટ ઊંડા શ્વાસ સાથે ચાલવાથી ફેફસાંને શુદ્ધ ઓક્સિજન મળે છે.',
                   bg: 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-800/60',
                 },
                 {
                   icon: '🥛',
-                  title: 'હળદરવાળું નવશેકું દૂધ',
-                  desc: 'રાત્રે હળદર અને સહેજ સૂંઠ વાળું દૂધ પીવાથી ફેફસાંનું ઇન્ફેક્શન અટકે છે અને રોગપ્રતિકારક શક્તિ વધે છે.',
+                  title: lang === 'hi' ? 'हल्दी वाला गुनगुना दूध' : lang === 'en' ? 'Warm Turmeric Milk' : 'હળદરવાળું નવશેકું દૂધ',
+                  desc: lang === 'hi'
+                    ? 'रात को हल्दी और सोंठ वाला दूध पीने से फेफड़ों का संक्रमण रुकता है और रोग प्रतिरोधक क्षमता बढ़ती है।'
+                    : lang === 'en'
+                    ? 'Warm milk with turmeric and dry ginger at bedtime prevents infections and strengthens immunity.'
+                    : 'રાત્રે હળદર અને સહેજ સૂંઠ વાળું દૂધ પીવાથી ફેફસાંનું ઇન્ફેક્શન અટકે છે અને રોગપ્રતિકારક શક્તિ વધે છે.',
                   bg: 'bg-purple-50/80 dark:bg-purple-950/30 border-purple-200/80 dark:border-purple-800/60',
                 },
               ].map((tip, idx) => (

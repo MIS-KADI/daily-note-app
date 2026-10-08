@@ -6,10 +6,6 @@ const LANGUAGES = [
   { id: 'gu', label: 'ગુજરાતી (Gujarati)', flag: '🇮🇳', nativeName: 'ગુજરાતી' },
   { id: 'hi', label: 'हिन्दी (Hindi)', flag: '🇮🇳', nativeName: 'हिन्दी' },
   { id: 'en', label: 'English', flag: '🇬🇧', nativeName: 'English' },
-  { id: 'es', label: 'Español (Spanish)', flag: '🇪🇸', nativeName: 'Español' },
-  { id: 'fr', label: 'Français (French)', flag: '🇫🇷', nativeName: 'Français' },
-  { id: 'de', label: 'Deutsch (German)', flag: '🇩🇪', nativeName: 'Deutsch' },
-  { id: 'ar', label: 'العربية (Arabic)', flag: '🇸🇦', nativeName: 'العربية' },
 ];
 
 export default function LanguageModal({ isOpen, onClose, currentLang, onSelectLang }) {
