@@ -428,184 +428,6 @@ export default function ProfileTab({
         </div>
       </div>
 
-      {/* ==================================================== */}
-      {/* EMAIL AUTO-BACKUP & SYNC CONTROL CARD (PROPER SYSTEM) */}
-      {/* ==================================================== */}
-      <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-3xl p-5 shadow-xl border border-blue-800/40 space-y-4 relative overflow-hidden">
-        {/* Glow ambient background effect */}
-        <div className="absolute -top-12 -right-12 w-36 h-36 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center font-black text-xl shadow-md shadow-amber-500/25">
-              ☁️
-            </div>
-            <div>
-              <h3 className="text-sm font-black tracking-wide flex items-center gap-1.5">
-                <span>
-                  {lang === 'gu'
-                    ? 'ઈમેલ ઓટો-બેકઅપ & સિંક'
-                    : lang === 'hi'
-                    ? 'ईमेल ऑटो-बैकअप व सिंक'
-                    : 'Email Auto-Backup & Sync'}
-                </span>
-                <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 font-bold px-2 py-0.5 rounded-full">
-                  LIVE
-                </span>
-              </h3>
-              <p className="text-[11px] text-blue-200">
-                {email
-                  ? (lang === 'gu' ? `📧 ${email}` : `📧 ${email}`)
-                  : (lang === 'gu' ? '⚠️ પ્રોફાઇલમાં ઈમેલ ID સેટ કરો' : '⚠️ Set Email ID in Profile')}
-              </p>
-            </div>
-          </div>
-
-          {/* Active status indicator badge */}
-          <div className="shrink-0">
-            {email && email.includes('@') ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded-full shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                {lang === 'gu' ? 'ઓટો-સિંક સક્રિય' : lang === 'hi' ? 'ऑटो-सिंक सक्रिय' : 'Auto-Sync Active'}
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2.5 py-1 rounded-full">
-                ⚠️ {lang === 'gu' ? 'ઈમેલ જરૂરી' : lang === 'hi' ? 'ईमेल आवश्यक' : 'Email Needed'}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Sync Info Description */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-3 text-xs space-y-1.5 relative z-10">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-blue-200 flex items-center gap-1">
-              <RefreshCw size={12} className={isSyncing ? 'animate-spin text-amber-400' : 'text-blue-300'} />
-              <span>{lang === 'gu' ? 'છેલ્લું સિંક:' : lang === 'hi' ? 'अंतिम सिंक:' : 'Last Synced:'}</span>
-            </span>
-            <span className="font-mono font-bold text-amber-300">
-              {formatSyncTime(lastSyncTime)}
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-300 leading-relaxed">
-            {lang === 'gu'
-              ? '💡 ડાયરી, હિસાબ, કામો અને દવાઓ આપમેળે તમારા ઈમેલમાં સુરક્ષિત સિંક થાય છે. જ્યારે પણ તમે લૉગિન કે લૉગઆઉટ કરશો ત્યારે તમારો જૂનો તમામ ડેટા અહીંથી તરત જ પાછો મળી જશે!'
-              : lang === 'hi'
-              ? '💡 डायरी, हिसाब, कार्य और दवाइयाँ आपके ईमेल में सुरक्षित ऑटो-सिंक होती हैं। लॉगिन या लॉगआउट करने पर आपका पुराना सारा डेटा तुरंत वापस मिल जाएगा!'
-              : '💡 Notes, finance, tasks & medicines are securely auto-synced. Logging in and out will always preserve and restore your old data!'}
-          </p>
-        </div>
-
-        {/* Sync Feedback Toast */}
-        {syncNotice && (
-          <div className="p-2.5 bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
-            <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
-            <span>{syncNotice}</span>
-          </div>
-        )}
-
-        {/* Action Controls */}
-        <div className="grid grid-cols-3 gap-2 relative z-10 pt-1">
-          {/* Sync Now Button */}
-          <button
-            type="button"
-            onClick={handleManualSync}
-            disabled={isSyncing}
-            className="py-2.5 px-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1.5 disabled:opacity-50"
-            title="Sync Now"
-          >
-            <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
-            <span>{lang === 'gu' ? 'હમણાં સિંક' : lang === 'hi' ? 'अभी सिंक' : 'Sync Now'}</span>
-          </button>
-
-          {/* Switch / Login Account */}
-          <button
-            type="button"
-            onClick={onOpenAuthModal}
-            className="py-2.5 px-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold rounded-xl border border-white/15 transition flex items-center justify-center gap-1.5"
-            title="Switch or Login"
-          >
-            <Users size={14} className="text-amber-300" />
-            <span>{lang === 'gu' ? 'એકાઉન્ટ સ્વિચ' : lang === 'hi' ? 'अकाउंट स्विच' : 'Switch'}</span>
-          </button>
-
-          {/* Logout Button */}
-          <button
-            type="button"
-            onClick={onLogout}
-            className="py-2.5 px-2 bg-rose-600/30 hover:bg-rose-600/50 active:scale-95 text-rose-200 text-xs font-bold rounded-xl border border-rose-500/30 transition flex items-center justify-center gap-1.5"
-            title="Safe Logout"
-          >
-            <LogOut size={14} className="text-rose-400" />
-            <span>{lang === 'gu' ? 'લૉગઆઉટ' : lang === 'hi' ? 'लॉगआउट' : 'Logout'}</span>
-          </button>
-        </div>
-
-        {/* Expandable Snapshots History Toggle */}
-        <div className="pt-2 border-t border-white/10 relative z-10">
-          <button
-            type="button"
-            onClick={() => setShowHistory(!showHistory)}
-            className="w-full flex items-center justify-between text-xs text-blue-200 hover:text-white transition py-1"
-          >
-            <span className="flex items-center gap-1.5 font-bold">
-              <History size={14} className="text-amber-400" />
-              <span>
-                {lang === 'gu'
-                  ? `📜 સેવ થયેલા બેકઅપ સ્નેપશોટ (${backupHistory.length})`
-                  : lang === 'hi'
-                  ? `📜 सहेजे गए बैकअप स्नैपशॉट (${backupHistory.length})`
-                  : `📜 Backup Snapshots History (${backupHistory.length})`}
-              </span>
-            </span>
-            <span className="text-[10px] font-bold text-amber-300 bg-white/10 px-2 py-0.5 rounded-full">
-              {showHistory ? '▲ છુપાવો' : '▼ જુઓ (View)'}
-            </span>
-          </button>
-
-          {/* Snapshots List */}
-          {showHistory && (
-            <div className="mt-2.5 space-y-2 animate-in fade-in max-h-56 overflow-y-auto">
-              {backupHistory.length === 0 ? (
-                <p className="text-[11px] text-slate-400 p-2 text-center">
-                  {lang === 'gu'
-                    ? 'હજુ કોઈ હિસ્ટ્રી નથી. "હમણાં સિંક" પર ક્લિક કરો.'
-                    : 'No snapshot history yet. Click Sync Now.'}
-                </p>
-              ) : (
-                backupHistory.map((snap, idx) => (
-                  <div
-                    key={snap.id || idx}
-                    className="p-2.5 bg-white/10 rounded-xl border border-white/10 flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <p className="font-bold text-white text-[11px]">
-                        📅 {new Date(snap.timestamp).toLocaleString()}
-                      </p>
-                      {snap.recordCounts && (
-                        <div className="flex gap-2 text-[10px] text-blue-200 mt-0.5">
-                          <span>📝 {snap.recordCounts.notes || 0} નોંધ</span>
-                          <span>💰 {snap.recordCounts.finance || 0} હિસાબ</span>
-                          <span>⏰ {snap.recordCounts.reminders || 0} કામ</span>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRestoreSnapshot(snap)}
-                      className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] rounded-lg shadow-xs active:scale-95 transition"
-                    >
-                      {lang === 'gu' ? 'રીસ્ટોર' : lang === 'hi' ? 'रीस्टोर' : 'Restore'}
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Linked Account Card */}
       <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
@@ -620,6 +442,32 @@ export default function ProfileTab({
                 {t('mobile_email_linked', lang)}
               </span>
             </div>
+          </div>
+
+          {/* Quick Account Switch & Logout Actions */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onOpenAuthModal && (
+              <button
+                type="button"
+                onClick={onOpenAuthModal}
+                className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl border border-blue-200 transition active:scale-95 flex items-center gap-1"
+                title={lang === 'gu' ? 'એકાઉન્ટ સ્વિચ / લૉગિન' : 'Switch / Login'}
+              >
+                <Users size={13} className="text-blue-600" />
+                <span>{lang === 'gu' ? 'સ્વિચ' : lang === 'hi' ? 'स्विच' : 'Switch'}</span>
+              </button>
+            )}
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition active:scale-95 flex items-center gap-1"
+                title={lang === 'gu' ? 'લૉગઆઉટ' : 'Logout'}
+              >
+                <LogOut size={13} className="text-rose-600" />
+                <span>{lang === 'gu' ? 'લૉગઆઉટ' : lang === 'hi' ? 'लॉगआउट' : 'Logout'}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1179,16 +1027,16 @@ export default function ProfileTab({
 
             {/* Modal Body - Scrollable content */}
             <div className="p-4 overflow-y-auto space-y-3.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-              {/* Point 1: 100% Offline */}
+              {/* Point 1: 100% Online Security */}
               <div className="p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60 space-y-1">
                 <span className="font-black text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
                   <span>🛡️</span>
-                  <span>{lang === 'gu' ? '૧. ૧૦૦% ઓફલાઇન અને સ્થાનિક સંગ્રહ (Offline Local Storage)' : '1. 100% Offline & Local Storage'}</span>
+                  <span>{lang === 'gu' ? '૧. ૧૦૦% ઓનલાઇન ક્લાઉડ સુરક્ષા (100% Online Cloud Security)' : lang === 'hi' ? '१. १००% ऑनलाइन क्लाउड सुरक्षा' : '1. 100% Online Cloud Security'}</span>
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
-                    ? 'તમારી તમામ વ્યક્તિગત ડાયરીની નોંધો, દવાઓનું શિડ્યુલ, રોકડ અને બેંકનો હિસાબ, ખરીદીની યાદી અને દૈનિક પગલાં (Steps) ફક્ત તમારા મોબાઇલ ફોનની મેમરીમાં જ સચવાય છે. અમારું કોઈ કેન્દ્રીય સર્વર તમારા ડેટાને સંગ્રહિત કે વાંચી શકતું નથી.'
-                    : 'All your diary notes, health vitals, finances, shopping lists, and steps are stored exclusively on your own phone storage. No server collects or transmits your private data.'}
+                    ? 'તમારી તમામ વ્યક્તિગત ડાયરીની નોંધો, દવાઓનું શિડ્યુલ, રોકડ અને બેંકનો હિસાબ ૧૦૦% ઓનલાઇન એન્ક્રિપ્શન સાથે સુરક્ષિત રહે છે. ઇન્ટરનેટ કનેક્શન સાથે જ એપ ઓપન થાય છે જેથી તમારો ડેટા સુરક્ષિત રહે.'
+                    : 'All your diary notes, health vitals, finances, and shopping lists operate with 100% online real-time encryption and cloud protection.'}
                 </p>
               </div>
 

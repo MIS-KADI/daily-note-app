@@ -16,6 +16,7 @@ import PdfScannerModal from './components/PdfScannerModal';
 import AuthModal from './components/AuthModal';
 import DemoModeBanner from './components/DemoModeBanner';
 import DemoModeModal from './components/DemoModeModal';
+import NoInternetGatekeeper from './components/NoInternetGatekeeper';
 import confetti from 'canvas-confetti';
 
 // Tabs
@@ -87,17 +88,51 @@ export default function App() {
   // Active Date tracker for Midnight / Daily Health Auto-Reset
   const currentDateRef = useRef(new Date().toISOString().split('T')[0]);
 
-  // Monitor network online/offline state
+  // Proactive internet verification for 100% online requirement
+  const verifyInternet = useCallback(async () => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setIsOffline(true);
+      return false;
+    }
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3500);
+      await fetch(`https://www.google.com/favicon.ico?_ts=${Date.now()}`, {
+        method: 'HEAD',
+        mode: 'no-cors',
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      setIsOffline(false);
+      return true;
+    } catch {
+      const isNavOnline = typeof navigator !== 'undefined' ? Boolean(navigator.onLine) : false;
+      setIsOffline(!isNavOnline);
+      return isNavOnline;
+    }
+  }, []);
+
+  // Monitor network online/offline state continuously
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
+    const handleOnline = () => verifyInternet();
     const handleOffline = () => setIsOffline(true);
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // Initial proactive check
+    if (!navigator.onLine) {
+      setIsOffline(true);
+    } else {
+      verifyInternet();
+    }
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [verifyInternet]);
 
   // Listen to auto-sync completion events
   useEffect(() => {
@@ -1025,6 +1060,16 @@ export default function App() {
     return () => clearInterval(timer);
   }, [medicines, reminders, medicineLogs, lang]);
 
+  // Strictly enforce 100% online requirement: If no internet, app must NOT open
+  if (isOffline) {
+    return (
+      <NoInternetGatekeeper
+        onRetry={verifyInternet}
+        lang={lang}
+      />
+    );
+  }
+
   return (
     <div className={`mobile-app-wrapper ${theme === 'dark' ? 'dark-theme dark' : ''}`}>
       {/* Top Navbar */}
@@ -1053,22 +1098,6 @@ export default function App() {
         }
         isOffline={isOffline}
       />
-
-      {/* Offline Mode Banner */}
-      {isOffline && (
-        <div className="bg-slate-900 text-white px-3.5 py-1.5 flex items-center justify-between text-xs border-b border-slate-800 animate-in slide-in-from-top">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold text-[11px]">
-              {lang === 'gu'
-                ? '🟢 ઓફલાઈન મોડ સક્ષમ - ઇન્ટરનેટ વગર પણ તમામ ડેટા સેવ થાય છે.'
-                : lang === 'hi'
-                ? '🟢 ऑफ़लाइन मोड सक्रिय - इंटरनेट के बिना भी सारा डेटा सुरक्षित रहेगा।'
-                : '🟢 Offline Mode Active - Everything is saved locally.'}
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* 1-Tap Sensor Permission Banner for iOS / Browsers */}
       {needsSensorPermission && (

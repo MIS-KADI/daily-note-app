@@ -196,7 +196,7 @@ export default function MobilePermissionsModal({
                 {lang === 'gu' ? 'પરવાનગીઓ & સુરક્ષા સેટિંગ્સ' : 'Permissions & Security'}
               </h2>
               <p className="text-[11px] text-blue-100 mt-0.5">
-                {lang === 'gu' ? '૧૦૦% ઓફલાઇન • સંપૂર્ણ સુરક્ષિત • કોઈ ટ્રેકિંગ નહીં' : '100% Offline • Fully Secure • Zero Cloud'}
+                {lang === 'gu' ? '૧૦૦% ઓનલાઇન ક્લાઉડ સુરક્ષિત • સંપૂર્ણ એન્ક્રિપ્ટેડ' : lang === 'hi' ? '100% ऑनलाइन क्लाउड सुरक्षित • पूर्ण एन्क्रिप्टेड' : '100% Online Cloud Secure • Fully Encrypted'}
               </p>
             </div>
           </div>

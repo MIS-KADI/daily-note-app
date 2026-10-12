@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.34.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.35.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.34.apk
+            daily-diary-v1.0.35.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,39 +68,28 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.34
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.34 Direct Live Camera Scanner, Google Drive Auto-Sync, Eye Workout & Vision Care)"
+          tag_name: v1.0.35
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.35 Strict 100% Online Enforcement, Clean Profile UI)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.34)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.35)
 
-            આ નવા વર્ઝન v1.0.34 માં કરવામાં આવેલા તમામ ખાસ ઊંડાણપૂર્વકના સુધારાઓ:
-            - **📷 PDF સ્કેનરમાં ડાયરેક્ટ લાઇવ કેમેરા વ્યૂફાઇન્ડર (Direct Live Camera Scanner):**
-              - 'કેમેરાથી સ્કેન કરો' પર ક્લિક કરતાં ગેલેરી ખુલવાની સમસ્યા સંપૂર્ણપણે દૂર. હવે સ્ક્રીન પર સીધો જ લાઇવ રિયર કેમેરો સ્ટ્રીમ થાય છે.
-              - દસ્તાવેજ (A4 / Bill) અને ઓળખપત્ર (ID Card) માટે ગ્લોઇંગ કોર્નર્સ અને ગાઇડ ફ્રેમ સાથે સચોટ ફોટો કેપ્ચર.
-              - શટર બટન (📸 ફોટો પાડો), ફ્લેશલાઇટ/ટોર્ચ ટૉગલ (⚡) અને કેમેરા ફ્લિપ (🔄 આગળ/પાછળ).
-            - **☁️ Google Drive ઓટો-સિંક (Google Drive Cloud Auto-Sync System):**
-              - પ્રોફાઇલમાં સમર્પિત 'Google Drive ઓટો-સિંક' કાર્ડ અને લાઇવ ઓટો-સિંક ટૉગલ સ્વિચ.
-              - નોંધો, હિસાબ, કામો અને દવાઓ આપમેળે Google Drive ફોર્મેટમાં બેકઅપ થઈ જાય છે.
-              - ૧-ક્લિકમાં ડાયરેક્ટ Google Drive સાથે ક્લાઉડ સિંક અને ગૂગલ ડ્રાઇવ ઓપન કરવાની સુવિધા.
-            - **👀 આંખોની કસરત & નેત્ર યોગ ટ્રેનર (Interactive Eye Workout & Vision Care):**
-              - હેલ્થ & ફિટનેસમાં નવું '👀 આંખોની કસરત' સબ-ટેબ.
-              - ૬૦ FPS સ્મૂધ એનિમેટેડ ઓર્બ સાથે:
-                1. ગોળ આંખો ફેરવવી (Circular Eye Rolling)
-                2. આઠડા આકારની ગતિ (Figure 8 / Infinity ∞ Tracking)
-                3. નજીક અને દૂર ફોકસ (Near-Far Depth Focus)
-                4. ઝડપી પલકારો (Blink Pacer - કુદરતી આંસુ/ભેજ માટે)
-                5. પામિંગ & હૂંફાળો વિશ્રામ (Palming Relaxation)
-                6. સંપૂર્ણ ૨-મિનિટ માર્ગદર્શિત વર્કઆઉટ અને ઓડિયો ચાઇમ્સ.
-              - ૨૦-૨૦-૨૦ સ્ક્રીન બ્રેક ટાઇમર અને આયુર્વેદિક નેત્ર કાળજી માર્ગદર્શન.
-            - **💵 ચુકવણી મોડ ડ્રોપ-ડાઉન (Payment Mode Dropdown with Cash First):**
-              - વધારાના બટનો હટાવીને સ્વચ્છ ડ્રોપ-ડાઉન રાખવામાં આવ્યું છે.
-              - પ્રથમ વિકલ્પ **'રોકડ (Cash)'** રાખવામાં આવ્યો છે, ત્યારબાદ UPI, બેંક ટ્રાન્સફર અને કાર્ડ્સ.
-            - **⚡ અલ્ટ્રા-સ્પીડ પર્ફોર્મન્સ & સ્મૂધનેસ (Fast & Smooth 60FPS):**
-              - સુપર ઓપ્ટિમાઇઝ્ડ રેન્ડરિંગ જેથી આખી એપ એકદમ સ્પીડ અને માખણ જેવી સ્મૂધ ચાલે.
+            આ નવા વર્ઝન v1.0.35 માં કરવામાં આવેલા મહત્વના સુધારાઓ:
+            - **🌐 ૧૦૦% ઓનલાઇન મોડ કડક રીતે લાગુ (Strict 100% Online-Only Enforcement):**
+              - જો ઇન્ટરનેટ / મોબાઇલ ડેટા / Wi-Fi ચાલુ ન હોય તો એપ કોઈ પણ સંજોગોમાં ઓપન થશે નહીં.
+              - પૂર્ણ-સ્ક્રીન અનબાયપાસેબલ ગેટકીપર સ્ક્રીન (**ઇન્ટરનેટ કનેક્શન જરૂરી છે**):
+                - રેડ/એમ્બર પલ્સિંગ બીકન અને `WifiOff` એનિમેટેડ આઇકન.
+                - ગુજરાતી, હિન્દી અને અંગ્રેજીમાં સ્પષ્ટ સૂચના.
+                - '🔄 ફરી પ્રયાસ કરો (Retry Connection)' લાઈવ ચકાસણી બટન.
+                - બેકગ્રાઉન્ડ ઓટો-ડિટેક્શન: ફોનમાં નેટ ચાલુ થતાં જ એપ ૧ સેકન્ડમાં આપમેળે ખુલી જશે!
+            - **🧹 પ્રોફાઇલ કાર્ડ સાફ કર્યું (Clean Profile UI):**
+              - યુઝરની માંગણી મુજબ "ઈમેલ ઓટો-બેકઅપ & સિંક" ડાર્ક કાર્ડ પ્રોફાઇલમાંથી સંપૂર્ણપણે હટાવી લીધું છે.
+              - પ્રોફાઇલ હેડરમાં 'સ્વિચ' અને 'લૉગઆઉટ' ના સ્વચ્છ બટન રાખવામાં આવ્યા છે જેથી એકાઉન્ટ મેનેજમેન્ટ સરળ રહે.
+            - **⚡ અલ્ટ્રા-સ્પીડ & સ્મૂધ 60FPS ઓપ્ટિમાઇઝેશન:**
+              - કોઈ લેગ વગર તમામ ટેબ્સ અને ફીચર્સ સ્મૂધલી કામ કરશે.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.34.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.35.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.34.apk
+            daily-diary-v1.0.35.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
