@@ -46,10 +46,8 @@ export default function NoInternetGatekeeper({ onRetry, lang = 'gu' }) {
     window.addEventListener('online', handleOnlineEvent);
 
     const interval = setInterval(() => {
-      if (navigator.onLine) {
-        performCheck();
-      }
-    }, 2500);
+      performCheck();
+    }, 1500);
 
     return () => {
       window.removeEventListener('online', handleOnlineEvent);

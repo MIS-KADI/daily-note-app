@@ -125,10 +125,14 @@ export const translations = {
     hi: 'खरीदारी को खर्च में जोड़ें',
     en: 'Add to Expenses',
   },
-  purchased_items: {
-    gu: 'ખરીદેલી વસ્તુઓ',
-    hi: 'खरीदी गई वस्तुएं',
-    en: 'Purchased Items',
+  pinned_notes: {
+    gu: 'પિન કરેલી',
+    hi: 'पिन की गई',
+    en: 'Pinned',
+    es: 'Fijadas',
+    fr: 'Épinglées',
+    de: 'Angeheftet',
+    ar: 'المثبتة',
   },
   test: {
     gu: 'ટેસ્ટ',

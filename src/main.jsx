@@ -12,16 +12,18 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 )
 
-// Register Service Worker for Offline Mode
+// Strictly enforce 100% online requirement: Unregister any offline service workers and clear cache
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('./sw.js')
-      .then((reg) => {
-        console.log('Daily Note App offline Service Worker active:', reg.scope);
-      })
-      .catch((err) => {
-        console.warn('Service worker registration failed:', err);
-      });
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
+if ('caches' in window) {
+  caches.keys().then((names) => {
+    names.forEach((name) => {
+      caches.delete(name);
+    });
   });
 }

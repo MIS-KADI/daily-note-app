@@ -974,16 +974,37 @@ export default function NotesTab({
         </div>
       )}
 
-      {/* Date Filter Tabs for List & Timeline View */}
+      {/* Unified Filter & Search Panel for List & Timeline View */}
       {viewMode !== 'calendar' && (
-        <div className="bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
-          <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-none text-xs">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2.5">
+          {/* Search Box */}
+          <div className="relative">
+            <Search size={15} className="absolute left-3.5 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder={t('search_notes', lang)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs placeholder:text-slate-400 focus:outline-blue-500 focus:bg-white dark:focus:bg-slate-900 transition"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs font-bold p-0.5"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Date Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5 text-xs">
             <button
               onClick={() => setDateFilterMode('all')}
               className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
                 dateFilterMode === 'all'
                   ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               {t('filter_all', lang)} ({notes.length})
@@ -994,7 +1015,7 @@ export default function NotesTab({
               className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition ${
                 dateFilterMode === 'today'
                   ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               {t('filter_today', lang)}
@@ -1005,7 +1026,7 @@ export default function NotesTab({
               className={`py-1.5 px-3 rounded-xl font-bold whitespace-nowrap transition flex items-center gap-1 ${
                 dateFilterMode === 'by_date'
                   ? 'bg-cyan-600 text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <Calendar size={13} />
@@ -1013,58 +1034,46 @@ export default function NotesTab({
             </button>
           </div>
 
+          {/* Inline Date Picker when 'by_date' is active */}
           {dateFilterMode === 'by_date' && (
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-slate-800/80 dark:to-slate-800 p-2.5 rounded-2xl border border-cyan-100 dark:border-slate-700">
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-slate-800/80 dark:to-slate-800 p-2.5 rounded-xl border border-cyan-100 dark:border-slate-700">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-700 dark:text-slate-200 font-bold">{t('select_date_label', lang)}:</span>
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="text-xs font-bold p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-2xs"
+                  className="text-xs font-bold p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-2xs"
                 />
               </div>
               <button
                 onClick={() => handleOpenAdd(selectedDate)}
-                className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-xs font-bold shadow-xs active:scale-95 transition flex items-center gap-1"
               >
-                <Plus size={14} />
+                <Plus size={13} />
                 <span>{t('add_note_on_date', lang)}</span>
               </button>
             </div>
           )}
+
+          {/* Category Filter Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-slate-100 dark:border-slate-800 scrollbar-none text-xs">
+            {noteCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCat(cat)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
+                  selectedCat === cat
+                    ? 'bg-slate-800 dark:bg-blue-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
       )}
-
-      {/* Search & Category Chips */}
-      <div className="space-y-2">
-        <div className="relative">
-          <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
-          <input
-            type="text"
-            placeholder={t('search_notes', lang)}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs placeholder:text-slate-400 focus:outline-blue-500 shadow-2xs"
-          />
-        </div>
-
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {noteCategories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCat(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
-                selectedCat === cat
-                  ? 'bg-slate-800 text-white'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* ======================================================= */}
       {/* TIMELINE VIEW MODE                                      */}

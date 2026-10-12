@@ -25,6 +25,8 @@ import {
 import { jsPDF } from 'jspdf';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { downloadOrSharePDF } from '../services/fileDownloadService';
 import confetti from 'canvas-confetti';
 
 const SCAN_FILTERS = [
@@ -779,20 +781,27 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
         if (i > 0) pdf.addPage();
 
         const p = pages[i];
-        const img = new Image();
-        img.src = p.processedUrl || p.dataUrl;
-        await new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = resolve;
+        const srcUrl = p.processedUrl || p.dataUrl;
+
+        // Safely load and measure image dimensions
+        const img = await new Promise((resolve) => {
+          const el = new Image();
+          el.onload = () => resolve(el);
+          el.onerror = () => resolve(null);
+          el.src = srcUrl;
+          if (el.complete) resolve(el);
         });
 
-        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const naturalW = img && img.naturalWidth > 0 ? img.naturalWidth : 1200;
+        const naturalH = img && img.naturalHeight > 0 ? img.naturalHeight : 1600;
+
+        const imgRatio = naturalW / naturalH;
         const pageRatio = pdfPageW / pdfPageH;
 
-        let renderW = pdfPageW;
-        let renderH = pdfPageH;
-        let posX = 0;
-        let posY = 0;
+        let renderW = pdfPageW - 10;
+        let renderH = pdfPageH - 10;
+        let posX = 5;
+        let posY = 5;
 
         if (imgRatio > pageRatio) {
           renderW = pdfPageW - 10;
@@ -806,26 +815,24 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
           posY = 5;
         }
 
-        pdf.addImage(p.processedUrl || p.dataUrl, 'JPEG', posX, posY, renderW, renderH, undefined, 'FAST');
+        pdf.addImage(srcUrl, 'JPEG', posX, posY, renderW, renderH, undefined, 'FAST');
       }
 
       const fileName = `${docTitle.trim() || 'Scanned_Document'}.pdf`;
+      const pdfBlob = pdf.output('blob');
 
-      if (action === 'share' && Capacitor.isNativePlatform()) {
-        const pdfBase64 = pdf.output('datauristring');
-        await Share.share({
-          title: fileName,
-          text: `દૈનિક ડાયરી સ્કેનર દસ્તાવેજ: ${fileName}`,
-          url: pdfBase64,
-        });
-      } else {
-        pdf.save(fileName);
-      }
+      await downloadOrSharePDF({
+        pdfBlob,
+        filename: fileName,
+        title: docTitle.trim() || 'Scanned Document',
+        lang,
+        autoShare: action === 'share',
+      });
 
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
     } catch (err) {
       console.error('PDF generation error:', err);
-      alert(lang === 'gu' ? 'PDF બનાવવામાં ક્ષતિ આવી.' : 'Error generating PDF.');
+      alert(lang === 'gu' ? `PDF બનાવવામાં ક્ષતિ આવી: ${err?.message || ''}` : `Error generating PDF: ${err?.message || ''}`);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -841,12 +848,37 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
     setIsGeneratingPdf(true);
     try {
       if (format === 'image') {
-        const a = document.createElement('a');
-        a.href = idCompositePreview;
-        a.download = `${idDocTitle.trim() || 'ID_Card_Scan'}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const fileName = `${idDocTitle.trim() || 'ID_Card_Scan'}.jpg`;
+        if (Capacitor.isNativePlatform() && idCompositePreview) {
+          const base64Data = idCompositePreview.includes(',') ? idCompositePreview.split(',')[1] : idCompositePreview;
+          const cacheFile = await Filesystem.writeFile({
+            path: fileName,
+            data: base64Data,
+            directory: Directory.Cache,
+          });
+          try {
+            await Filesystem.writeFile({
+              path: fileName,
+              data: base64Data,
+              directory: Directory.Documents,
+              recursive: true,
+            });
+          } catch (_) {}
+          if (action === 'share') {
+            await Share.share({
+              title: fileName,
+              text: `ઓળખપત્ર સ્કેન: ${fileName}`,
+              files: [cacheFile.uri],
+            });
+          }
+        } else {
+          const a = document.createElement('a');
+          a.href = idCompositePreview;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
         setIsGeneratingPdf(false);
         return;
@@ -865,22 +897,20 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
       pdf.addImage(idCompositePreview, 'JPEG', 0, 0, pdfPageW, pdfPageH, undefined, 'FAST');
 
       const fileName = `${idDocTitle.trim() || 'ID_Card_Scan'}.pdf`;
+      const pdfBlob = pdf.output('blob');
 
-      if (action === 'share' && Capacitor.isNativePlatform()) {
-        const pdfBase64 = pdf.output('datauristring');
-        await Share.share({
-          title: fileName,
-          text: `આઈડી કાર્ડ સ્કેન (૨-ઇન-૧): ${fileName}`,
-          url: pdfBase64,
-        });
-      } else {
-        pdf.save(fileName);
-      }
+      await downloadOrSharePDF({
+        pdfBlob,
+        filename: fileName,
+        title: idDocTitle.trim() || 'ID Card Scan',
+        lang,
+        autoShare: action === 'share',
+      });
 
       confetti({ particleCount: 55, spread: 65, origin: { y: 0.6 } });
     } catch (err) {
       console.error('ID Card export error:', err);
-      alert(lang === 'gu' ? 'આઈડી કાર્ડ નિકાસમાં ક્ષતિ આવી.' : 'Error exporting ID card.');
+      alert(lang === 'gu' ? `આઈડી કાર્ડ નિકાસમાં ક્ષતિ આવી: ${err?.message || ''}` : `Error exporting ID card: ${err?.message || ''}`);
     } finally {
       setIsGeneratingPdf(false);
     }

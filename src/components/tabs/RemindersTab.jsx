@@ -649,120 +649,134 @@ export default function RemindersTab({
       {/* ======================================================= */}
       {activeSubView === 'tasks' && (
         <div className="space-y-3.5">
-          {/* Smart Stats Summary Cards */}
-          <div className="grid grid-cols-4 gap-2 text-center">
-            <div className="bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-2xs">
-              <span className="text-[10px] text-slate-500 font-bold block">{lang === 'gu' ? 'કુલ કામો' : 'Total'}</span>
+          {/* Smart Stats Summary Strip */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-2.5 shadow-2xs grid grid-cols-4 divide-x divide-slate-100 text-center">
+            <div className="px-1">
+              <span className="text-[10px] text-slate-500 font-bold block leading-tight">{lang === 'gu' ? 'કુલ કામો' : 'Total'}</span>
               <span className="text-base font-black text-slate-800">{reminders.length}</span>
             </div>
-            <div className="bg-white p-2.5 rounded-2xl border border-indigo-100 bg-indigo-50/20 shadow-2xs">
-              <span className="text-[10px] text-indigo-700 font-bold block">{lang === 'gu' ? 'આજના' : 'Today'}</span>
+            <div className="px-1">
+              <span className="text-[10px] text-indigo-600 font-bold block leading-tight">{lang === 'gu' ? 'આજના' : 'Today'}</span>
               <span className="text-base font-black text-indigo-600">{todayTasksCount}</span>
             </div>
-            <div className="bg-white p-2.5 rounded-2xl border border-rose-100 bg-rose-50/20 shadow-2xs">
-              <span className="text-[10px] text-rose-700 font-bold block">{lang === 'gu' ? 'અગત્યનું' : 'Priority'}</span>
+            <div className="px-1">
+              <span className="text-[10px] text-rose-600 font-bold block leading-tight">{lang === 'gu' ? 'અગત્યનું' : 'Priority'}</span>
               <span className="text-base font-black text-rose-600">{highPriorityCount}</span>
             </div>
-            <div className="bg-white p-2.5 rounded-2xl border border-emerald-100 bg-emerald-50/20 shadow-2xs">
-              <span className="text-[10px] text-emerald-700 font-bold block">{lang === 'gu' ? 'પૂર્ણ' : 'Done'}</span>
+            <div className="px-1">
+              <span className="text-[10px] text-emerald-600 font-bold block leading-tight">{lang === 'gu' ? 'પૂર્ણ' : 'Done'}</span>
               <span className="text-base font-black text-emerald-600">{completedTasksCount}</span>
             </div>
           </div>
 
-          {/* Search Box */}
-          <div className="relative">
-            <SearchIcon size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder={lang === 'gu' ? 'કામ કે વિગત શોધો...' : 'Search tasks & checklists...'}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full text-xs pl-9 pr-8 py-2 rounded-2xl bg-white border border-slate-200 focus:outline-indigo-500 font-medium placeholder:text-slate-400 shadow-2xs"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <XIcon size={14} />
-              </button>
-            )}
-          </div>
+          {/* Consolidated Search & Filter Panel */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-3 shadow-2xs space-y-2.5">
+            {/* Search Box */}
+            <div className="relative">
+              <SearchIcon size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder={lang === 'gu' ? 'કામ કે વિગત શોધો...' : 'Search tasks & checklists...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full text-xs pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:outline-indigo-500 font-medium placeholder:text-slate-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <XIcon size={14} />
+                </button>
+              )}
+            </div>
 
-          {/* Date Filter Tabs (All, Today, Upcoming) */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
-            <button
-              onClick={() => setDateFilter('all')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
-                dateFilter === 'all'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {t('filter_all', lang)} ({reminders.length})
-            </button>
+            {/* Date Filter Tabs + Show Completed Checkbox */}
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              <div className="flex gap-1 overflow-x-auto scrollbar-none text-xs">
+                <button
+                  onClick={() => setDateFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+                    dateFilter === 'all'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {t('filter_all', lang)} ({reminders.length})
+                </button>
 
-            <button
-              onClick={() => setDateFilter('today')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
-                dateFilter === 'today'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {t('today', lang)} ({todayTasksCount})
-            </button>
+                <button
+                  onClick={() => setDateFilter('today')}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+                    dateFilter === 'today'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {t('today', lang)} ({todayTasksCount})
+                </button>
 
-            <button
-              onClick={() => setDateFilter('future')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
-                dateFilter === 'future'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              🚀 {lang === 'gu' ? 'આગામી (Upcoming)' : t('upcoming', lang)} ({futureTasksCount})
-            </button>
-          </div>
+                <button
+                  onClick={() => setDateFilter('future')}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+                    dateFilter === 'future'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  🚀 {lang === 'gu' ? 'આગામી' : t('upcoming', lang)} ({futureTasksCount})
+                </button>
+              </div>
 
-          {/* Type Filter Buttons */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-            {typesList.map((tItem) => (
-              <button
-                key={tItem.id}
-                onClick={() => setSelectedTaskType(tItem.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                  selectedTaskType === tItem.id
-                    ? 'bg-slate-800 text-white shadow-xs'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                }`}
-              >
-                {tItem.label}
-              </button>
-            ))}
-          </div>
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-bold text-slate-600 shrink-0 select-none">
+                <input
+                  type="checkbox"
+                  checked={showCompleted}
+                  onChange={(e) => setShowCompleted(e.target.checked)}
+                  className="w-3.5 h-3.5 text-indigo-600 rounded-sm cursor-pointer accent-indigo-600"
+                />
+                <span>{lang === 'gu' ? 'પૂર્ણ બતાવો' : 'Done'}</span>
+              </label>
+            </div>
 
-          {/* Priority Quick Filter */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
-            <span className="text-[11px] font-bold text-slate-400 shrink-0">{lang === 'gu' ? 'પ્રાથમિકતા:' : 'Priority:'}</span>
-            {[
-              { id: 'all', label: lang === 'gu' ? 'બધી' : 'All' },
-              { id: 'high', label: '🔴 ' + t('priority_high', lang) },
-              { id: 'medium', label: '🟡 ' + t('priority_medium', lang) },
-              { id: 'low', label: '🟢 ' + t('priority_low', lang) },
-            ].map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setPriorityFilter(p.id)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition whitespace-nowrap ${
-                  priorityFilter === p.id
-                    ? 'bg-slate-700 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+            {/* Category Chips Scroll */}
+            <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none pt-1.5 border-t border-slate-100">
+              {typesList.map((tItem) => (
+                <button
+                  key={tItem.id}
+                  onClick={() => setSelectedTaskType(tItem.id)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition ${
+                    selectedTaskType === tItem.id
+                      ? 'bg-slate-800 text-white shadow-2xs'
+                      : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {tItem.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Priority Filter */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-xs">
+              {[
+                { id: 'all', label: lang === 'gu' ? 'બધી પ્રાથમિકતા' : 'All Priority' },
+                { id: 'high', label: '🔴 ' + t('priority_high', lang) },
+                { id: 'medium', label: '🟡 ' + t('priority_medium', lang) },
+                { id: 'low', label: '🟢 ' + t('priority_low', lang) },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setPriorityFilter(p.id)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition whitespace-nowrap ${
+                    priorityFilter === p.id
+                      ? 'bg-indigo-900 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Shopping Shortcut Banner */}
@@ -791,20 +805,9 @@ export default function RemindersTab({
             </div>
           )}
 
-          {/* Completed toggle checkbox & count */}
-          <div className="flex items-center justify-between px-1 text-xs text-slate-500">
-            <span>
-              {lang === 'gu' ? `દર્શાવેલ: ${filteredTasks.length} કામો` : `Showing: ${filteredTasks.length} tasks`}
-            </span>
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showCompleted}
-                onChange={(e) => setShowCompleted(e.target.checked)}
-                className="w-3.5 h-3.5 text-indigo-600 rounded-sm cursor-pointer"
-              />
-              {t('show_completed', lang)}
-            </label>
+          {/* Active filter count label */}
+          <div className="px-1 text-[11px] font-bold text-slate-500">
+            {lang === 'gu' ? `દર્શાવેલ: ${filteredTasks.length} કામો` : `Showing: ${filteredTasks.length} tasks`}
           </div>
 
           {/* Reminders List */}

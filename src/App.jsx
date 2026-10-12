@@ -90,14 +90,17 @@ export default function App() {
 
   // Proactive internet verification for 100% online requirement
   const verifyInternet = useCallback(async () => {
+    // If browser/device explicitly reports offline, block immediately
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       setIsOffline(true);
       return false;
     }
+
     try {
+      // 1. Primary fast check using Android's native connectivity check endpoint
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 3500);
-      await fetch(`https://www.google.com/favicon.ico?_ts=${Date.now()}`, {
+      const timer = setTimeout(() => controller.abort(), 3000);
+      await fetch(`https://connectivitycheck.gstatic.com/generate_204?_ts=${Date.now()}`, {
         method: 'HEAD',
         mode: 'no-cors',
         cache: 'no-store',
@@ -107,13 +110,29 @@ export default function App() {
       setIsOffline(false);
       return true;
     } catch {
-      const isNavOnline = typeof navigator !== 'undefined' ? Boolean(navigator.onLine) : false;
-      setIsOffline(!isNavOnline);
-      return isNavOnline;
+      // 2. Secondary fallback ping to Google CDN
+      try {
+        const controller2 = new AbortController();
+        const timer2 = setTimeout(() => controller2.abort(), 3000);
+        await fetch(`https://www.google.com/favicon.ico?_ts=${Date.now()}`, {
+          method: 'HEAD',
+          mode: 'no-cors',
+          cache: 'no-store',
+          signal: controller2.signal,
+        });
+        clearTimeout(timer2);
+        setIsOffline(false);
+        return true;
+      } catch (err2) {
+        // Both pings failed! There is definitely NO working internet connection!
+        console.warn('Real internet connection unavailable, blocking app access:', err2);
+        setIsOffline(true);
+        return false;
+      }
     }
   }, []);
 
-  // Monitor network online/offline state continuously
+  // Monitor network online/offline state continuously and poll every 4s
   useEffect(() => {
     const handleOnline = () => verifyInternet();
     const handleOffline = () => setIsOffline(true);
@@ -122,15 +141,17 @@ export default function App() {
     window.addEventListener('offline', handleOffline);
 
     // Initial proactive check
-    if (!navigator.onLine) {
-      setIsOffline(true);
-    } else {
+    verifyInternet();
+
+    // Regular background heartbeat check to immediately block if mobile data is toggled off
+    const interval = setInterval(() => {
       verifyInternet();
-    }
+    }, 4000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
     };
   }, [verifyInternet]);
 
