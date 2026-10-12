@@ -830,8 +830,52 @@ export const storageService = {
     };
   },
 
-  saveDiaryReminderConfig(config) {
-    localStorage.setItem('daily_diary_reminder_config', JSON.stringify(config));
+  // Restore all data from a snapshot payload
+  restoreAllData(parsed) {
+    if (!parsed) return { success: false, error: 'Empty payload' };
+    try {
+      if (parsed.user) this.saveUserProfile(parsed.user);
+      if (parsed.notes) this.saveNotes(parsed.notes);
+      if (parsed.reminders) this.saveReminders(parsed.reminders);
+      if (parsed.events) this.saveEvents(parsed.events);
+      if (parsed.medicines) this.saveMedicines(parsed.medicines);
+      if (parsed.medicineLogs) this.saveMedicineLogs(parsed.medicineLogs);
+      if (parsed.finance) this.saveFinance(parsed.finance);
+      if (parsed.accounts) this.saveAccounts(parsed.accounts);
+      if (parsed.khata) this.saveKhata(parsed.khata);
+      if (parsed.water) this.saveWater(parsed.water);
+      if (parsed.shopping) this.saveShopping(parsed.shopping);
+      if (parsed.fitness) this.saveFitness(parsed.fitness);
+      if (parsed.alarmSettings) this.saveAlarmSettings(parsed.alarmSettings);
+      if (parsed.weeklyStepHistory) this.saveWeeklyStepHistory(parsed.weeklyStepHistory);
+      if (parsed.diaryReminderConfig) this.saveDiaryReminderConfig(parsed.diaryReminderConfig);
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  // Get full snapshot of all entities
+  getAllDataSnapshot() {
+    return {
+      version: '1.0.32',
+      exportedAt: new Date().toISOString(),
+      user: this.getUserProfile(),
+      notes: this.getNotes(),
+      reminders: this.getReminders(),
+      events: this.getEvents(),
+      medicines: this.getMedicines(),
+      medicineLogs: this.getMedicineLogs(),
+      finance: this.getFinance(),
+      accounts: this.getAccounts(),
+      khata: this.getKhata(),
+      water: this.getWater(),
+      shopping: this.getShopping(),
+      fitness: this.getFitness(),
+      alarmSettings: this.getAlarmSettings(),
+      weeklyStepHistory: this.getWeeklyStepHistory(),
+      diaryReminderConfig: this.getDiaryReminderConfig(),
+    };
   },
 };
 

@@ -26,6 +26,7 @@ export default function Navbar({
   onOpenEmergency,
   onOpenPhotoGallery,
   onOpenPdfScanner,
+  onOpenAuth,
   onTestAlarm,
   onLockApp,
   activeAlarmCount = 0,
@@ -51,13 +52,31 @@ export default function Navbar({
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3 py-2 shadow-xs w-full max-w-full overflow-hidden">
       <div className="flex items-center justify-between w-full">
-        {/* Brand Logo Icon & Live Online Status */}
+        {/* Brand Logo Icon, Account Chip & Live Online Status */}
         <div className="flex items-center gap-1.5 shrink-0">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/25 text-sm select-none">
             📔
           </div>
+
+          {/* Quick Account Pill */}
+          {onOpenAuth && (
+            <button
+              type="button"
+              onClick={onOpenAuth}
+              className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 transition active:scale-95"
+              title={user?.email || (lang === 'gu' ? 'એકાઉન્ટ લૉગિન / સિંક' : 'Account Login / Sync')}
+            >
+              <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-black">
+                {user?.name ? user.name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : '👤')}
+              </span>
+              <span className="hidden xs:inline max-w-[85px] sm:max-w-[120px] truncate text-[10px]">
+                {user?.name || (user?.email ? user.email.split('@')[0] : (lang === 'gu' ? 'લૉગિન' : 'Login'))}
+              </span>
+            </button>
+          )}
+
           <div
-            className={`hidden xs:flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold border transition ${
+            className={`hidden sm:flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold border transition ${
               isOffline
                 ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
                 : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'

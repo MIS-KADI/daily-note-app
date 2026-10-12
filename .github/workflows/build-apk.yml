@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.31.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.32.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.31.apk
+            daily-diary-v1.0.32.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,34 +68,28 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.31
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.31 Speech Stutter Fix, DD/MM/YYYY, Hindi UI, Frames, PDF Scanner)"
+          tag_name: v1.0.32
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.32 Email Auto-Backup, Continuous Sync, Multi-Account Login/Logout)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.31)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.32)
 
-            આ નવા વર્ઝન v1.0.31 માં કરવામાં આવેલા તમામ ખાસ ઊંડાણપૂર્વકના સુધારાઓ:
-            - **🎙️ બોલીને ટાઈપ કરતી વખતે થતું રિપીટેશન સંપૂર્ણ ફિક્સ (Voice Typing Stutter Fix):**
-              - સ્પીચ રેકગ્નિશન સેશન દરમિયાન શબ્દોનું વારંવાર ડુપ્લિકેશન અટકાવ્યું છે.
-            - **📅 તારીખનું સુવ્યવસ્થિત ફોર્મેટ (DD/MM/YYYY Format Across the App):**
-              - મોબાઇલના કેલેન્ડર મુજબ અથવા સ્પષ્ટ dd/mm/yyyy મુજબ જ તારીખો પ્રદર્શિત થાય છે.
-            - **🌐 ઓનલાઇન & ક્લાઉડ સિંક સુવિધા (Online Cloud Sync & Real-time Network Indicator):**
-              - એપ હવે ઓનલાઇન ક્લાઉડ કનેક્ટિવિટી, ગુગલ ડ્રાઇવ બેકઅપ અને રિયલ-ટાઇમ કનેક્શન ઇન્ડિકેટર સાથે સજ્જ છે.
-            - **💳 નાણાકીય હિસાબ & ચુકવણી મોડ સુધારો (Finance & Payment Modes):**
-              - રોકડ (Cash) અને UPI (GPay/PhonePe) ઝડપી ૧-ટેપ બટન સાથે ટોચના ક્રમે ગોઠવવામાં આવ્યા છે.
-              - ૧૭ જેટલી નવી અને ઉપયોગી દૈનિક કેટેગરીઝ (શોપિંગ, રેસ્ટોરન્ટ/ખોરાક, મનોરંજન, ભાડું, લોન/EMI, રિપેરિંગ, દાન, બચત/SIP, સલૂન વગેરે) ઉમેરવામાં આવી છે.
-              - બેંક SMS ઓટો-ડિટેક્શનમાં પણ તમામ નવી કેટેગરીઝ સચોટ સિંક થાય છે.
-            - **🇮🇳 હિન્દી ભાષામાં સંપૂર્ણ સુધારો (100% Complete Hindi UI Translations):**
-              - હિન્દી ભાષા પસંદ કરવા પર પ્રોફાઇલ, રિમાઇન્ડર્સ, બાયોમેટ્રિક્સ અને બેકઅપનું તમામ લખાણ શુદ્ધ હિન્દીમાં જ દેખાય છે.
-            - **🖼️ ફોટો ગેલેરીમાં ૧૮ ફિલ્ટર્સ, ૮ રોયલ ફ્રેમ્સ અને ૬ ફોટા સુધીનો કોલાઝ (Artistic Filters, Frames & 6-Photo Collage):**
-              - વિન્ટેજ, રોયલ સેપિયા, સિનેમેટિક, ગોલ્ડન અવર, સાયબરપંક જેવા ૧૮ ફિલ્ટર્સ.
-              - પોલરોઇડ, રોયલ ગોલ્ડન, નિયોન ગ્લો, ફિલ્મસ્ટ્રીપ, વુડન જેવી ૮ પ્રીમિયમ ફ્રેમ્સ.
-              - ૨ થી ૬ ફોટા સુધીનો મલ્ટી-લેઆઉટ અને ગોલ્ડન બોર્ડર કોલાઝ મેકર.
-            - **📄 નવું PDF સ્કેનર અને ફોટો માંથી PDF કન્વર્ટર (Document Scanner & Photo to PDF Export):**
-              - કેમેરા કે ગેલેરીમાંથી બિલ, રસીદ કે ફોટા સ્કેન કરી મેજિક કલર કે ક્લીન B&W દસ્તાવેજ બનાવી ૧-ક્લિકમાં PDF ડાઉનલોડ & શેર કરો.
+            આ નવા વર્ઝન v1.0.32 માં કરવામાં આવેલા તમામ ખાસ ઊંડાણપૂર્વકના સુધારાઓ:
+            - **☁️ ઈમેલ-આધારિત સંપૂર્ણ ઓટો-બેકઅપ સીસ્ટમ (Email-Linked Auto-Backup & Continuous Sync):**
+              - પ્રોફાઈલમાં દાખલ કરેલ અથવા સાઈન અપ વખતે આપેલ Email ID સાથે સમગ્ર એપનો ડેટા (ડાયરીની નોંધો, રિમાઇન્ડર્સ, આવક-ખર્ચ, ખાતાવહી, દવાઓ, ઉત્સવો, હેલ્થ/ફિટનેસ અને સેટિંગ્સ) આપમેળે સતત ઓટો-સિંક થાય છે.
+              - LocalStorage સાથે IndexedDB ડ્યુઅલ-લેયર બેકઅપ આર્કિટેક્ચર, જેનાથી કોઈ ડેટા લોસ થતો નથી.
+            - **🔐 લૉગિન અને લૉગઆઉટ પર જૂનો ડેટા પુનઃપ્રાપ્તિ (Seamless Login & Logout with Data Restoration):**
+              - **લૉગઆઉટ કરતી વખતે:** વર્તમાન યુઝરનો તમામ તાજો ડેટા ઈમેલ સ્ટોરમાં આપમેળે સેવ થાય છે અને સેશન સુરક્ષિત રીતે ક્લીયર થાય છે.
+              - **લૉગિન કરતી વખતે:** ઈમેલ દાખલ કરતા જ અગાઉનો તમામ બેકઅપ ડિટેક્ટ થાય છે અને ૧-ટેપમાં તમામ જૂની નોંધો, હિસાબ અને કામો તુરંત પાછા રિસ્ટોર થઈ જાય છે.
+            - **👥 મલ્ટી-એકાઉન્ટ સ્વિચિંગ (Saved Accounts on Device):**
+              - ઉપકરણમાં સેવ થયેલા એકાઉન્ટ્સની યાદીમાંથી કોઈપણ એકાઉન્ટમાં ૧-ક્લિકમાં સ્વિચ કરી શકાય છે.
+            - **🔄 હમણાં સિંક કરો (Instant Manual Sync & Snapshots History):**
+              - પ્રોફાઇલ ટેબમાં લાઈવ ઓટો-સિંક બેજ, છેલ્લો સિંક થયેલો સમય, "હમણાં સિંક કરો" બટન અને પાછલા ૫ બેકઅપ સ્નેપશોટની હિસ્ટ્રી સાથે ૧-ક્લિક રોલબેક/રિસ્ટોર સુવિધા.
+            - **🌐 નેટવર્ક સ્ટેટસ અને ઝડપી ઍક્સેસ:**
+              - નેવબારમાં યુઝર એકાઉન્ટ ચિપ જેના પરથી ગમે ત્યારે લૉગિન/સાઇન અપ/સ્વિચ કરી શકાય છે.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.31.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.32.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.31.apk
+            daily-diary-v1.0.32.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

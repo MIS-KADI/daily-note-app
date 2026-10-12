@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   UserCheck,
   Mail,
@@ -17,9 +17,17 @@ import {
   X,
   Shield,
   FileText,
+  RefreshCw,
+  LogIn,
+  LogOut,
+  Users,
+  History,
+  Cloud,
+  Database,
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 import { biometricService } from '../../services/biometricService';
+import { backupSyncService } from '../../services/backupSyncService';
 import { t } from '../../services/i18n';
 
 export default function ProfileTab({
@@ -28,6 +36,10 @@ export default function ProfileTab({
   onReloadAllData,
   onOpenMobilePermissions,
   onOpenPhotoGallery,
+  onOpenAuthModal,
+  onLogout,
+  onSyncNow,
+  lastSyncTime: propLastSyncTime,
   lang = 'gu',
   isDemoMode,
   onClearDemo,
@@ -49,7 +61,38 @@ export default function ProfileTab({
   const [isTestingHold, setIsTestingHold] = useState(false);
   const [testHoldProgress, setTestHoldProgress] = useState(0);
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncNotice, setSyncNotice] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(() => propLastSyncTime || backupSyncService.getLastSyncTime());
+  const [backupHistory, setBackupHistory] = useState(() => backupSyncService.getBackupHistory(user?.email || ''));
   const testHoldRef = useRef(null);
+
+  // Keep local fields in sync if user changes externally (e.g. login/restore)
+  useEffect(() => {
+    setName(user?.name || '');
+    setMobile(user?.mobile || '');
+    setEmail(user?.email || '');
+    setDob(user?.dob || '');
+    setUpiId(user?.upiId || '');
+    setIsPinRequired(user?.isPinRequired ?? false);
+    setPin(user?.pin || '1234');
+    setIsBiometricEnabled(user?.isBiometricEnabled ?? true);
+    setBackupHistory(backupSyncService.getBackupHistory(user?.email || ''));
+  }, [user]);
+
+  // Listen to background auto-sync events
+  useEffect(() => {
+    const handleSyncEvent = (e) => {
+      const time = e.detail?.timestamp || new Date().toISOString();
+      setLastSyncTime(time);
+      if (email) {
+        setBackupHistory(backupSyncService.getBackupHistory(email));
+      }
+    };
+    window.addEventListener('daily_diary_sync_completed', handleSyncEvent);
+    return () => window.removeEventListener('daily_diary_sync_completed', handleSyncEvent);
+  }, [email]);
 
   const handleToggleBiometric = async (enable) => {
     if (enable) {
@@ -199,8 +242,106 @@ export default function ProfileTab({
       isWaterReminder,
     };
     onUpdateUser(updated);
+
+    // If email is provided, automatically bind & trigger auto-backup under this email
+    if (email && email.includes('@')) {
+      const cleanEmail = backupSyncService.normalizeEmail(email);
+      backupSyncService.saveAccountBackup(cleanEmail, {
+        ...backupSyncService.buildDataPayload(),
+        user: updated,
+      }).then((res) => {
+        if (res?.success) {
+          setLastSyncTime(res.timestamp);
+          setBackupHistory(backupSyncService.getBackupHistory(cleanEmail));
+        }
+      });
+      backupSyncService.registerOrUpdateAccount(cleanEmail, { name, mobile });
+    }
+
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 2000);
+  };
+
+  const handleManualSync = async () => {
+    const cleanEmail = backupSyncService.normalizeEmail(email || user?.email);
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      alert(
+        lang === 'gu'
+          ? 'કૃપા કરીને પહેલાં તમારું ઈમેલ ID દાખલ કરો!'
+          : lang === 'hi'
+          ? 'कृपया पहले अपना ईमेल ID दर्ज करें!'
+          : 'Please enter your email ID first!'
+      );
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const res = await backupSyncService.saveAccountBackup(cleanEmail);
+      setIsSyncing(false);
+      if (res?.success) {
+        setLastSyncTime(res.timestamp);
+        setBackupHistory(backupSyncService.getBackupHistory(cleanEmail));
+        setSyncNotice(
+          lang === 'gu'
+            ? '✅ તમારો તમામ ડેટા ઈમેલ સાથે સુરક્ષિત સિંક થઈ ગયો છે!'
+            : lang === 'hi'
+            ? '✅ आपका सारा डेटा ईमेल के साथ सुरक्षित सिंक हो गया है!'
+            : '✅ All data safely synced to your email!'
+        );
+        if (onSyncNow) onSyncNow();
+        setTimeout(() => setSyncNotice(''), 3000);
+      } else {
+        alert(res?.error || 'Sync failed');
+      }
+    } catch (err) {
+      setIsSyncing(false);
+      alert('Sync error: ' + err.message);
+    }
+  };
+
+  const handleRestoreSnapshot = async (snapshot) => {
+    const cleanEmail = backupSyncService.normalizeEmail(email || user?.email);
+    if (!cleanEmail) return;
+
+    const conf = window.confirm(
+      lang === 'gu'
+        ? `શું તમે આ તારીખનો (${new Date(snapshot.timestamp).toLocaleString()}) સ્નેપશોટ પુનઃસ્થાપિત કરવા માંગો છો?\nઆનાથી તે સમયનો જૂનો ડેટા પાછો આવી જશે.`
+        : lang === 'hi'
+        ? `क्या आप इस तारीख (${new Date(snapshot.timestamp).toLocaleString()}) का स्नैपशॉट पुनर्स्थापित करना चाहते हैं?`
+        : `Restore backup snapshot from ${new Date(snapshot.timestamp).toLocaleString()}?`
+    );
+
+    if (conf) {
+      setIsSyncing(true);
+      const fullBackup = await backupSyncService.getAccountBackup(cleanEmail);
+      setIsSyncing(false);
+      if (fullBackup?.payload) {
+        storageService.restoreAllData(fullBackup.payload);
+        alert(
+          lang === 'gu'
+            ? '🎉 જૂનો ડેટા સફળતાપૂર્વક પુનઃસ્થાપિત (Restore) થઈ ગયો છે!'
+            : lang === 'hi'
+            ? '🎉 पुराना डेटा सफलतापूर्वक पुनर्स्थापित (Restore) हो गया!'
+            : '🎉 Data restored successfully!'
+        );
+        if (onReloadAllData) onReloadAllData();
+      } else {
+        alert('Could not find snapshot data');
+      }
+    }
+  };
+
+  const formatSyncTime = (isoStr) => {
+    if (!isoStr) {
+      return lang === 'gu' ? 'હજુ સુધી સિંક નથી થયું' : lang === 'hi' ? 'अभी तक सिंक नहीं हुआ' : 'Not synced yet';
+    }
+    try {
+      const d = new Date(isoStr);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' (' + d.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' }) + ')';
+    } catch {
+      return isoStr;
+    }
   };
 
   const handleExport = () => {
@@ -246,6 +387,184 @@ export default function ProfileTab({
           <p className="text-xs text-slate-500">
             {t('profile_sub', lang)}
           </p>
+        </div>
+      </div>
+
+      {/* ==================================================== */}
+      {/* EMAIL AUTO-BACKUP & SYNC CONTROL CARD (PROPER SYSTEM) */}
+      {/* ==================================================== */}
+      <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-3xl p-5 shadow-xl border border-blue-800/40 space-y-4 relative overflow-hidden">
+        {/* Glow ambient background effect */}
+        <div className="absolute -top-12 -right-12 w-36 h-36 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center font-black text-xl shadow-md shadow-amber-500/25">
+              ☁️
+            </div>
+            <div>
+              <h3 className="text-sm font-black tracking-wide flex items-center gap-1.5">
+                <span>
+                  {lang === 'gu'
+                    ? 'ઈમેલ ઓટો-બેકઅપ & સિંક'
+                    : lang === 'hi'
+                    ? 'ईमेल ऑटो-बैकअप व सिंक'
+                    : 'Email Auto-Backup & Sync'}
+                </span>
+                <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 font-bold px-2 py-0.5 rounded-full">
+                  LIVE
+                </span>
+              </h3>
+              <p className="text-[11px] text-blue-200">
+                {email
+                  ? (lang === 'gu' ? `📧 ${email}` : `📧 ${email}`)
+                  : (lang === 'gu' ? '⚠️ પ્રોફાઇલમાં ઈમેલ ID સેટ કરો' : '⚠️ Set Email ID in Profile')}
+              </p>
+            </div>
+          </div>
+
+          {/* Active status indicator badge */}
+          <div className="shrink-0">
+            {email && email.includes('@') ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded-full shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                {lang === 'gu' ? 'ઓટો-સિંક સક્રિય' : lang === 'hi' ? 'ऑटो-सिंक सक्रिय' : 'Auto-Sync Active'}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2.5 py-1 rounded-full">
+                ⚠️ {lang === 'gu' ? 'ઈમેલ જરૂરી' : lang === 'hi' ? 'ईमेल आवश्यक' : 'Email Needed'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Sync Info Description */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-3 text-xs space-y-1.5 relative z-10">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-blue-200 flex items-center gap-1">
+              <RefreshCw size={12} className={isSyncing ? 'animate-spin text-amber-400' : 'text-blue-300'} />
+              <span>{lang === 'gu' ? 'છેલ્લું સિંક:' : lang === 'hi' ? 'अंतिम सिंक:' : 'Last Synced:'}</span>
+            </span>
+            <span className="font-mono font-bold text-amber-300">
+              {formatSyncTime(lastSyncTime)}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-relaxed">
+            {lang === 'gu'
+              ? '💡 ડાયરી, હિસાબ, કામો અને દવાઓ આપમેળે તમારા ઈમેલમાં સુરક્ષિત સિંક થાય છે. જ્યારે પણ તમે લૉગિન કે લૉગઆઉટ કરશો ત્યારે તમારો જૂનો તમામ ડેટા અહીંથી તરત જ પાછો મળી જશે!'
+              : lang === 'hi'
+              ? '💡 डायरी, हिसाब, कार्य और दवाइयाँ आपके ईमेल में सुरक्षित ऑटो-सिंक होती हैं। लॉगिन या लॉगआउट करने पर आपका पुराना सारा डेटा तुरंत वापस मिल जाएगा!'
+              : '💡 Notes, finance, tasks & medicines are securely auto-synced. Logging in and out will always preserve and restore your old data!'}
+          </p>
+        </div>
+
+        {/* Sync Feedback Toast */}
+        {syncNotice && (
+          <div className="p-2.5 bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+            <span>{syncNotice}</span>
+          </div>
+        )}
+
+        {/* Action Controls */}
+        <div className="grid grid-cols-3 gap-2 relative z-10 pt-1">
+          {/* Sync Now Button */}
+          <button
+            type="button"
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            className="py-2.5 px-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+            title="Sync Now"
+          >
+            <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
+            <span>{lang === 'gu' ? 'હમણાં સિંક' : lang === 'hi' ? 'अभी सिंक' : 'Sync Now'}</span>
+          </button>
+
+          {/* Switch / Login Account */}
+          <button
+            type="button"
+            onClick={onOpenAuthModal}
+            className="py-2.5 px-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold rounded-xl border border-white/15 transition flex items-center justify-center gap-1.5"
+            title="Switch or Login"
+          >
+            <Users size={14} className="text-amber-300" />
+            <span>{lang === 'gu' ? 'એકાઉન્ટ સ્વિચ' : lang === 'hi' ? 'अकाउंट स्विच' : 'Switch'}</span>
+          </button>
+
+          {/* Logout Button */}
+          <button
+            type="button"
+            onClick={onLogout}
+            className="py-2.5 px-2 bg-rose-600/30 hover:bg-rose-600/50 active:scale-95 text-rose-200 text-xs font-bold rounded-xl border border-rose-500/30 transition flex items-center justify-center gap-1.5"
+            title="Safe Logout"
+          >
+            <LogOut size={14} className="text-rose-400" />
+            <span>{lang === 'gu' ? 'લૉગઆઉટ' : lang === 'hi' ? 'लॉगआउट' : 'Logout'}</span>
+          </button>
+        </div>
+
+        {/* Expandable Snapshots History Toggle */}
+        <div className="pt-2 border-t border-white/10 relative z-10">
+          <button
+            type="button"
+            onClick={() => setShowHistory(!showHistory)}
+            className="w-full flex items-center justify-between text-xs text-blue-200 hover:text-white transition py-1"
+          >
+            <span className="flex items-center gap-1.5 font-bold">
+              <History size={14} className="text-amber-400" />
+              <span>
+                {lang === 'gu'
+                  ? `📜 સેવ થયેલા બેકઅપ સ્નેપશોટ (${backupHistory.length})`
+                  : lang === 'hi'
+                  ? `📜 सहेजे गए बैकअप स्नैपशॉट (${backupHistory.length})`
+                  : `📜 Backup Snapshots History (${backupHistory.length})`}
+              </span>
+            </span>
+            <span className="text-[10px] font-bold text-amber-300 bg-white/10 px-2 py-0.5 rounded-full">
+              {showHistory ? '▲ છુપાવો' : '▼ જુઓ (View)'}
+            </span>
+          </button>
+
+          {/* Snapshots List */}
+          {showHistory && (
+            <div className="mt-2.5 space-y-2 animate-in fade-in max-h-56 overflow-y-auto">
+              {backupHistory.length === 0 ? (
+                <p className="text-[11px] text-slate-400 p-2 text-center">
+                  {lang === 'gu'
+                    ? 'હજુ કોઈ હિસ્ટ્રી નથી. "હમણાં સિંક" પર ક્લિક કરો.'
+                    : 'No snapshot history yet. Click Sync Now.'}
+                </p>
+              ) : (
+                backupHistory.map((snap, idx) => (
+                  <div
+                    key={snap.id || idx}
+                    className="p-2.5 bg-white/10 rounded-xl border border-white/10 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <p className="font-bold text-white text-[11px]">
+                        📅 {new Date(snap.timestamp).toLocaleString()}
+                      </p>
+                      {snap.recordCounts && (
+                        <div className="flex gap-2 text-[10px] text-blue-200 mt-0.5">
+                          <span>📝 {snap.recordCounts.notes || 0} નોંધ</span>
+                          <span>💰 {snap.recordCounts.finance || 0} હિસાબ</span>
+                          <span>⏰ {snap.recordCounts.reminders || 0} કામ</span>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRestoreSnapshot(snap)}
+                      className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] rounded-lg shadow-xs active:scale-95 transition"
+                    >
+                      {lang === 'gu' ? 'રીસ્ટોર' : lang === 'hi' ? 'रीस्टोर' : 'Restore'}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
 

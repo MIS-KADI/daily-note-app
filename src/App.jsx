@@ -13,6 +13,7 @@ import UpiPaymentModal from './components/UpiPaymentModal';
 import MobilePermissionsModal from './components/MobilePermissionsModal';
 import PhotoGalleryModal from './components/PhotoGalleryModal';
 import PdfScannerModal from './components/PdfScannerModal';
+import AuthModal from './components/AuthModal';
 import DemoModeBanner from './components/DemoModeBanner';
 import DemoModeModal from './components/DemoModeModal';
 import confetti from 'canvas-confetti';
@@ -29,6 +30,7 @@ import ProfileTab from './components/tabs/ProfileTab';
 // Services
 import { Capacitor } from '@capacitor/core';
 import { storageService } from './services/storageService';
+import { backupSyncService } from './services/backupSyncService';
 import { notificationService } from './services/notificationService';
 import { streakService } from './services/streakService';
 import { pedometerService } from './services/pedometerService';
@@ -67,6 +69,8 @@ export default function App() {
   const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
   const [isPhotoGalleryOpen, setIsPhotoGalleryOpen] = useState(false);
   const [isPdfScannerOpen, setIsPdfScannerOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(() => backupSyncService.getLastSyncTime());
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
@@ -94,6 +98,36 @@ export default function App() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Listen to auto-sync completion events
+  useEffect(() => {
+    const handleSyncCompleted = (e) => {
+      setLastSyncTime(e.detail?.timestamp || new Date().toISOString());
+    };
+    window.addEventListener('daily_diary_sync_completed', handleSyncCompleted);
+    return () => window.removeEventListener('daily_diary_sync_completed', handleSyncCompleted);
+  }, []);
+
+  // Continuous Email-bound Auto-Backup & Sync Engine
+  useEffect(() => {
+    if (user?.email && user.email.includes('@')) {
+      const fullData = {
+        user,
+        notes,
+        reminders,
+        medicines,
+        medicineLogs,
+        finance,
+        accounts,
+        khata,
+        events,
+        water,
+        shopping: shoppingList,
+        fitness,
+      };
+      backupSyncService.triggerAutoSync(fullData, user.email);
+    }
+  }, [user, notes, reminders, medicines, medicineLogs, finance, accounts, khata, events, water, shoppingList, fitness]);
 
   // Track fired alarms to prevent duplicate ringing in the same minute
   const firedAlarmsRef = useRef(new Set());
@@ -343,7 +377,7 @@ export default function App() {
     };
   }, [handleStepIncrement, handleSetExactSteps]);
 
-  // Reload all data (e.g. after backup restore)
+  // Reload all data (e.g. after backup restore or account switch)
   const handleReloadAllData = () => {
     setUser(storageService.getUserProfile());
     setNotes(storageService.getNotes());
@@ -355,6 +389,65 @@ export default function App() {
     setFinance(storageService.getFinance());
     setAccounts(storageService.getAccounts());
     setKhata(storageService.getKhata());
+    setWater(storageService.getWater());
+    setShoppingList(storageService.getShopping());
+    setLastSyncTime(backupSyncService.getLastSyncTime());
+  };
+
+  // Login & Restore Old Data Handler
+  const handleLoginSuccess = (restoredPayload) => {
+    if (restoredPayload) {
+      if (restoredPayload.user) setUser(restoredPayload.user);
+      if (restoredPayload.notes) setNotes(restoredPayload.notes);
+      if (restoredPayload.reminders) setReminders(restoredPayload.reminders);
+      if (restoredPayload.events) setEvents(restoredPayload.events);
+      if (restoredPayload.medicines) setMedicines(restoredPayload.medicines);
+      if (restoredPayload.medicineLogs) setMedicineLogs(restoredPayload.medicineLogs);
+      if (restoredPayload.fitness) setFitness(restoredPayload.fitness);
+      if (restoredPayload.finance) setFinance(restoredPayload.finance);
+      if (restoredPayload.accounts) setAccounts(restoredPayload.accounts);
+      if (restoredPayload.khata) setKhata(restoredPayload.khata);
+      if (restoredPayload.water) setWater(restoredPayload.water);
+      if (restoredPayload.shopping) setShoppingList(restoredPayload.shopping);
+      setLastSyncTime(backupSyncService.getLastSyncTime());
+    } else {
+      handleReloadAllData();
+    }
+    confetti({
+      particleCount: 65,
+      spread: 70,
+      origin: { y: 0.6 },
+    });
+  };
+
+  // Safe Logout Handler (Preserves active data to email backup first, then clears session)
+  const handleLogout = async () => {
+    const conf = window.confirm(
+      lang === 'gu'
+        ? 'શું તમે લૉગઆઉટ કરવા માંગો છો? તમારો તમામ ડેટા તમારા ઈમેલ બેકઅપમાં સુરક્ષિત સાચવવામાં આવશે.'
+        : lang === 'hi'
+        ? 'क्या आप लॉगआउट करना चाहते हैं? आपका सारा डेटा आपके ईमेल बैकअप में सुरक्षित रहेगा।'
+        : 'Do you want to log out? All your data will be safely backed up to your email.'
+    );
+    if (!conf) return;
+
+    const currentPayload = {
+      user,
+      notes,
+      reminders,
+      events,
+      medicines,
+      medicineLogs,
+      finance,
+      accounts,
+      khata,
+      water,
+      shopping: shoppingList,
+      fitness,
+    };
+    await backupSyncService.logoutUser(currentPayload);
+    handleReloadAllData();
+    setIsAuthModalOpen(true);
   };
 
   // Toggle medicine taken status for today
@@ -946,6 +1039,7 @@ export default function App() {
         onOpenEmergency={() => setIsEmergencyOpen(true)}
         onOpenPhotoGallery={() => setIsPhotoGalleryOpen(true)}
         onOpenPdfScanner={() => setIsPdfScannerOpen(true)}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenAssistant={(autoStart = false) => {
           setAssistantAutoStart(Boolean(autoStart));
           setIsAssistantOpen(true);
@@ -1133,6 +1227,10 @@ export default function App() {
             onReloadAllData={handleReloadAllData}
             onOpenMobilePermissions={() => setIsMobilePermissionsOpen(true)}
             onOpenPhotoGallery={() => setIsPhotoGalleryOpen(true)}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
+            onLogout={handleLogout}
+            onSyncNow={() => setLastSyncTime(backupSyncService.getLastSyncTime())}
+            lastSyncTime={lastSyncTime}
             lang={lang}
             isDemoMode={isDemoMode}
             onClearDemo={() => handleClearDemoData()}
@@ -1259,6 +1357,15 @@ export default function App() {
       <PdfScannerModal
         isOpen={isPdfScannerOpen}
         onClose={() => setIsPdfScannerOpen(false)}
+        lang={lang}
+      />
+
+      {/* Email Auto-Backup & Account Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        currentUser={user}
+        onLoginSuccess={handleLoginSuccess}
         lang={lang}
       />
     </div>
