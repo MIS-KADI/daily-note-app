@@ -10,6 +10,7 @@ import {
   ShieldAlert,
   Globe,
   Image as ImageIcon,
+  FileText,
 } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
 import { t } from '../services/i18n';
@@ -24,9 +25,11 @@ export default function Navbar({
   onOpenShopping,
   onOpenEmergency,
   onOpenPhotoGallery,
+  onOpenPdfScanner,
   onTestAlarm,
   onLockApp,
   activeAlarmCount = 0,
+  isOffline = false,
 }) {
   const handleRequestNotification = async () => {
     const granted = await notificationService.requestPermission();
@@ -48,10 +51,25 @@ export default function Navbar({
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3 py-2 shadow-xs w-full max-w-full overflow-hidden">
       <div className="flex items-center justify-between w-full">
-        {/* Brand Logo Icon */}
+        {/* Brand Logo Icon & Live Online Status */}
         <div className="flex items-center gap-1.5 shrink-0">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/25 text-sm select-none">
             📔
+          </div>
+          <div
+            className={`hidden xs:flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold border transition ${
+              isOffline
+                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
+                : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+            }`}
+            title={isOffline ? 'ઓફલાઇન મોડ' : 'ઓનલાઇન ક્લાઉડ સિંક'}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isOffline ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'
+              }`}
+            />
+            <span>{isOffline ? (lang === 'hi' ? 'ऑफ़लाइन' : lang === 'en' ? 'Offline' : 'ઓફલાઇન') : (lang === 'hi' ? 'ऑनलाइन' : lang === 'en' ? 'Online' : 'ઓનલાઇન')}</span>
           </div>
         </div>
 
@@ -88,6 +106,17 @@ export default function Navbar({
           >
             <ImageIcon size={15} />
           </button>
+
+          {/* PDF Document Scanner Quick Access */}
+          {onOpenPdfScanner && (
+            <button
+              onClick={onOpenPdfScanner}
+              className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 transition active:scale-95"
+              title={lang === 'gu' ? '📄 PDF સ્કેનર' : lang === 'hi' ? '📄 PDF स्कैनर' : '📄 PDF Scanner'}
+            >
+              <FileText size={15} />
+            </button>
+          )}
 
           {/* Shopping Quick Access */}
           <button

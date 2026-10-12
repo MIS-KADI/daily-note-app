@@ -119,16 +119,28 @@ export default function BankSmsParserModal({
     // Detect Category
     let category = isCredited ? incomeCategories[0] : expenseCategories[0];
     const mLower = merchant.toLowerCase() + ' ' + t;
-    if (mLower.includes('petrol') || mLower.includes('hpcl') || mLower.includes('bpcl') || mLower.includes('fuel')) {
-      category = expenseCategories.find((c) => c.includes('પેટ્રોલ') || c.includes('पेट्रोल') || c.includes('Fuel')) || expenseCategories[0];
-    } else if (mLower.includes('swiggy') || mLower.includes('zomato') || mLower.includes('food') || mLower.includes('restaurant')) {
-      category = expenseCategories.find((c) => c.includes('ચા-નાસ્તો') || c.includes('चाय') || c.includes('Milk')) || expenseCategories[0];
-    } else if (mLower.includes('dmart') || mLower.includes('supermarket') || mLower.includes('grocery') || mLower.includes('store')) {
+    if (mLower.includes('petrol') || mLower.includes('hpcl') || mLower.includes('bpcl') || mLower.includes('iocl') || mLower.includes('fuel') || mLower.includes('cng')) {
+      category = expenseCategories.find((c) => c.includes('પેટ્રોલ') || c.includes('पेट्रोल') || c.includes('Fuel')) || expenseCategories[2];
+    } else if (mLower.includes('swiggy') || mLower.includes('zomato') || mLower.includes('food') || mLower.includes('restaurant') || mLower.includes('cafe') || mLower.includes('hotel') || mLower.includes('dhaba')) {
+      category = expenseCategories.find((c) => c.includes('હોટેલ') || c.includes('होटल') || c.includes('Dining') || c.includes('ચા-નાસ્તો')) || expenseCategories[8] || expenseCategories[0];
+    } else if (mLower.includes('amazon') || mLower.includes('flipkart') || mLower.includes('myntra') || mLower.includes('meesho') || mLower.includes('zudio') || mLower.includes('ajio') || mLower.includes('shopping')) {
+      category = expenseCategories.find((c) => c.includes('કપડાં') || c.includes('कपड़े') || c.includes('Clothes') || c.includes('Shopping')) || expenseCategories[7] || expenseCategories[0];
+    } else if (mLower.includes('dmart') || mLower.includes('supermarket') || mLower.includes('grocery') || mLower.includes('store') || mLower.includes('kirana') || mLower.includes('blinkit') || mLower.includes('zepto')) {
       category = expenseCategories.find((c) => c.includes('કરિયાણું') || c.includes('किराना') || c.includes('Grocery')) || expenseCategories[0];
-    } else if (mLower.includes('medical') || mLower.includes('pharmacy') || mLower.includes('hospital')) {
-      category = expenseCategories.find((c) => c.includes('દવાઓ') || c.includes('दवाइयाँ') || c.includes('Medicines')) || expenseCategories[0];
-    } else if (mLower.includes('recharge') || mLower.includes('airtel') || mLower.includes('jio') || mLower.includes('electricity') || mLower.includes('bill')) {
-      category = expenseCategories.find((c) => c.includes('બિલ') || c.includes('बिल') || c.includes('Bills')) || expenseCategories[0];
+    } else if (mLower.includes('medical') || mLower.includes('pharmacy') || mLower.includes('hospital') || mLower.includes('apollo') || mLower.includes('doctor') || mLower.includes('clinic')) {
+      category = expenseCategories.find((c) => c.includes('દવાઓ') || c.includes('दवाइयाँ') || c.includes('Medicines')) || expenseCategories[1];
+    } else if (mLower.includes('recharge') || mLower.includes('airtel') || mLower.includes('jio') || mLower.includes('electricity') || mLower.includes('bill') || mLower.includes('power') || mLower.includes('pgvcl') || mLower.includes('ugvcl')) {
+      category = expenseCategories.find((c) => c.includes('બિલ') || c.includes('बिल') || c.includes('Bills')) || expenseCategories[5];
+    } else if (mLower.includes('emi') || mLower.includes('loan') || mLower.includes('bajaj') || mLower.includes('hdb') || mLower.includes('finance') || mLower.includes('interest')) {
+      category = expenseCategories.find((c) => c.includes('લોન') || c.includes('लोन') || c.includes('Loan')) || expenseCategories[11] || expenseCategories[0];
+    } else if (mLower.includes('zerodha') || mLower.includes('groww') || mLower.includes('sip') || mLower.includes('mutual') || mLower.includes('gold')) {
+      category = expenseCategories.find((c) => c.includes('બચત') || c.includes('बचत') || c.includes('Savings')) || expenseCategories[14] || expenseCategories[0];
+    } else if (mLower.includes('rent') || mLower.includes('society') || mLower.includes('maintenance')) {
+      category = expenseCategories.find((c) => c.includes('ભાડું') || c.includes('किराया') || c.includes('Rent')) || expenseCategories[10] || expenseCategories[0];
+    } else if (mLower.includes('school') || mLower.includes('college') || mLower.includes('tuition') || mLower.includes('fee')) {
+      category = expenseCategories.find((c) => c.includes('શિક્ષણ') || c.includes('शिक्षा') || c.includes('Education')) || expenseCategories[6];
+    } else if (mLower.includes('cinema') || mLower.includes('movie') || mLower.includes('netflix') || mLower.includes('hotstar') || mLower.includes('pvr') || mLower.includes('inox')) {
+      category = expenseCategories.find((c) => c.includes('મનોરંજન') || c.includes('मनोरंजन') || c.includes('Entertainment')) || expenseCategories[9] || expenseCategories[0];
     }
 
     setParsed({

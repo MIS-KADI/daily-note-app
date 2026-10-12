@@ -12,6 +12,7 @@ import BankSmsParserModal from './components/BankSmsParserModal';
 import UpiPaymentModal from './components/UpiPaymentModal';
 import MobilePermissionsModal from './components/MobilePermissionsModal';
 import PhotoGalleryModal from './components/PhotoGalleryModal';
+import PdfScannerModal from './components/PdfScannerModal';
 import DemoModeBanner from './components/DemoModeBanner';
 import DemoModeModal from './components/DemoModeModal';
 import confetti from 'canvas-confetti';
@@ -65,6 +66,7 @@ export default function App() {
   const [isShoppingOpen, setIsShoppingOpen] = useState(false);
   const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
   const [isPhotoGalleryOpen, setIsPhotoGalleryOpen] = useState(false);
+  const [isPdfScannerOpen, setIsPdfScannerOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
@@ -943,6 +945,7 @@ export default function App() {
         onOpenShopping={() => setIsShoppingOpen(true)}
         onOpenEmergency={() => setIsEmergencyOpen(true)}
         onOpenPhotoGallery={() => setIsPhotoGalleryOpen(true)}
+        onOpenPdfScanner={() => setIsPdfScannerOpen(true)}
         onOpenAssistant={(autoStart = false) => {
           setAssistantAutoStart(Boolean(autoStart));
           setIsAssistantOpen(true);
@@ -954,6 +957,7 @@ export default function App() {
           reminders.filter((r) => !r.isCompleted && r.hasAlarm).length +
           medicines.filter((m) => m.active && m.hasAlarm).length
         }
+        isOffline={isOffline}
       />
 
       {/* Offline Mode Banner */}
@@ -1244,6 +1248,17 @@ export default function App() {
       <PhotoGalleryModal
         isOpen={isPhotoGalleryOpen}
         onClose={() => setIsPhotoGalleryOpen(false)}
+        lang={lang}
+        onOpenPdfScanner={() => {
+          setIsPhotoGalleryOpen(false);
+          setIsPdfScannerOpen(true);
+        }}
+      />
+
+      {/* PDF Document Scanner & Photo-to-PDF Modal */}
+      <PdfScannerModal
+        isOpen={isPdfScannerOpen}
+        onClose={() => setIsPdfScannerOpen(false)}
         lang={lang}
       />
     </div>

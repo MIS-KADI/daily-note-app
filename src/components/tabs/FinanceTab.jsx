@@ -941,33 +941,65 @@ export default function FinanceTab({
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    {t('payment_mode', lang)}
-                  </label>
-                  <select
-                    value={txPaymentMode}
-                    onChange={(e) => setTxPaymentMode(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold"
-                  >
-                    {paymentModes.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
+              {/* Payment Mode Selector with 1-Tap Quick Buttons */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {t('payment_mode', lang)}
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 mb-2">
+                  {paymentModes.slice(0, 2).map((p) => {
+                    const isSelected = txPaymentMode === p;
+                    const isCashMode = p.includes('Cash') || p.includes('રોકડ') || p.includes('नकद');
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setTxPaymentMode(p)}
+                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
+                          isSelected
+                            ? isCashMode
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                              : 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>{isCashMode ? '💵' : '📱'}</span>
+                        <span className="truncate">{p}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    {t('date', lang)}
-                  </label>
+                <select
+                  value={txPaymentMode}
+                  onChange={(e) => setTxPaymentMode(e.target.value)}
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold mb-2"
+                >
+                  {paymentModes.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Transaction Date with DD/MM/YYYY Format */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {t('date', lang)} (DD/MM/YYYY)
+                </label>
+                <div className="relative">
                   <input
                     type="date"
                     value={txDate}
                     onChange={(e) => setTxDate(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 font-bold"
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
                   />
+                  <div className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white font-bold flex items-center justify-between pointer-events-none shadow-2xs">
+                    <span className="font-mono text-slate-800">
+                      {txDate ? txDate.split('-').reverse().join('/') : 'DD/MM/YYYY'}
+                    </span>
+                    <span className="text-[10px] text-blue-600 font-semibold">📅 (DD/MM/YYYY)</span>
+                  </div>
                 </div>
               </div>
 
@@ -1111,25 +1143,41 @@ export default function FinanceTab({
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    {t('tx_date', lang)}
+                    {t('tx_date', lang)} (DD/MM/YYYY)
                   </label>
-                  <input
-                    type="date"
-                    value={khDate}
-                    onChange={(e) => setKhDate(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200"
-                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={khDate}
+                      onChange={(e) => setKhDate(e.target.value)}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                    />
+                    <div className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white font-bold flex items-center justify-between pointer-events-none shadow-2xs">
+                      <span className="font-mono text-slate-800">
+                        {khDate ? khDate.split('-').reverse().join('/') : 'DD/MM/YYYY'}
+                      </span>
+                      <span className="text-[10px] text-blue-600 font-semibold">📅</span>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    {t('due_date', lang)}
+                    {t('due_date', lang)} (DD/MM/YYYY)
                   </label>
-                  <input
-                    type="date"
-                    value={khDueDate}
-                    onChange={(e) => setKhDueDate(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 font-semibold text-amber-700"
-                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={khDueDate}
+                      onChange={(e) => setKhDueDate(e.target.value)}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                    />
+                    <div className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white font-bold flex items-center justify-between pointer-events-none shadow-2xs">
+                      <span className="font-mono text-amber-700">
+                        {khDueDate ? khDueDate.split('-').reverse().join('/') : 'DD/MM/YYYY'}
+                      </span>
+                      <span className="text-[10px] text-amber-600 font-semibold">📅</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

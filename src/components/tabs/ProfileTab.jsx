@@ -285,7 +285,7 @@ export default function ProfileTab({
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
               <Phone size={12} className="text-slate-500" />
-              {t('mobile_number', lang)} ({lang === 'gu' ? '૧૦ અંક' : '10 digits'})
+              {t('mobile_number', lang)} ({lang === 'gu' ? '૧૦ અંક' : lang === 'hi' ? '10 अंक' : '10 digits'})
             </label>
             <input
               type="tel"
@@ -294,7 +294,7 @@ export default function ProfileTab({
               value={mobile}
               onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              placeholder="10 અંકનો મોબાઈલ નંબર"
+              placeholder={lang === 'gu' ? '10 અંકનો મોબાઈલ નંબર' : lang === 'hi' ? '10 अंकों का मोबाइल नंबर' : '10 digits mobile number'}
             />
           </div>
 
@@ -314,23 +314,35 @@ export default function ProfileTab({
             />
           </div>
 
-          {/* Date of Birth (DOB) */}
+          {/* Date of Birth (DOB) with DD/MM/YYYY display */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-              {lang === 'gu' ? 'જન્મ તારીખ (DOB)' : 'Date of Birth'}
+              {lang === 'gu' ? 'જન્મ તારીખ (DOB)' : lang === 'hi' ? 'जन्म तिथि (DOB)' : 'Date of Birth (DOB)'}
             </label>
-            <input
-              type="date"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
+            <div className="relative">
+              <input
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+              />
+              <div className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 flex items-center justify-between pointer-events-none shadow-2xs">
+                <span className="font-mono">
+                  {dob ? dob.split('-').reverse().join('/') : (lang === 'hi' ? 'DD/MM/YYYY (चुनें)' : 'DD/MM/YYYY (પસંદ કરો)')}
+                </span>
+                <span className="text-[10px] text-blue-600 font-semibold">📅 (DD/MM/YYYY)</span>
+              </div>
+            </div>
           </div>
 
           {/* Receiving UPI ID for Khata QR Code */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-              તમારી UPI ID (ખાતાના QR કોડ અને પેમેન્ટ લેવા માટે):
+              {lang === 'gu'
+                ? 'તમારી UPI ID (ખાતાના QR કોડ અને પેમેન્ટ લેવા માટે):'
+                : lang === 'hi'
+                ? 'आपकी UPI ID (खाते के QR कोड और पेमेंट प्राप्त करने के लिए):'
+                : 'Your UPI ID (For account QR code & payments):'}
             </label>
             <input
               type="text"
@@ -343,13 +355,31 @@ export default function ProfileTab({
 
           {/* Daily Reminders & Habits Section */}
           <div className="pt-3 border-t border-slate-100 space-y-2.5">
-            <h4 className="text-xs font-bold text-slate-800">રોજિંદા રીમાઇન્ડર્સ અને હેબિટ સેટિંગ્સ:</h4>
+            <h4 className="text-xs font-bold text-slate-800">
+              {lang === 'gu'
+                ? 'રોજિંદા રીમાઇન્ડર્સ અને હેબિટ સેટિંગ્સ:'
+                : lang === 'hi'
+                ? 'दैनिक रिमाइंडर और आदत सेटिंग्स:'
+                : 'Daily Reminders & Habit Settings:'}
+            </h4>
 
             {/* 9:00 PM Diary Reminder */}
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-semibold text-slate-800 block">🌙 રાત્રે ૯:૦૦ વાગ્યે ડાયરી રીમાઇન્ડર</span>
-                <span className="text-[10px] text-slate-500 block">"આજનો દિવસ કેવો રહ્યો? ૨ મિનિટમાં ડાયરી લખો"</span>
+                <span className="text-xs font-semibold text-slate-800 block">
+                  {lang === 'gu'
+                    ? '🌙 રાત્રે ૯:૦૦ વાગ્યે ડાયરી રીમાઇન્ડર'
+                    : lang === 'hi'
+                    ? '🌙 रात 9:00 बजे डायरी रिमाइंडर'
+                    : '🌙 9:00 PM Diary Reminder'}
+                </span>
+                <span className="text-[10px] text-slate-500 block">
+                  {lang === 'gu'
+                    ? '"આજનો દિવસ કેવો રહ્યો? ૨ મિનિટમાં ડાયરી લખો"'
+                    : lang === 'hi'
+                    ? '"आज का दिन कैसा रहा? 2 मिनट में डायरी लिखें"'
+                    : '"How was your day? Write diary in 2 mins"'}
+                </span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -365,8 +395,20 @@ export default function ProfileTab({
             {/* 2-Hour Water Reminder */}
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-semibold text-slate-800 block">💧 દર ૨ કલાકે પાણી પીવાનું એલર્ટ</span>
-                <span className="text-[10px] text-slate-500 block">દિવસ દરમિયાન સમયસર હાઇડ્રેશન રીમાઇન્ડર</span>
+                <span className="text-xs font-semibold text-slate-800 block">
+                  {lang === 'gu'
+                    ? '💧 દર ૨ કલાકે પાણી પીવાનું એલર્ટ'
+                    : lang === 'hi'
+                    ? '💧 हर 2 घंटे में पानी पीने का अलर्ट'
+                    : '💧 2-Hour Water Reminder'}
+                </span>
+                <span className="text-[10px] text-slate-500 block">
+                  {lang === 'gu'
+                    ? 'દિવસ દરમિયાન સમયસર હાઇડ્રેશન રીમાઇન્ડર'
+                    : lang === 'hi'
+                    ? 'दिनभर में समय पर पानी पीने का रिमाइंडर'
+                    : 'Timely hydration reminder throughout the day'}
+                </span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -382,13 +424,31 @@ export default function ProfileTab({
 
           {/* Security PIN & Biometrics Section */}
           <div className="pt-3 border-t border-slate-100 space-y-2.5">
-            <h4 className="text-xs font-bold text-slate-800">એપ સિક્યોરિટી & બાયોમેટ્રિક્સ:</h4>
+            <h4 className="text-xs font-bold text-slate-800">
+              {lang === 'gu'
+                ? 'એપ સિક્યોરિટી & બાયોમેટ્રિક્સ:'
+                : lang === 'hi'
+                ? 'ऐप सुरक्षा और बायोमेट्रिक्स:'
+                : 'App Security & Biometrics:'}
+            </h4>
 
             {/* Biometric Toggle */}
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-semibold text-slate-800 block">👆 ફિંગરપ્રિન્ટ / Face ID લૉક</span>
-                <span className="text-[10px] text-slate-500 block">Android ફોનમાં નેટિવ સેન્સર અને બ્રાઉઝરમાં ટચ સેન્સર બંને સક્ષમ</span>
+                <span className="text-xs font-semibold text-slate-800 block">
+                  {lang === 'gu'
+                    ? '👆 ફિંગરપ્રિન્ટ / Face ID લૉક'
+                    : lang === 'hi'
+                    ? '👆 फ़िंगरप्रिंट / Face ID लॉक'
+                    : '👆 Biometric / Face ID Lock'}
+                </span>
+                <span className="text-[10px] text-slate-500 block">
+                  {lang === 'gu'
+                    ? 'Android ફોનમાં નેટિવ સેન્સર અને બ્રાઉઝરમાં ટચ સેન્સર બંને સક્ષમ'
+                    : lang === 'hi'
+                    ? 'Android फ़ोन में नेटिव सेंसर और ब्राउज़र में टच सेंसर दोनों सक्षम'
+                    : 'Native biometric sensor on Android and touch sensor enabled'}
+                </span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -526,10 +586,14 @@ export default function ProfileTab({
               </span>
               <div>
                 <h3 className="text-sm font-bold text-slate-800">
-                  {lang === 'gu' ? 'મોબાઇલ પરવાનગીઓ & ઍક્સેસ' : 'Mobile Permissions & Access'}
+                  {lang === 'gu' ? 'મોબાઇલ પરવાનગીઓ & ઍક્સેસ' : lang === 'hi' ? 'मोबाइल अनुमतियाँ और एक्सेस' : 'Mobile Permissions & Access'}
                 </h3>
                 <p className="text-[10px] text-blue-700 font-semibold">
-                  માઇક્રોફોન, એલાર્મ નોટિફિકેશન અને સાઉન્ડ સેટિંગ્સ
+                  {lang === 'gu'
+                    ? 'માઇક્રોફોન, એલાર્મ નોટિફિકેશન અને સાઉન્ડ સેટિંગ્સ'
+                    : lang === 'hi'
+                    ? 'माइक्रोफ़ोन, अलार्म नोटिफिकेशन और साउंड सेटिंग्स'
+                    : 'Microphone, Alarm Notifications & Sound Settings'}
                 </p>
               </div>
             </div>
@@ -538,11 +602,15 @@ export default function ProfileTab({
               onClick={onOpenMobilePermissions}
               className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5"
             >
-              <span>ચકાસો ⚙️</span>
+              <span>{lang === 'gu' ? 'ચકાસો ⚙️' : lang === 'hi' ? 'जांचें ⚙️' : 'Check ⚙️'}</span>
             </button>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            મોબાઈલમાં વૉઇસ ટાઇપિંગ અને સમયસર અલાર્મ વાગવા માટે જરૂરી પરવાનગીઓ સેટ કરવા માટે અહીં ક્લિક કરો.
+            {lang === 'gu'
+              ? 'મોબાઈલમાં વૉઇસ ટાઇપિંગ અને સમયસર અલાર્મ વાગવા માટે જરૂરી પરવાનગીઓ સેટ કરવા માટે અહીં ક્લિક કરો.'
+              : lang === 'hi'
+              ? 'फ़ोन में वॉइस टाइपिंग और समय पर अलार्म बजने के लिए आवश्यक अनुमतियां सेट करने के लिए यहां क्लिक करें।'
+              : 'Click here to configure microphone and alarm permissions for voice typing and alarms.'}
           </p>
         </div>
       )}
@@ -560,7 +628,7 @@ export default function ProfileTab({
                   {lang === 'gu' ? 'મારી યાદગાર ફોટો ગેલેરી' : lang === 'hi' ? 'मेरी पसंदीदा फोटो गैलरी' : 'Favorite Photo Gallery'}
                 </h3>
                 <p className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold">
-                  {lang === 'gu' ? 'ફેવરિટ તસવીરો સાચવો • ૧૦૦% ઓફલાઇન સેવ' : 'Store favorite photos 100% offline'}
+                  {lang === 'gu' ? 'ફેવરિટ તસવીરો સાચવો • 🌐 ઓનલાઇન & ક્લાઉડ સિંક' : lang === 'hi' ? 'पसंदीदा फ़ोटो सहेजें • 🌐 ऑनलाइन व क्लाउड सिंक' : 'Store favorite photos • 🌐 Online & Cloud Sync'}
                 </p>
               </div>
             </div>
@@ -569,12 +637,14 @@ export default function ProfileTab({
               onClick={onOpenPhotoGallery}
               className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5"
             >
-              <span>{lang === 'gu' ? 'ગેલેરી ખોલો' : 'Open Vault'}</span>
+              <span>{lang === 'gu' ? 'ગેલેરી ખોલો' : lang === 'hi' ? 'गैलरी खोलें' : 'Open Vault'}</span>
             </button>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
             {lang === 'gu'
               ? 'તમારા પરિવાર, પ્રવાસ કે અંગત યાદગાર ફોટા ઓટોમેટીક સાઈઝ ઓપ્ટિમાઈઝ કરીને ફોનમાં સુરક્ષિત સાચવી રાખો.'
+              : lang === 'hi'
+              ? 'अपने परिवार, यात्रा या व्यक्तिगत यादगार फ़ोटो को फ़ोन में सुरक्षित रूप से सहेजें।'
               : 'Safely organize and keep your favorite photos directly on your device with high optimization.'}
           </p>
         </div>
@@ -592,7 +662,7 @@ export default function ProfileTab({
                 {lang === 'gu' ? '🔒 પ્રાઇવસી પોલિસી & ડેટા સુરક્ષા' : lang === 'hi' ? '🔒 प्राइवेसी पॉलिसी व डेटा सुरक्षा' : '🔒 Privacy Policy & Data Security'}
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                {lang === 'gu' ? '૧૦૦% ઓફલાઇન • સંપૂર્ણ સુરક્ષિત • કોઈ ટ્રેકિંગ નહીં' : '100% Offline • Fully Secure • Zero Tracking'}
+                {lang === 'gu' ? '🌐 ઓનલાઇન સુરક્ષિત • સંપૂર્ણ એન્ક્રિપ્ટેડ • કોઈ ટ્રેકિંગ નહીં' : lang === 'hi' ? '🌐 ऑनलाइन सुरक्षित • पूर्ण एन्क्रिप्टेड • कोई ट्रैकिंग नहीं' : '🌐 Online & Cloud Secure • Zero Tracking'}
               </p>
             </div>
           </div>
@@ -625,7 +695,13 @@ export default function ProfileTab({
           className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:opacity-95 text-white rounded-2xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-98 transition"
         >
           <span className="text-base">☁️</span>
-          <span>Google Drive / ક્લાઉડમાં ઓટો-બેકઅપ સાચવો</span>
+          <span>
+            {lang === 'gu'
+              ? 'Google Drive / ક્લાઉડમાં ઓટો-બેકઅપ સાચવો'
+              : lang === 'hi'
+              ? 'Google Drive / क्लाउड में ऑटो-बैकअप सहेजें'
+              : 'Auto Backup to Google Drive / Cloud'}
+          </span>
         </button>
 
         <div className="grid grid-cols-2 gap-2 pt-1">

@@ -122,6 +122,7 @@ export default function NotesTab({
 
   const contentRef = useRef(null);
   const recognitionRef = useRef(null);
+  const baseContentRef = useRef('');
   const fileInputRef = useRef(null);
 
   // Streak Information
@@ -402,7 +403,7 @@ export default function NotesTab({
     }
   };
 
-  // Speech Recognition Setup
+  // Speech Recognition Setup (Non-repeating & Clean)
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -413,27 +414,56 @@ export default function NotesTab({
         gu: 'gu-IN',
         hi: 'hi-IN',
         en: 'en-US',
-        es: 'es-ES',
-        fr: 'fr-FR',
-        de: 'de-DE',
-        ar: 'ar-SA',
       };
       recognition.lang = voiceLangMap[lang] || 'gu-IN';
 
       recognition.onresult = (event) => {
-        let currentTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        let finalTrans = '';
+        let interimTrans = '';
+        for (let i = 0; i < event.results.length; i++) {
+          const piece = event.results[i][0]?.transcript || '';
           if (event.results[i].isFinal) {
-            currentTranscript += event.results[i][0].transcript;
+            finalTrans += piece + ' ';
+          } else {
+            interimTrans += piece;
           }
         }
-        if (currentTranscript.trim()) {
-          setContent((prev) => (prev ? prev.trim() + ' ' : '') + currentTranscript.trim() + ' ');
+
+        const sessionSpeech = (finalTrans + interimTrans).trim();
+        if (!sessionSpeech) return;
+
+        // Deduplicate immediate adjacent identical words (e.g. "સોમવારે સોમવારે" -> "સોમવારે")
+        const words = sessionSpeech.split(/\s+/);
+        const dedupedWords = [];
+        for (let w = 0; w < words.length; w++) {
+          if (w === 0 || words[w].toLowerCase() !== words[w - 1].toLowerCase()) {
+            dedupedWords.push(words[w]);
+          }
+        }
+        const cleanSession = dedupedWords.join(' ');
+
+        const base = baseContentRef.current ? baseContentRef.current.trim() : '';
+        if (cleanSession) {
+          setContent(base ? `${base} ${cleanSession}` : cleanSession);
         }
       };
 
       recognition.onerror = () => setIsListening(false);
-      recognition.onend = () => setIsListening(false);
+      recognition.onend = () => {
+        setIsListening(false);
+        // Clean final content of any duplicate adjacent words
+        setContent((prev) => {
+          if (!prev) return '';
+          const words = prev.trim().split(/\s+/);
+          const deduped = [];
+          for (let w = 0; w < words.length; w++) {
+            if (w === 0 || words[w].toLowerCase() !== words[w - 1].toLowerCase()) {
+              deduped.push(words[w]);
+            }
+          }
+          return deduped.join(' ');
+        });
+      };
       recognitionRef.current = recognition;
     }
   }, [lang]);
@@ -444,13 +474,19 @@ export default function NotesTab({
       return;
     }
     if (isListening) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.warn(e);
+      }
       setIsListening(false);
     } else {
       try {
+        baseContentRef.current = content || '';
         recognitionRef.current.start();
         setIsListening(true);
-      } catch {
+      } catch (err) {
+        console.warn('Speech start error:', err);
         setIsListening(false);
       }
     }
@@ -1330,13 +1366,23 @@ export default function NotesTab({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    required
-                    value={noteDate}
-                    onChange={(e) => setNoteDate(e.target.value)}
-                    className="flex-1 text-xs font-bold p-2 rounded-xl border border-blue-200 bg-white"
-                  />
+                  <div className="relative flex-1">
+                    <input
+                      type="date"
+                      required
+                      value={noteDate}
+                      onChange={(e) => setNoteDate(e.target.value)}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                    />
+                    <div className="text-xs font-bold p-2 rounded-xl border border-blue-200 bg-white flex items-center justify-between pointer-events-none shadow-2xs">
+                      <span className="font-mono text-slate-800">
+                        {noteDate ? noteDate.split('-').reverse().join('/') : 'DD/MM/YYYY'}
+                      </span>
+                      <span className="text-[10px] text-blue-600 font-bold">
+                        (DD/MM/YYYY) 📅
+                      </span>
+                    </div>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setNoteDate(todayStr)}

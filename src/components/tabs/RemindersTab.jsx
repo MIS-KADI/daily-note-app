@@ -1818,12 +1818,20 @@ export default function RemindersTab({
                     +7 {lang === 'gu' ? 'દિવસ' : 'Days'}
                   </button>
                 </div>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full text-xs p-2 rounded-xl border border-slate-200 font-bold"
-                />
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                  />
+                  <div className="w-full text-xs p-2 rounded-xl border border-slate-200 bg-white font-bold flex items-center justify-between pointer-events-none shadow-2xs">
+                    <span className="font-mono text-slate-800">
+                      {date ? date.split('-').reverse().join('/') : 'DD/MM/YYYY'}
+                    </span>
+                    <span className="text-[10px] text-indigo-600 font-semibold">📅 (DD/MM/YYYY)</span>
+                  </div>
+                </div>
               </div>
 
               {/* Time & Priority Grid */}
@@ -2121,14 +2129,22 @@ export default function RemindersTab({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">{t('date', lang)} *</label>
-                  <input
-                    type="date"
-                    required
-                    value={evDate}
-                    onChange={(e) => setEvDate(e.target.value)}
-                    className="w-full text-xs p-2 rounded-xl border border-slate-200 font-bold"
-                  />
+                  <label className="text-xs font-bold text-slate-700 block mb-1">{t('date', lang)} * (DD/MM/YYYY)</label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      required
+                      value={evDate}
+                      onChange={(e) => setEvDate(e.target.value)}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                    />
+                    <div className="w-full text-xs p-2 rounded-xl border border-slate-200 bg-white font-bold flex items-center justify-between pointer-events-none shadow-2xs">
+                      <span className="font-mono text-slate-800">
+                        {evDate ? evDate.split('-').reverse().join('/') : 'DD/MM/YYYY'}
+                      </span>
+                      <span className="text-[10px] text-pink-600 font-semibold">📅</span>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">{t('relation', lang)}</label>
