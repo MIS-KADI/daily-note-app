@@ -35,6 +35,7 @@ import {
   RotateCcw,
   ShieldCheck,
   Award,
+  Eye,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { t } from '../../services/i18n';
@@ -869,6 +870,164 @@ export default function HealthHubTab({
     }
   };
 
+  // ----------------------------------------------------
+  // 6. EYE EXERCISES & VISION CARE (આંખોની કસરત)
+  // ----------------------------------------------------
+  const [eyeMode, setEyeMode] = useState('circle'); // 'circle' | 'infinity' | 'focus' | 'blink' | 'palming' | 'full'
+  const [isEyeActive, setIsEyeActive] = useState(false);
+  const [eyeSecondsLeft, setEyeSecondsLeft] = useState(30);
+  const [eyeAngle, setEyeAngle] = useState(0);
+  const [eyeFocusPhase, setEyeFocusPhase] = useState('near'); // 'near' | 'far'
+  const [blinkCount, setBlinkCount] = useState(0);
+  const [eyeFullStepIndex, setEyeFullStepIndex] = useState(0);
+
+  // 20-20-20 Rule Timer
+  const [is20RuleActive, setIs20RuleActive] = useState(false);
+  const [rule20SecondsLeft, setRule20SecondsLeft] = useState(1200); // 20 mins
+  const [is20BreakTime, setIs20BreakTime] = useState(false);
+  const [breakSecondsLeft, setBreakSecondsLeft] = useState(20);
+
+  const eyeAnimRef = useRef(null);
+  const eyeAngleRef = useRef(0);
+
+  const FULL_ROUTINE_STEPS = [
+    { mode: 'blink', nameGu: '૧. પલકારાથી આંખોમાં ભેજ લાવો', nameHi: '१. पलकें झपकाएं (नमी के लिए)', nameEn: '1. Rapid Blinking', duration: 20 },
+    { mode: 'circle', nameGu: '૨. ગોળ આંખો ફેરવવી', nameHi: '२. गोलाकार आँखों का घुमाव', nameEn: '2. Circular Rolling', duration: 30 },
+    { mode: 'infinity', nameGu: '૩. આઠડા આકારની ગતિ (∞)', nameHi: '३. आठ के आकार में गति (∞)', nameEn: '3. Infinity ∞ Tracking', duration: 30 },
+    { mode: 'focus', nameGu: '૪. નજીક અને દૂર ફોકસ', nameHi: '४. पास और दूर फोकस', nameEn: '4. Near-Far Depth Focus', duration: 30 },
+    { mode: 'palming', nameGu: '૫. પામિંગ & હૂંફાળો વિશ્રામ', nameHi: '५. पामिंग व आराम', nameEn: '5. Palming Relaxation', duration: 30 },
+  ];
+
+  const playEyeSound = (type = 'tick') => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      if (type === 'tick') {
+        osc.frequency.setValueAtTime(540, ctx.currentTime);
+        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.05);
+      } else if (type === 'bell') {
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.8);
+      } else if (type === 'finish') {
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.24);
+        gain.gain.setValueAtTime(0.14, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.6);
+      }
+    } catch {}
+  };
+
+  // Smooth 60fps tracking animation
+  useEffect(() => {
+    if (!isEyeActive) {
+      if (eyeAnimRef.current) cancelAnimationFrame(eyeAnimRef.current);
+      return;
+    }
+
+    const animate = () => {
+      eyeAngleRef.current = (eyeAngleRef.current + 1.6) % 360;
+      setEyeAngle(eyeAngleRef.current);
+      eyeAnimRef.current = requestAnimationFrame(animate);
+    };
+
+    eyeAnimRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (eyeAnimRef.current) cancelAnimationFrame(eyeAnimRef.current);
+    };
+  }, [isEyeActive]);
+
+  // Eye Exercise Timer Interval
+  useEffect(() => {
+    if (!isEyeActive) return;
+
+    const interval = setInterval(() => {
+      setEyeSecondsLeft((prev) => {
+        if (prev <= 1) {
+          if (eyeMode === 'full') {
+            if (eyeFullStepIndex < FULL_ROUTINE_STEPS.length - 1) {
+              const nextStep = eyeFullStepIndex + 1;
+              setEyeFullStepIndex(nextStep);
+              playEyeSound('bell');
+              return FULL_ROUTINE_STEPS[nextStep].duration;
+            } else {
+              setIsEyeActive(false);
+              playEyeSound('finish');
+              confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } });
+              return 0;
+            }
+          } else {
+            setIsEyeActive(false);
+            playEyeSound('finish');
+            confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+            return 30;
+          }
+        }
+
+        const currentActiveMode = eyeMode === 'full' ? FULL_ROUTINE_STEPS[eyeFullStepIndex].mode : eyeMode;
+        if (currentActiveMode === 'focus') {
+          if (prev % 5 === 0) {
+            setEyeFocusPhase((p) => (p === 'near' ? 'far' : 'near'));
+            playEyeSound('tick');
+          }
+        } else if (currentActiveMode === 'blink') {
+          if (prev % 2 === 0) {
+            setBlinkCount((b) => b + 1);
+            playEyeSound('tick');
+          }
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isEyeActive, eyeMode, eyeFullStepIndex]);
+
+  // 20-20-20 Rule Timer
+  useEffect(() => {
+    if (!is20RuleActive) return;
+
+    const interval = setInterval(() => {
+      if (is20BreakTime) {
+        setBreakSecondsLeft((prev) => {
+          if (prev <= 1) {
+            setIs20BreakTime(false);
+            setRule20SecondsLeft(1200);
+            playEyeSound('finish');
+            return 20;
+          }
+          return prev - 1;
+        });
+      } else {
+        setRule20SecondsLeft((prev) => {
+          if (prev <= 1) {
+            setIs20BreakTime(true);
+            setBreakSecondsLeft(20);
+            playEyeSound('bell');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [is20RuleActive, is20BreakTime]);
+
   return (
     <div className="space-y-4 pb-20 animate-in fade-in duration-200">
       {/* Top Header Card */}
@@ -920,6 +1079,12 @@ export default function HealthHubTab({
             label: t('subtab_lungs', lang) || (lang === 'gu' ? 'ફેફસાં & કસરત' : lang === 'hi' ? 'फेफड़े और कसरत' : 'Lungs & Breath'),
             icon: Wind,
             color: 'text-cyan-500',
+          },
+          {
+            id: 'eyes',
+            label: t('subtab_eyes', lang) || (lang === 'gu' ? '👀 આંખોની કસરત' : '👀 Eye Workout'),
+            icon: Eye,
+            color: 'text-amber-500',
           },
           {
             id: 'water',
@@ -2049,6 +2214,360 @@ export default function HealthHubTab({
                     <span>{tip.title}</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
+                    {tip.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================== */}
+      {/* 6. EYE EXERCISES & VISION CARE SUB-TAB CONTENT       */}
+      {/* ==================================================== */}
+      {activeSubTab === 'eyes' && (
+        <div className="space-y-4">
+          {/* Main Eye Workout Trainer Card */}
+          <div className="bg-gradient-to-br from-amber-950 via-slate-900 to-indigo-950 rounded-3xl p-5 text-white shadow-xl relative overflow-hidden border border-amber-500/25">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-2xl bg-amber-500/20 backdrop-blur-md text-amber-300">
+                  <Eye size={22} className="animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold flex items-center gap-1.5">
+                    <span>{lang === 'hi' ? 'नेत्र योग व दृष्टि सुधार' : lang === 'en' ? 'Eye Yoga & Vision Care' : 'નેત્ર યોગ & દ્રષ્ટિ સુધાર કસરત'}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-semibold border border-amber-400/30">
+                      PRO VISION
+                    </span>
+                  </h3>
+                  <p className="text-xs text-amber-200/80">
+                    {lang === 'hi' ? 'स्क्रीन की थकान दूर करें और आँखों की रोशनी बढ़ाएं' : lang === 'en' ? 'Relieve eye strain & strengthen optic muscles' : 'મોબાઈલ સ્ક્રીનનો થાક દૂર કરો અને આંખોનું તેજ વધારો'}
+                  </p>
+                </div>
+              </div>
+              {isEyeActive && (
+                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/30 text-amber-200 border border-amber-400/30 animate-pulse">
+                  {eyeMode === 'full' ? `સ્ટેપ ${eyeFullStepIndex + 1}/5` : 'લાઇવ કસરત'}
+                </span>
+              )}
+            </div>
+
+            {/* Exercise Mode Selector Tabs */}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 mb-5">
+              {[
+                { id: 'full', label: lang === 'gu' ? '૨-મિનિટ ફુલ' : lang === 'hi' ? '२-मिनट फुल' : '2-Min Routine', icon: '⭐' },
+                { id: 'circle', label: lang === 'gu' ? 'ગોળ આંખો' : lang === 'hi' ? 'गोलाकार' : 'Circles', icon: '🔄' },
+                { id: 'infinity', label: lang === 'gu' ? 'આઠડો (∞)' : lang === 'hi' ? 'आठ (∞)' : 'Figure 8', icon: '♾️' },
+                { id: 'focus', label: lang === 'gu' ? 'ફોકસ ટ્રેનિંગ' : lang === 'hi' ? 'फोकस' : 'Focus', icon: '🎯' },
+                { id: 'blink', label: lang === 'gu' ? 'પલકારો' : lang === 'hi' ? 'पलकें' : 'Blink', icon: '👁️' },
+                { id: 'palming', label: lang === 'gu' ? 'પામિંગ આરામ' : lang === 'hi' ? 'पामिंग' : 'Palming', icon: '🤲' },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    setEyeMode(m.id);
+                    setIsEyeActive(false);
+                    setEyeSecondsLeft(m.id === 'full' ? FULL_ROUTINE_STEPS[0].duration : 30);
+                    setEyeFullStepIndex(0);
+                    setBlinkCount(0);
+                  }}
+                  className={`py-2 px-1.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-0.5 border active:scale-95 cursor-pointer ${
+                    eyeMode === m.id
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black border-amber-400 shadow-md shadow-amber-500/25'
+                      : 'bg-white/10 text-amber-100 hover:bg-white/15 border-white/10'
+                  }`}
+                >
+                  <span className="text-sm">{m.icon}</span>
+                  <span className="text-[10px] truncate max-w-full">{m.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Interactive Visual Eye Arena */}
+            <div className="py-4 flex flex-col items-center justify-center relative min-h-[260px] bg-black/40 rounded-2xl border border-white/10 overflow-hidden">
+              {/* Full Routine Step Indicator Banner */}
+              {eyeMode === 'full' && (
+                <div className="absolute top-2.5 inset-x-4 flex items-center justify-between text-xs z-20">
+                  <span className="bg-amber-400 text-slate-950 font-black px-2.5 py-0.5 rounded-full text-[10px]">
+                    {FULL_ROUTINE_STEPS[eyeFullStepIndex].nameGu}
+                  </span>
+                  <span className="text-amber-300 font-mono font-bold text-[11px]">
+                    {eyeSecondsLeft}s બાકી
+                  </span>
+                </div>
+              )}
+
+              {/* VISUAL 1: Circular Eye Rolling */}
+              {(eyeMode === 'circle' || (eyeMode === 'full' && FULL_ROUTINE_STEPS[eyeFullStepIndex].mode === 'circle')) && (
+                <div className="relative flex flex-col items-center justify-center">
+                  <svg className="w-56 h-56" viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="75" fill="none" stroke="rgba(245, 158, 11, 0.25)" strokeWidth="3" strokeDasharray="6 6" />
+                    {/* Orbiting glowing target */}
+                    <circle
+                      cx={100 + 75 * Math.cos((eyeAngle * Math.PI) / 180)}
+                      cy={100 + 75 * Math.sin((eyeAngle * Math.PI) / 180)}
+                      r="13"
+                      fill="#f59e0b"
+                      className="drop-shadow-[0_0_12px_rgba(245,158,11,0.9)]"
+                    />
+                    <circle
+                      cx={100 + 75 * Math.cos((eyeAngle * Math.PI) / 180)}
+                      cy={100 + 75 * Math.sin((eyeAngle * Math.PI) / 180)}
+                      r="5"
+                      fill="#ffffff"
+                    />
+                    {/* Center focal dot */}
+                    <circle cx="100" cy="100" r="4" fill="rgba(255,255,255,0.4)" />
+                  </svg>
+                  <p className="text-xs text-amber-200 mt-2 font-bold text-center">
+                    {lang === 'gu' ? '👀 માથું હલાવ્યા વિના પીળા ગોળાને ગોળ-ગોળ અનુસરો' : 'Keep head still, follow the orb with eyes'}
+                  </p>
+                </div>
+              )}
+
+              {/* VISUAL 2: Figure 8 / Infinity ∞ Tracking */}
+              {(eyeMode === 'infinity' || (eyeMode === 'full' && FULL_ROUTINE_STEPS[eyeFullStepIndex].mode === 'infinity')) && (
+                <div className="relative flex flex-col items-center justify-center">
+                  <svg className="w-64 h-48" viewBox="0 0 200 200">
+                    <path
+                      d="M 100,100 C 60,60 25,75 25,100 C 25,125 60,140 100,100 C 140,60 175,75 175,100 C 175,125 140,140 100,100 Z"
+                      fill="none"
+                      stroke="rgba(245, 158, 11, 0.25)"
+                      strokeWidth="3"
+                      strokeDasharray="6 6"
+                    />
+                    {/* Moving Lissajous Infinity Target */}
+                    <circle
+                      cx={100 + 70 * Math.sin((eyeAngle * Math.PI) / 180)}
+                      cy={100 + 38 * Math.sin((2 * eyeAngle * Math.PI) / 180)}
+                      r="13"
+                      fill="#f59e0b"
+                      className="drop-shadow-[0_0_14px_rgba(245,158,11,0.95)]"
+                    />
+                    <circle
+                      cx={100 + 70 * Math.sin((eyeAngle * Math.PI) / 180)}
+                      cy={100 + 38 * Math.sin((2 * eyeAngle * Math.PI) / 180)}
+                      r="5"
+                      fill="#ffffff"
+                    />
+                  </svg>
+                  <p className="text-xs text-amber-200 mt-2 font-bold text-center">
+                    {lang === 'gu' ? '♾️ આઠડા (∞) આકારમાં ફરતા ગોળાને એકાગ્રતાથી જુઓ' : 'Trace the figure-8 infinity loop with your eyes'}
+                  </p>
+                </div>
+              )}
+
+              {/* VISUAL 3: Near & Far Focus */}
+              {(eyeMode === 'focus' || (eyeMode === 'full' && FULL_ROUTINE_STEPS[eyeFullStepIndex].mode === 'focus')) && (
+                <div className="relative flex flex-col items-center justify-center h-48">
+                  <div
+                    className={`rounded-full flex items-center justify-center transition-all duration-700 shadow-2xl ${
+                      eyeFocusPhase === 'near'
+                        ? 'w-40 h-40 bg-gradient-to-tr from-amber-500 to-yellow-300 ring-8 ring-amber-400/40 scale-105'
+                        : 'w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-600 ring-4 ring-blue-400/30 scale-80'
+                    }`}
+                  >
+                    <span className="text-3xl">{eyeFocusPhase === 'near' ? '🔍' : '🏔️'}</span>
+                  </div>
+                  <div className="mt-4 text-center">
+                    <span className="px-3 py-1 rounded-full text-xs font-black bg-white/20 text-amber-300 shadow-xs">
+                      {eyeFocusPhase === 'near'
+                        ? (lang === 'gu' ? '👇 ૧. સ્ક્રીન પર નજીક ફોકસ કરો' : 'Focus Near on Screen')
+                        : (lang === 'gu' ? '🌲 ૨. સ્ક્રીનથી દૂર અનંત અંતરે જુઓ' : 'Look into Far Distance')}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* VISUAL 4: Rapid Blinking (Blink Pacer) */}
+              {(eyeMode === 'blink' || (eyeMode === 'full' && FULL_ROUTINE_STEPS[eyeFullStepIndex].mode === 'blink')) && (
+                <div className="flex flex-col items-center justify-center h-48 space-y-3">
+                  <div className="w-28 h-28 rounded-full bg-amber-400/20 border-2 border-amber-400/50 flex items-center justify-center text-5xl shadow-lg animate-pulse">
+                    {eyeSecondsLeft % 2 === 0 ? '👁️' : '😌'}
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-amber-200">
+                      {lang === 'gu' ? '💧 બીપના તાલે ઝડપથી આંખો પલકાવો (કુદરતી ભેજ)' : 'Blink rhythmically to moisturize dry eyes'}
+                    </p>
+                    <span className="text-[11px] font-mono text-amber-400 mt-0.5 block font-bold">
+                      પલકારા ગણતરી: {blinkCount} વખત
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* VISUAL 5: Palming Relaxation */}
+              {(eyeMode === 'palming' || (eyeMode === 'full' && FULL_ROUTINE_STEPS[eyeFullStepIndex].mode === 'palming')) && (
+                <div className="flex flex-col items-center justify-center h-48 space-y-3 text-center px-4">
+                  <span className="text-5xl animate-bounce">🤲</span>
+                  <div className="max-w-xs space-y-1">
+                    <h4 className="text-sm font-bold text-amber-300">
+                      {lang === 'gu' ? 'હથેળીઓ આંખો પર મૂકી આરામ કરો' : 'Warm Palming Rest'}
+                    </h4>
+                    <p className="text-xs text-amber-100/90 leading-relaxed">
+                      {lang === 'gu'
+                        ? 'બંને હથેળીઓ ઘસીને ગરમ કરો અને આંખો પર હળવેથી મૂકો. સંપૂર્ણ અંધકારમાં આંખોને શાંતિ અનુભવો.'
+                        : 'Gently cup warm palms over closed eyes and rest in soothing darkness.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Countdown Live Badge */}
+              <div className="mt-3 px-3.5 py-1 rounded-full bg-black/50 border border-white/15 text-xs font-mono font-bold text-amber-300 flex items-center gap-1.5">
+                <Timer size={13} className="text-amber-400" />
+                <span>{eyeSecondsLeft} {lang === 'gu' ? 'સેકન્ડ બાકી' : 'seconds left'}</span>
+              </div>
+            </div>
+
+            {/* Eye Workout Start/Stop Controls */}
+            <div className="flex gap-2.5 pt-4">
+              {!isEyeActive ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEyeActive(true);
+                    setEyeSecondsLeft(eyeMode === 'full' ? FULL_ROUTINE_STEPS[0].duration : 30);
+                    setEyeFullStepIndex(0);
+                    setBlinkCount(0);
+                    playEyeSound('bell');
+                  }}
+                  className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer"
+                >
+                  <Play size={16} fill="black" />
+                  <span>
+                    {eyeMode === 'full'
+                      ? (lang === 'gu' ? 'સંપૂર્ણ ૨-મિનિટ કસરત શરૂ કરો 🚀' : 'Start Full 2-Min Routine 🚀')
+                      : (lang === 'gu' ? 'કસરત શરૂ કરો (Start Exercise)' : 'Start Eye Exercise')}
+                  </span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEyeActive(false);
+                    }}
+                    className="flex-1 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer"
+                  >
+                    <Pause size={16} />
+                    <span>{lang === 'gu' ? 'રોકો (Pause)' : 'Pause'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEyeActive(false);
+                      setEyeSecondsLeft(30);
+                      setEyeFullStepIndex(0);
+                    }}
+                    className="py-3 px-4 rounded-2xl bg-white/15 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-98 transition cursor-pointer"
+                  >
+                    <RotateCcw size={16} />
+                    <span>{lang === 'gu' ? 'રીસેટ' : 'Reset'}</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 20-20-20 Rule Screen Break Timer Card */}
+          <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-5 text-white shadow-md border border-blue-500/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="p-2.5 bg-blue-500/20 text-blue-300 rounded-2xl text-lg">
+                  ⏱️
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold flex items-center gap-1.5">
+                    <span>૨૦-૨૦-૨૦ સ્ક્રીન બ્રેક ટાઇમર</span>
+                    <span className="text-[10px] bg-blue-400/20 text-blue-300 font-bold px-2 py-0.5 rounded-full">
+                      RULE
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-blue-200">
+                    દર ૨૦ મિનિટે ૨૦ સેકન્ડ સુધી ૨૦ ફૂટ દૂર જુઓ
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIs20RuleActive(!is20RuleActive);
+                  if (!is20RuleActive) playEyeSound('bell');
+                }}
+                className={`px-3.5 py-1.5 rounded-xl font-bold text-xs shadow-xs transition active:scale-95 ${
+                  is20RuleActive
+                    ? 'bg-rose-500 hover:bg-rose-600 text-white'
+                    : 'bg-blue-600 hover:bg-blue-500 text-white'
+                }`}
+              >
+                {is20RuleActive ? '⏸️ રોકો' : '▶️ શરૂ કરો'}
+              </button>
+            </div>
+
+            {/* Timer Display */}
+            <div className="bg-white/10 rounded-2xl p-3 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] text-blue-200 block">
+                  {is20BreakTime ? '🚨 ૨૦ સેકન્ડનો વિઝન બ્રેક!' : 'કામ કરવાનો સમય (Work Timer):'}
+                </span>
+                <span className="text-xl font-black font-mono text-amber-300">
+                  {is20BreakTime
+                    ? `${breakSecondsLeft} સેકન્ડ`
+                    : `${Math.floor(rule20SecondsLeft / 60)}:${(rule20SecondsLeft % 60).toString().padStart(2, '0')} મિનિટ`}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 max-w-xs text-right">
+                {is20BreakTime
+                  ? '👀 બારી બહાર ૨૦ ફૂટ દૂર જુઓ અને આંખોને આરામ આપો!'
+                  : 'ટાઇમર ચાલુ રાખો. સમય પૂરો થતાં એલાર્મ વાગશે.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Doctor & Ayurveda Vision Care Tips */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span>🌿</span>
+              <span>{lang === 'hi' ? 'आँखों की सुरक्षा व स्वास्थ्य नियम' : lang === 'en' ? 'Doctor & Ayurveda Vision Care Guidelines' : 'આંખોની કાળજી & નેત્ર સ્વાસ્થ્ય નિયમો'}</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {[
+                {
+                  icon: '🥕',
+                  title: lang === 'gu' ? 'વિટામિન-A & નેત્ર આહાર' : 'Vitamin-A Diet',
+                  desc: lang === 'gu' ? 'ગાજર, પપૈયું, પાલક અને બદામ આંખોની રોશની જાળવવામાં અદ્ભુત મદદ કરે છે.' : 'Carrots, papaya, spinach & almonds boost optic sharpness.',
+                  bg: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40 text-amber-900 dark:text-amber-200',
+                },
+                {
+                  icon: '💧',
+                  title: lang === 'gu' ? 'ઠંડા પાણીની છાલક' : 'Cold Water Splash',
+                  desc: lang === 'gu' ? 'સવારે ઉઠીને મોંમાં પાણી ભરીને આંખો પર ઠંડા પાણીની છાલક મારવાથી નેત્રતંતુઓ તાજા થાય છે.' : 'Splashing cold water on eyes in morning relieves strain.',
+                  bg: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/40 text-blue-900 dark:text-blue-200',
+                },
+                {
+                  icon: '📱',
+                  title: lang === 'gu' ? 'મોબાઇલ સ્ક્રીન અંતર' : 'Safe Screen Distance',
+                  desc: lang === 'gu' ? 'મોબાઇલ હંમેશા આંખોથી ૧.૫ ફૂટ (૪૦ સે.મી.) દૂર રાખો અને રાત્રે રૂમની લાઈટ બંધ રાખી સ્ક્રીન ન જુઓ.' : 'Keep phone 40 cm away and avoid dark room glare.',
+                  bg: 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/40 text-indigo-900 dark:text-indigo-200',
+                },
+                {
+                  icon: '😴',
+                  title: lang === 'gu' ? '૭-૮ કલાક પૂરતી ઊંઘ' : '7-8 Hours Sleep',
+                  desc: lang === 'gu' ? 'ઊંઘ દરમિયાન આંખોના કોષો પુનર્જીવિત થાય છે અને સુકાપણાની સમસ્યા મટે છે.' : 'Sleep rejuvenates optical cells and restores tears.',
+                  bg: 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-900/40 text-purple-900 dark:text-purple-200',
+                },
+              ].map((tip, idx) => (
+                <div key={idx} className={`p-3 rounded-2xl border ${tip.bg} space-y-1`}>
+                  <div className="flex items-center gap-1.5 font-bold text-xs">
+                    <span>{tip.icon}</span>
+                    <span>{tip.title}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed opacity-90">
                     {tip.desc}
                   </p>
                 </div>

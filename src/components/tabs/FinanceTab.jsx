@@ -941,38 +941,15 @@ export default function FinanceTab({
                 </select>
               </div>
 
-              {/* Payment Mode Selector with 1-Tap Quick Buttons */}
+              {/* Payment Mode Selector Dropdown */}
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
                   {t('payment_mode', lang)}
                 </label>
-                <div className="grid grid-cols-2 gap-1.5 mb-2">
-                  {paymentModes.slice(0, 2).map((p) => {
-                    const isSelected = txPaymentMode === p;
-                    const isCashMode = p.includes('Cash') || p.includes('રોકડ') || p.includes('नकद');
-                    return (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setTxPaymentMode(p)}
-                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
-                          isSelected
-                            ? isCashMode
-                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                              : 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        <span>{isCashMode ? '💵' : '📱'}</span>
-                        <span className="truncate">{p}</span>
-                      </button>
-                    );
-                  })}
-                </div>
                 <select
                   value={txPaymentMode}
                   onChange={(e) => setTxPaymentMode(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold mb-2"
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white font-bold text-slate-800 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 mb-2"
                 >
                   {paymentModes.map((p) => (
                     <option key={p} value={p}>

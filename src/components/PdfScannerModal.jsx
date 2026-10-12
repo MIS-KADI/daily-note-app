@@ -20,6 +20,7 @@ import {
   RefreshCw,
   CreditCard,
   Image as ImageIcon,
+  Zap,
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { Share } from '@capacitor/share';
@@ -156,6 +157,16 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
   // Interactive Crop Editor State
   // { isOpen, target: 'page'|'idFront'|'idBack', pageIndex?: number, imageSrc, rotation, cropBox: { x, y, width, height } }
   const [cropState, setCropState] = useState(null);
+
+  // Live In-App Camera Viewfinder State
+  const [isLiveCameraOpen, setIsLiveCameraOpen] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState('doc'); // 'doc' | 'idFront' | 'idBack'
+  const [facingMode, setFacingMode] = useState('environment'); // 'environment' | 'user'
+  const [isTorchOn, setIsTorchOn] = useState(false);
+  const [isShutterFlashing, setIsShutterFlashing] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const videoRef = useRef(null);
+  const mediaStreamRef = useRef(null);
 
   // File Inputs Refs
   const docFileInputRef = useRef(null);
@@ -387,6 +398,182 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
       generateIdCardComposite();
     }
   }, [scanMode, idFront, idBack, idType, generateIdCardComposite]);
+
+  // Manage Live Camera Stream Lifecycle
+  useEffect(() => {
+    if (!isLiveCameraOpen) {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+        mediaStreamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      setIsTorchOn(false);
+      setCameraError(null);
+      return;
+    }
+
+    let isCancelled = false;
+    let localStream = null;
+
+    async function initCamera() {
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Camera API not available');
+        }
+
+        const constraints = {
+          video: {
+            facingMode: { ideal: facingMode },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          },
+          audio: false,
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (isCancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+
+        localStream = stream;
+        mediaStreamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          try {
+            await videoRef.current.play();
+          } catch (e) {
+            console.warn('Video play error:', e);
+          }
+        }
+      } catch (err) {
+        console.warn('getUserMedia failed, falling back to camera input:', err);
+        setCameraError(err.message || 'Camera access error');
+        setIsLiveCameraOpen(false);
+        // Fallback to direct input
+        if (cameraTarget === 'doc') {
+          docCameraInputRef.current?.click();
+        } else if (cameraTarget === 'idFront') {
+          frontCameraInputRef.current?.click();
+        } else if (cameraTarget === 'idBack') {
+          backCameraInputRef.current?.click();
+        }
+      }
+    }
+
+    initCamera();
+
+    return () => {
+      isCancelled = true;
+      if (localStream) {
+        localStream.getTracks().forEach((t) => t.stop());
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+        mediaStreamRef.current = null;
+      }
+    };
+  }, [isLiveCameraOpen, facingMode, cameraTarget]);
+
+  // Clean up stream if main modal closes
+  useEffect(() => {
+    if (!isOpen && isLiveCameraOpen) {
+      setIsLiveCameraOpen(false);
+    }
+  }, [isOpen, isLiveCameraOpen]);
+
+  // Flip rear / front camera
+  const handleFlipCamera = () => {
+    setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
+  };
+
+  // Toggle torch / flashlight if supported
+  const handleToggleTorch = async () => {
+    if (!mediaStreamRef.current) return;
+    const track = mediaStreamRef.current.getVideoTracks()[0];
+    if (track) {
+      try {
+        const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+        if (capabilities.torch) {
+          const nextVal = !isTorchOn;
+          await track.applyConstraints({ advanced: [{ torch: nextVal }] });
+          setIsTorchOn(nextVal);
+        } else {
+          alert(lang === 'gu' ? 'આ કેમેરામાં ટોર્ચ સપોર્ટ નથી.' : 'Torch not supported on this camera.');
+        }
+      } catch (e) {
+        console.warn('Torch error:', e);
+      }
+    }
+  };
+
+  // Capture frame from live video
+  const handleCaptureLiveFrame = async () => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      alert(lang === 'gu' ? 'કેમેરા શરૂ થઈ રહ્યો છે, કૃપા કરીને થોડી ક્ષણ રાહ જુઓ.' : 'Camera initializing, please wait.');
+      return;
+    }
+
+    try {
+      if (navigator.vibrate) navigator.vibrate(50);
+    } catch {}
+
+    setIsShutterFlashing(true);
+    setTimeout(() => setIsShutterFlashing(false), 200);
+
+    const vW = video.videoWidth;
+    const vH = video.videoHeight;
+    const canvas = document.createElement('canvas');
+    canvas.width = vW;
+    canvas.height = vH;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, vW, vH);
+
+    const rawDataUrl = canvas.toDataURL('image/jpeg', 0.94);
+
+    if (cameraTarget === 'doc') {
+      const processed = await processImage(rawDataUrl, globalFilter, 0, null);
+      setPages((prev) => [
+        ...prev,
+        {
+          id: 'page-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+          dataUrl: rawDataUrl,
+          processedUrl: processed,
+          filter: globalFilter,
+          rotation: 0,
+          cropBox: null,
+          name: `Scan_Page_${pages.length + 1}`,
+        },
+      ]);
+      confetti({ particleCount: 25, spread: 45, origin: { y: 0.8 } });
+    } else if (cameraTarget === 'idFront') {
+      const processed = await processImage(rawDataUrl, idFilter, 0, null);
+      setIdFront({
+        dataUrl: rawDataUrl,
+        processedUrl: processed,
+        filter: idFilter,
+        rotation: 0,
+        cropBox: null,
+      });
+      setIsLiveCameraOpen(false);
+      confetti({ particleCount: 35, spread: 50, origin: { y: 0.7 } });
+    } else if (cameraTarget === 'idBack') {
+      const processed = await processImage(rawDataUrl, idFilter, 0, null);
+      setIdBack({
+        dataUrl: rawDataUrl,
+        processedUrl: processed,
+        filter: idFilter,
+        rotation: 0,
+        cropBox: null,
+      });
+      setIsLiveCameraOpen(false);
+      confetti({ particleCount: 35, spread: 50, origin: { y: 0.7 } });
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -809,7 +996,10 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
 
                   <button
                     type="button"
-                    onClick={() => docCameraInputRef.current?.click()}
+                    onClick={() => {
+                      setCameraTarget('doc');
+                      setIsLiveCameraOpen(true);
+                    }}
                     className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs active:scale-95 transition"
                   >
                     <Camera size={14} />
@@ -983,7 +1173,10 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   <div className="flex items-center justify-center gap-2 pt-2">
                     <button
                       type="button"
-                      onClick={() => docCameraInputRef.current?.click()}
+                      onClick={() => {
+                        setCameraTarget('doc');
+                        setIsLiveCameraOpen(true);
+                      }}
                       className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs active:scale-95 transition flex items-center gap-1.5"
                     >
                       <Camera size={15} />
@@ -1133,7 +1326,10 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                       <div className="flex items-center gap-1.5 pt-1">
                         <button
                           type="button"
-                          onClick={() => frontCameraInputRef.current?.click()}
+                          onClick={() => {
+                            setCameraTarget('idFront');
+                            setIsLiveCameraOpen(true);
+                          }}
                           className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-2xs active:scale-95"
                         >
                           <Camera size={12} />
@@ -1221,7 +1417,10 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                       <div className="flex items-center gap-1.5 pt-1">
                         <button
                           type="button"
-                          onClick={() => backCameraInputRef.current?.click()}
+                          onClick={() => {
+                            setCameraTarget('idBack');
+                            setIsLiveCameraOpen(true);
+                          }}
                           className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-2xs active:scale-95"
                         >
                           <Camera size={12} />
@@ -1353,6 +1552,175 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
           onApply={handleApplyCrop}
           lang={lang}
         />
+      )}
+
+      {/* ==================================================== */}
+      {/* DIRECT LIVE CAMERA SCANNER VIEWFINDER OVERLAY        */}
+      {/* ==================================================== */}
+      {isLiveCameraOpen && (
+        <div className="fixed inset-0 z-70 bg-black flex flex-col justify-between select-none animate-in fade-in">
+          {/* Top Camera Action Bar */}
+          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 to-transparent z-10 text-white">
+            <button
+              type="button"
+              onClick={() => setIsLiveCameraOpen(false)}
+              className="p-2 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 transition"
+              title="Close Camera"
+            >
+              <X size={22} />
+            </button>
+
+            {/* Title / Mode Indicator */}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-black/60 backdrop-blur-md rounded-full border border-white/20">
+              <Camera size={14} className="text-amber-400 animate-pulse" />
+              <span className="text-xs font-bold">
+                {cameraTarget === 'doc'
+                  ? (lang === 'hi' ? 'दस्तावेज़ लाइव कैमरा' : lang === 'en' ? 'Document Live Camera' : 'દસ્તાવેજ લાઇવ કેમેરા')
+                  : cameraTarget === 'idFront'
+                  ? (lang === 'hi' ? 'आईडी कार्ड: आगे का भाग' : lang === 'en' ? 'ID Card: Front' : 'ઓળખપત્ર: આગળની બાજુ (FRONT)')
+                  : (lang === 'hi' ? 'आईडी कार्ड: पीछे का भाग' : lang === 'en' ? 'ID Card: Back' : 'ઓળખપત્ર: પાછળની બાજુ (BACK)')}
+              </span>
+            </div>
+
+            {/* Quick Controls: Torch & Camera Switch */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleToggleTorch}
+                className={`p-2 rounded-full transition active:scale-95 ${
+                  isTorchOn ? 'bg-amber-400 text-slate-950 font-bold' : 'bg-white/15 hover:bg-white/25 text-white'
+                }`}
+                title="Flashlight"
+              >
+                <Zap size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={handleFlipCamera}
+                className="p-2 rounded-full bg-white/15 hover:bg-white/25 text-white active:scale-95 transition"
+                title="Flip Camera"
+              >
+                <RotateCw size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Center: Live Video Viewfinder with Alignment Frame */}
+          <div className="relative flex-1 flex items-center justify-center overflow-hidden bg-slate-950">
+            {/* Live Camera Video */}
+            <video
+              ref={videoRef}
+              playsInline
+              autoPlay
+              muted
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+
+            {/* Shutter White Flash Effect */}
+            {isShutterFlashing && (
+              <div className="absolute inset-0 bg-white/90 z-20 pointer-events-none animate-out fade-out duration-200" />
+            )}
+
+            {/* Overlay Guide Frame */}
+            <div className="relative z-10 w-full px-6 flex flex-col items-center justify-center pointer-events-none">
+              {cameraTarget === 'doc' ? (
+                // Document / Receipt Guide (3:4 ratio)
+                <div className="w-full max-w-xs aspect-[3/4] border-2 border-dashed border-cyan-400/80 rounded-2xl relative shadow-2xl bg-black/10">
+                  {/* Glowing 4 Corners */}
+                  <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-cyan-400 rounded-tl-lg" />
+                  <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-cyan-400 rounded-tr-lg" />
+                  <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-cyan-400 rounded-bl-lg" />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-cyan-400 rounded-br-lg" />
+
+                  {/* Guide text inside */}
+                  <div className="absolute bottom-3 inset-x-0 text-center">
+                    <span className="bg-black/70 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-full border border-white/20">
+                      {lang === 'hi'
+                        ? '📄 दस्तावेज़ या बिल को फ्रेम में रखें'
+                        : lang === 'en'
+                        ? '📄 Align Document inside box'
+                        : '📄 દસ્તાવેજ કે બિલ આ ફ્રેમમાં ગોઠવો'}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                // ID Card Guide (1.58:1 ratio)
+                <div className="w-full max-w-sm aspect-[1.58/1] border-2 border-dashed border-amber-400/90 rounded-2xl relative shadow-2xl bg-black/10">
+                  {/* Glowing 4 Corners */}
+                  <div className="absolute -top-1 -left-1 w-7 h-7 border-t-4 border-l-4 border-amber-400 rounded-tl-xl" />
+                  <div className="absolute -top-1 -right-1 w-7 h-7 border-t-4 border-r-4 border-amber-400 rounded-tr-xl" />
+                  <div className="absolute -bottom-1 -left-1 w-7 h-7 border-b-4 border-l-4 border-amber-400 rounded-bl-xl" />
+                  <div className="absolute -bottom-1 -right-1 w-7 h-7 border-b-4 border-r-4 border-amber-400 rounded-br-xl" />
+
+                  {/* Guide text inside */}
+                  <div className="absolute bottom-3 inset-x-0 text-center">
+                    <span className="bg-black/75 backdrop-blur-xs text-amber-300 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-400/30">
+                      {cameraTarget === 'idFront'
+                        ? (lang === 'hi' ? '🪪 पहचान पत्र का आगे का भाग रखें' : '🪪 ઓળખપત્રની આગળની બાજુ (FRONT) ગોઠવો')
+                        : (lang === 'hi' ? '🪪 पहचान पत्र का पीछे का भाग रखें' : '🪪 ઓળખપત્રની પાછળની બાજુ (BACK) ગોઠવો')}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Camera Controls & Shutter Bar */}
+          <div className="px-6 py-5 bg-gradient-to-t from-black via-black/90 to-transparent flex items-center justify-between z-10">
+            {/* Left Slot: Page Count / Status */}
+            <div className="w-20">
+              {cameraTarget === 'doc' && pages.length > 0 && (
+                <div className="flex flex-col items-center">
+                  <span className="w-8 h-8 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center text-xs font-black text-white shadow-md">
+                    {pages.length}
+                  </span>
+                  <span className="text-[10px] text-slate-300 font-bold mt-1">
+                    {lang === 'gu' ? 'પાના' : 'Pages'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Center: BIG SHUTTER CAPTURE BUTTON */}
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                onClick={handleCaptureLiveFrame}
+                className="w-19 h-19 rounded-full bg-white p-1.5 shadow-2xl shadow-white/30 active:scale-90 transition-transform flex items-center justify-center cursor-pointer border-4 border-slate-900 group"
+                title="Capture Photo"
+              >
+                <div className="w-full h-full rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-inner group-hover:scale-95 transition-transform">
+                  <Camera size={26} />
+                </div>
+              </button>
+              <span className="text-[11px] font-bold text-white mt-1 drop-shadow-md">
+                {lang === 'gu' ? '📸 ફોટો પાડો' : lang === 'hi' ? '📸 फोटो खींचें' : 'Capture'}
+              </span>
+            </div>
+
+            {/* Right Slot: Done / Finish Button */}
+            <div className="w-20 flex justify-end">
+              {cameraTarget === 'doc' ? (
+                <button
+                  type="button"
+                  onClick={() => setIsLiveCameraOpen(false)}
+                  className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md active:scale-95 transition flex items-center gap-1"
+                >
+                  <Check size={14} />
+                  <span>{lang === 'gu' ? 'પૂર્ણ' : 'Done'}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsLiveCameraOpen(false)}
+                  className="px-3 py-2 bg-white/20 text-white rounded-xl text-xs font-bold active:scale-95 transition"
+                >
+                  {lang === 'gu' ? 'રદ' : 'Cancel'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1439,6 +1439,15 @@ export const translations = {
     de: 'Lunge & Atmung',
     ar: 'الرئتان والتنفس',
   },
+  subtab_eyes: {
+    gu: '👀 આંખોની કસરત',
+    hi: '👀 आँखों की कसरत',
+    en: '👀 Eye Workout',
+    es: '👀 Ejercicios de Ojos',
+    fr: '👀 Exercices des Yeux',
+    de: '👀 Augenübungen',
+    ar: '👀 تمارين العين',
+  },
   subtab_cardio: {
     gu: '💓 કાર્ડિયો & વાઇટલ્સ',
     hi: '💓 कार्डियो और वाइटल्स',

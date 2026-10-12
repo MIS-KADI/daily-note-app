@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.33.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.34.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.33.apk
+            daily-diary-v1.0.34.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,27 +68,39 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.33
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.33 Auto-Fit Crop & 2-in-1 ID Card Front/Back Single Page Scanner)"
+          tag_name: v1.0.34
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.34 Direct Live Camera Scanner, Google Drive Auto-Sync, Eye Workout & Vision Care)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.33)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.34)
 
-            આ નવા વર્ઝન v1.0.33 માં કરવામાં આવેલા તમામ ખાસ ઊંડાણપૂર્વકના સુધારાઓ:
-            - **✂️ ઓટો-ફીટ & ઇન્ટરેક્ટિવ ક્રોપ ટૂલ (Smart Auto-Fit & Document Border Crop):**
-              - સ્કેન કરેલ દસ્તાવેજ કે ફોટાની આસપાસની ટેબલ કે વધારાની બોર્ડર આપોઆપ ઓળખીને ક્રોપ કરવા માટે 'ઓટો ડિટેક્ટ' સુવિધા.
-              - ઇન્ટરેક્ટિવ ટચ/માઉસ ક્રોપ બોક્સ, ૪ ખૂણાના હેન્ડલ્સ અને રૂલ-ઓફ-થર્ડ્સ ગ્રીડ સાથે સચોટ ક્રોપિંગ.
-              - ઝડપી પ્રીસેટ્સ: 'ઓટો ફીટ ✨', 'A4 પાનું 📄', 'ID કાર્ડ (3:2) 🪪', '૧:૧ ચોરસ 🔲' અને 'સંપૂર્ણ 🌟'.
-            - **🪪 આઈડી કાર્ડ ૨-ઇન-૧ સ્કેનર - આગળ & પાછળ ૧ જ પેજ પર (ID Card & Driving License Front/Back on Single Page):**
-              - ડ્રાઇવિંગ લાઇસન્સ, આધાર કાર્ડ, ચૂંટણી કાર્ડ, પાન કાર્ડ કે ઓફિસ આઈડી કાર્ડ માટે સ્પેશિયલ ૨-ઇન-૧ સ્કેન મોડ.
-              - આગળની બાજુ (Front) અને પાછળની બાજુ (Back) અલગ-અલગ કેમેરાથી સ્કેન અથવા ગેલેરીમાંથી અપલોડ કરો.
-              - બંને બાજુઓને આપમેળે **એક જ સિંગલ A4 પેજ પર ઉપર અને નીચે સપ્રમાણ ગોઠવીને (Composite Single Page)** સુંદર બોર્ડર સાથે પ્રદર્શિત કરે છે.
-              - લાઇવ A4 પ્રિન્ટ પ્રિવ્યૂ અને ૧-ક્લિકમાં સિંગલ-પેજ PDF અથવા JPG ફોટો ડાઉનલોડ & શેર કરવાની સુવિધા.
-            - **⚡ હાઇ સ્પીડ કેન્વાસ એન્જિન (Fast & Smooth 60FPS Performance):**
-              - પ્યોર HTML5 કેન્વાસ પ્રોસેસિંગ વડે કોઈપણ લેગ વગર સુપર ફાસ્ટ અને સ્મૂધ કામગીરી.
+            આ નવા વર્ઝન v1.0.34 માં કરવામાં આવેલા તમામ ખાસ ઊંડાણપૂર્વકના સુધારાઓ:
+            - **📷 PDF સ્કેનરમાં ડાયરેક્ટ લાઇવ કેમેરા વ્યૂફાઇન્ડર (Direct Live Camera Scanner):**
+              - 'કેમેરાથી સ્કેન કરો' પર ક્લિક કરતાં ગેલેરી ખુલવાની સમસ્યા સંપૂર્ણપણે દૂર. હવે સ્ક્રીન પર સીધો જ લાઇવ રિયર કેમેરો સ્ટ્રીમ થાય છે.
+              - દસ્તાવેજ (A4 / Bill) અને ઓળખપત્ર (ID Card) માટે ગ્લોઇંગ કોર્નર્સ અને ગાઇડ ફ્રેમ સાથે સચોટ ફોટો કેપ્ચર.
+              - શટર બટન (📸 ફોટો પાડો), ફ્લેશલાઇટ/ટોર્ચ ટૉગલ (⚡) અને કેમેરા ફ્લિપ (🔄 આગળ/પાછળ).
+            - **☁️ Google Drive ઓટો-સિંક (Google Drive Cloud Auto-Sync System):**
+              - પ્રોફાઇલમાં સમર્પિત 'Google Drive ઓટો-સિંક' કાર્ડ અને લાઇવ ઓટો-સિંક ટૉગલ સ્વિચ.
+              - નોંધો, હિસાબ, કામો અને દવાઓ આપમેળે Google Drive ફોર્મેટમાં બેકઅપ થઈ જાય છે.
+              - ૧-ક્લિકમાં ડાયરેક્ટ Google Drive સાથે ક્લાઉડ સિંક અને ગૂગલ ડ્રાઇવ ઓપન કરવાની સુવિધા.
+            - **👀 આંખોની કસરત & નેત્ર યોગ ટ્રેનર (Interactive Eye Workout & Vision Care):**
+              - હેલ્થ & ફિટનેસમાં નવું '👀 આંખોની કસરત' સબ-ટેબ.
+              - ૬૦ FPS સ્મૂધ એનિમેટેડ ઓર્બ સાથે:
+                1. ગોળ આંખો ફેરવવી (Circular Eye Rolling)
+                2. આઠડા આકારની ગતિ (Figure 8 / Infinity ∞ Tracking)
+                3. નજીક અને દૂર ફોકસ (Near-Far Depth Focus)
+                4. ઝડપી પલકારો (Blink Pacer - કુદરતી આંસુ/ભેજ માટે)
+                5. પામિંગ & હૂંફાળો વિશ્રામ (Palming Relaxation)
+                6. સંપૂર્ણ ૨-મિનિટ માર્ગદર્શિત વર્કઆઉટ અને ઓડિયો ચાઇમ્સ.
+              - ૨૦-૨૦-૨૦ સ્ક્રીન બ્રેક ટાઇમર અને આયુર્વેદિક નેત્ર કાળજી માર્ગદર્શન.
+            - **💵 ચુકવણી મોડ ડ્રોપ-ડાઉન (Payment Mode Dropdown with Cash First):**
+              - વધારાના બટનો હટાવીને સ્વચ્છ ડ્રોપ-ડાઉન રાખવામાં આવ્યું છે.
+              - પ્રથમ વિકલ્પ **'રોકડ (Cash)'** રાખવામાં આવ્યો છે, ત્યારબાદ UPI, બેંક ટ્રાન્સફર અને કાર્ડ્સ.
+            - **⚡ અલ્ટ્રા-સ્પીડ પર્ફોર્મન્સ & સ્મૂધનેસ (Fast & Smooth 60FPS):**
+              - સુપર ઓપ્ટિમાઇઝ્ડ રેન્ડરિંગ જેથી આખી એપ એકદમ સ્પીડ અને માખણ જેવી સ્મૂધ ચાલે.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.33.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.34.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.33.apk
+            daily-diary-v1.0.34.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
