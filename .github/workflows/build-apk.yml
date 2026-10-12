@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.37.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.38.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.37.apk
+            daily-diary-v1.0.38.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,33 +68,24 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.37
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.37 Pro Scanner: Whiteboard, Book, Proper Crop, Adjust, Cleanup)"
+          tag_name: v1.0.38
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.38 Minimal Offline UI & Continuous Step Counter)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.37)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.38)
 
-            આ નવા વર્ઝન v1.0.37 માં કરવામાં આવેલા વિશાળ અને શાનદાર સુધારાઓ:
-            - **📑 ૫ નવા પ્રો સ્કેન મોડ્સ (5 Pro Scan Modes):**
-              1. **દસ્તાવેજ (Document):** મલ્ટી-પેજ બિલો, રસીદો અને ફાઇલો માટે સ્પષ્ટ B&W ઝેરોક્ષ.
-              2. **બુક / પુસ્તક (Book):** પુસ્તકો, નોટબુકો અને રજિસ્ટર માટે હાઇ-કોન્ટ્રાસ્ટ શાર્પ ટેક્સ્ટ ફિલ્ટર.
-              3. **વ્હાઇટબોર્ડ (Whiteboard):** બોર્ડ નોટ્સ માટે માર્કર ઇંક બૂસ્ટ અને ગ્લેર રીડક્શન સાથે પ્યોર વ્હાઇટ બેકગ્રાઉન્ડ.
-              4. **ID કાર્ડ ૨-ઇન-૧ (ID Card):** લાઈસન્સ, આધાર, પાન કાર્ડ આગળ-પાછળ એક જ સર્ટિફાઇડ A4 પેજ પર.
-              5. **વિઝિટિંગ કાર્ડ (Business Card):** બિઝનેસ કાર્ડ ફ્રન્ટ & બેક 3.5" x 2" ક્રિસ્પ સ્કેનિંગ.
-            - **🛠️ સંપૂર્ણ પેજ એડિટિંગ ટૂલકિટ (Full Page Editing Suite):**
-              - **📸 રીટેક (Retake):** પાનું ડિલીટ કર્યા વગર સીધો જ કેમેરા કે ગેલેરીમાંથી નવો ફોટો બદલી શકાશે.
-              - **✂️ ક્રોપ ફિક્સ & ઓટો પેજ એડજસ્ટ (Proper Calibrated Crop):** પહેલાં ક્રોપ કરતી વખતે પાનું કપાઈ જતું હતું તે સંપૂર્ણ ફિક્સ કરી દીધું છે. સાથે ૮-હેન્ડલ એડજસ્ટમેન્ટ અને 'ઓટો ફીટ' બટન મૂકવામાં આવ્યું છે.
-              - **🔄 રોટેટ (Rotate):** એક જ ક્લિકમાં 90° રોટેશન.
-              - **🎨 ફિલ્ટર્સ (Filters):** મેજિક કલર, વ્હાઇટબોર્ડ, બુક શાર્પ, ક્લીન B&W, ગ્રેસ્કેલ અને ઓરિજિનલ.
-              - **🎛️ એડજસ્ટ (Adjust):** બ્રાઇટનેસ અને કોન્ટ્રાસ્ટ સ્લાઇડર સાથે લાઈવ પ્રિવ્યૂ.
-              - **🧹 ક્લીનઅપ (Cleanup):** હાથના અંગૂઠાના શેડો કે ડાઘા-ધાબા સાફ કરવા માટે વ્હાઇટનર પીંછી અને અનડુ ટૂલ.
-              - **📐 સાઇઝ (Resize):** A4, Letter, Legal, Business Card અથવા ઓટો કન્ટેન્ટ ફિટ.
-              - **🔃 રિ-ઓર્ડર (Reorder):** પાના ૧, ૨, ૩ નો ક્રમ બદલવા માટે ખાસ મોડલ.
-              - **🗑️ ડિલીટ (Delete):** કન્ફર્મેશન સાથે પાનું કાઢી નાખવાની સુવિધા.
-            - **🌐 ૧૦૦% ઓનલાઇન મોડ & ⚡ અલ્ટ્રા-સ્પીડ પર્ફોર્મન્સ.**
+            આ નવા વર્ઝન v1.0.38 માં કરવામાં આવેલા સુધારાઓ:
+            - **🚫 ક્લીન અને મિનિમલ ઇન્ટરનેટ ગેટકીપર સ્ક્રીન (Clean & Minimal Offline Screen):**
+              - યુઝરના આપેલા સ્ક્રીનશોટ મુજબ માત્ર જરૂરી વિગતો જ રાખવામાં આવી છે (વધારાના બોક્સ, ચેકલિસ્ટ બટન અને ફૂટર હટાવી લીધા છે).
+              - રેડ-ઓરેન્જ સ્ક્વિર્કલ `WifiOff` + `OFFLINE` બેજ, શાનદાર ટાઇટલ અને માર્ગદર્શિકા.
+              - ફોનમાં મોબાઇલ ડેટા કે Wi-Fi ચાલુ થતાં જ ૧.૫ સેકન્ડમાં આપમેળે એપ ઓપન થઈ જશે.
+            - **👟 ૧૦૦% અવિરત સ્ટેપ કાઉન્ટિંગ (Uninterrupted Step Tracker):**
+              - એપ ભલે ૧૦૦% ઓનલાઇન મોડમાં ચાલે, પરંતુ ડગલાંની ગણતરી (સ્ટેપ્સ કાઉન્ટિંગ) સતત ચાલુ રહેશે!
+              - એન્ડ્રોઇડ હાર્ડવેર સેન્સર્સ અને બેકગ્રાઉન્ડ સર્વિસ દ્વારા દરરોજના તમામ ડગલાં સુરક્ષિત રીતે ગણાશે અને સેવ થશે.
+            - **📑 પ્રો PDF સ્કેનર ટૂલકિટ (Whiteboard, Book, Proper Crop, Adjust, Cleanup, Reorder).**
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.37.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.38.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.37.apk
+            daily-diary-v1.0.38.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

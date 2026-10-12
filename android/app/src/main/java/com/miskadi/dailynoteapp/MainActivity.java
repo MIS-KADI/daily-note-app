@@ -65,6 +65,8 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         setupStepUpdateReceiver();
         setupNativeSpeechBridge();
         setupNativeStepBridge();
+        mainHandler.postDelayed(this::setupNativeStepBridge, 800);
+        mainHandler.postDelayed(this::setupNativeStepBridge, 2000);
         setupNativePermissionBridge();
     }
 
@@ -109,6 +111,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         } else {
             registerStepSensors();
         }
+        setupNativeStepBridge();
         syncHardwareStepsWithJs();
     }
 

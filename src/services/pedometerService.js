@@ -50,9 +50,10 @@ class PedometerService {
       };
 
       // Auto-sync hardware steps on launch if bridge is available
-      setTimeout(() => {
-        this.syncHardwareSteps();
-      }, 500);
+      setTimeout(() => this.syncHardwareSteps(), 400);
+      setTimeout(() => this.syncHardwareSteps(), 1500);
+      setTimeout(() => this.syncHardwareSteps(), 3000);
+      setInterval(() => this.syncHardwareSteps(), 3500);
     }
 
     if (typeof document !== 'undefined') {
