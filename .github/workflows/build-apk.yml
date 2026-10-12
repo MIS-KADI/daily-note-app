@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.32.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.33.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.32.apk
+            daily-diary-v1.0.33.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,28 +68,27 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.32
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.32 Email Auto-Backup, Continuous Sync, Multi-Account Login/Logout)"
+          tag_name: v1.0.33
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.33 Auto-Fit Crop & 2-in-1 ID Card Front/Back Single Page Scanner)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.32)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.33)
 
-            આ નવા વર્ઝન v1.0.32 માં કરવામાં આવેલા તમામ ખાસ ઊંડાણપૂર્વકના સુધારાઓ:
-            - **☁️ ઈમેલ-આધારિત સંપૂર્ણ ઓટો-બેકઅપ સીસ્ટમ (Email-Linked Auto-Backup & Continuous Sync):**
-              - પ્રોફાઈલમાં દાખલ કરેલ અથવા સાઈન અપ વખતે આપેલ Email ID સાથે સમગ્ર એપનો ડેટા (ડાયરીની નોંધો, રિમાઇન્ડર્સ, આવક-ખર્ચ, ખાતાવહી, દવાઓ, ઉત્સવો, હેલ્થ/ફિટનેસ અને સેટિંગ્સ) આપમેળે સતત ઓટો-સિંક થાય છે.
-              - LocalStorage સાથે IndexedDB ડ્યુઅલ-લેયર બેકઅપ આર્કિટેક્ચર, જેનાથી કોઈ ડેટા લોસ થતો નથી.
-            - **🔐 લૉગિન અને લૉગઆઉટ પર જૂનો ડેટા પુનઃપ્રાપ્તિ (Seamless Login & Logout with Data Restoration):**
-              - **લૉગઆઉટ કરતી વખતે:** વર્તમાન યુઝરનો તમામ તાજો ડેટા ઈમેલ સ્ટોરમાં આપમેળે સેવ થાય છે અને સેશન સુરક્ષિત રીતે ક્લીયર થાય છે.
-              - **લૉગિન કરતી વખતે:** ઈમેલ દાખલ કરતા જ અગાઉનો તમામ બેકઅપ ડિટેક્ટ થાય છે અને ૧-ટેપમાં તમામ જૂની નોંધો, હિસાબ અને કામો તુરંત પાછા રિસ્ટોર થઈ જાય છે.
-            - **👥 મલ્ટી-એકાઉન્ટ સ્વિચિંગ (Saved Accounts on Device):**
-              - ઉપકરણમાં સેવ થયેલા એકાઉન્ટ્સની યાદીમાંથી કોઈપણ એકાઉન્ટમાં ૧-ક્લિકમાં સ્વિચ કરી શકાય છે.
-            - **🔄 હમણાં સિંક કરો (Instant Manual Sync & Snapshots History):**
-              - પ્રોફાઇલ ટેબમાં લાઈવ ઓટો-સિંક બેજ, છેલ્લો સિંક થયેલો સમય, "હમણાં સિંક કરો" બટન અને પાછલા ૫ બેકઅપ સ્નેપશોટની હિસ્ટ્રી સાથે ૧-ક્લિક રોલબેક/રિસ્ટોર સુવિધા.
-            - **🌐 નેટવર્ક સ્ટેટસ અને ઝડપી ઍક્સેસ:**
-              - નેવબારમાં યુઝર એકાઉન્ટ ચિપ જેના પરથી ગમે ત્યારે લૉગિન/સાઇન અપ/સ્વિચ કરી શકાય છે.
+            આ નવા વર્ઝન v1.0.33 માં કરવામાં આવેલા તમામ ખાસ ઊંડાણપૂર્વકના સુધારાઓ:
+            - **✂️ ઓટો-ફીટ & ઇન્ટરેક્ટિવ ક્રોપ ટૂલ (Smart Auto-Fit & Document Border Crop):**
+              - સ્કેન કરેલ દસ્તાવેજ કે ફોટાની આસપાસની ટેબલ કે વધારાની બોર્ડર આપોઆપ ઓળખીને ક્રોપ કરવા માટે 'ઓટો ડિટેક્ટ' સુવિધા.
+              - ઇન્ટરેક્ટિવ ટચ/માઉસ ક્રોપ બોક્સ, ૪ ખૂણાના હેન્ડલ્સ અને રૂલ-ઓફ-થર્ડ્સ ગ્રીડ સાથે સચોટ ક્રોપિંગ.
+              - ઝડપી પ્રીસેટ્સ: 'ઓટો ફીટ ✨', 'A4 પાનું 📄', 'ID કાર્ડ (3:2) 🪪', '૧:૧ ચોરસ 🔲' અને 'સંપૂર્ણ 🌟'.
+            - **🪪 આઈડી કાર્ડ ૨-ઇન-૧ સ્કેનર - આગળ & પાછળ ૧ જ પેજ પર (ID Card & Driving License Front/Back on Single Page):**
+              - ડ્રાઇવિંગ લાઇસન્સ, આધાર કાર્ડ, ચૂંટણી કાર્ડ, પાન કાર્ડ કે ઓફિસ આઈડી કાર્ડ માટે સ્પેશિયલ ૨-ઇન-૧ સ્કેન મોડ.
+              - આગળની બાજુ (Front) અને પાછળની બાજુ (Back) અલગ-અલગ કેમેરાથી સ્કેન અથવા ગેલેરીમાંથી અપલોડ કરો.
+              - બંને બાજુઓને આપમેળે **એક જ સિંગલ A4 પેજ પર ઉપર અને નીચે સપ્રમાણ ગોઠવીને (Composite Single Page)** સુંદર બોર્ડર સાથે પ્રદર્શિત કરે છે.
+              - લાઇવ A4 પ્રિન્ટ પ્રિવ્યૂ અને ૧-ક્લિકમાં સિંગલ-પેજ PDF અથવા JPG ફોટો ડાઉનલોડ & શેર કરવાની સુવિધા.
+            - **⚡ હાઇ સ્પીડ કેન્વાસ એન્જિન (Fast & Smooth 60FPS Performance):**
+              - પ્યોર HTML5 કેન્વાસ પ્રોસેસિંગ વડે કોઈપણ લેગ વગર સુપર ફાસ્ટ અને સ્મૂધ કામગીરી.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.32.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.33.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.32.apk
+            daily-diary-v1.0.33.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
