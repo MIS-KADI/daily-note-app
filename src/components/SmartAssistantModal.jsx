@@ -409,6 +409,29 @@ export default function SmartAssistantModal({
     }
   };
 
+  const handleUpdatePaymentMode = (mode) => {
+    setParsedResult((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        paymentMode: mode,
+        details: `કેટેગરી: ${prev.category || 'સામાન્ય'} | મોડ: ${mode} | તારીખ: ${prev.date || ''}`,
+      };
+    });
+  };
+
+  const handleUpdateAmount = (val) => {
+    const num = parseFloat(val) || 0;
+    setParsedResult((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        amount: num,
+        title: `${prev.type === 'income' ? 'આવક' : 'ખર્ચ'}: ₹${num.toLocaleString()} (${prev.category || 'સામાન્ય'})`,
+      };
+    });
+  };
+
   const getInputPlaceholder = () => {
     return (tLang.placeholders && tLang.placeholders[selectedCategory]) || tLang.placeholder;
   };
@@ -978,12 +1001,56 @@ export default function SmartAssistantModal({
                   </p>
                 )}
 
-                {parsedResult.amount && (
-                  <div className="flex items-center gap-2 text-xs pt-0.5">
-                    <span className="text-slate-400 font-semibold">{tLang.amount}</span>
-                    <span className="font-black text-emerald-400 text-sm">
-                      ₹{parsedResult.amount.toLocaleString()}
-                    </span>
+                {parsedResult.amount !== undefined && (
+                  <div className="space-y-2 pt-1 border-t border-slate-700/60 mt-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-300 font-semibold flex items-center gap-1">
+                        <span>{tLang.amount || 'રકમ'}:</span>
+                        <span className="text-[10px] text-slate-400 font-normal">(બદલવા માટે ટેપ કરો)</span>
+                      </span>
+                      <div className="flex items-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-700">
+                        <span className="text-emerald-400 font-black text-xs">₹</span>
+                        <input
+                          type="number"
+                          value={parsedResult.amount || ''}
+                          onChange={(e) => handleUpdateAmount(e.target.value)}
+                          className="w-24 bg-transparent text-right font-black text-emerald-400 text-sm focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {parsedResult.intent === 'finance' && (
+                      <div className="space-y-1 pt-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-slate-300 font-bold block">
+                            ચુકવણી મોડ (Payment Mode):
+                          </span>
+                          <span className="text-[10px] text-emerald-400 font-extrabold">
+                            {parsedResult.paymentMode || 'રોકડ (Cash)'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1">
+                          {[
+                            { id: 'રોકડ (Cash)', label: '💵 રોકડ' },
+                            { id: 'UPI (GPay/PhonePe)', label: '📱 UPI' },
+                            { id: 'બેંક ટ્રાન્સફર (NEFT/IMPS)', label: '🏦 બેંક' },
+                          ].map((pm) => (
+                            <button
+                              key={pm.id}
+                              type="button"
+                              onClick={() => handleUpdatePaymentMode(pm.id)}
+                              className={`text-[11px] py-1 px-1 rounded-lg border font-bold transition active:scale-95 flex items-center justify-center gap-1 ${
+                                (parsedResult.paymentMode || 'રોકડ (Cash)') === pm.id
+                                  ? 'bg-emerald-600 text-white border-emerald-400 shadow-md'
+                                  : 'bg-slate-800/90 text-slate-300 border-slate-700 hover:text-white'
+                              }`}
+                            >
+                              {pm.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

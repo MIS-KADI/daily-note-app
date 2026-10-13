@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.38.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.39.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.38.apk
+            daily-diary-v1.0.39.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,24 +68,30 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.38
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.38 Minimal Offline UI & Continuous Step Counter)"
+          tag_name: v1.0.39
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.39 Offline/Online Dual Mode, Voice Petrol Fix & Calculator Expense Save)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.38)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.39)
 
-            આ નવા વર્ઝન v1.0.38 માં કરવામાં આવેલા સુધારાઓ:
-            - **🚫 ક્લીન અને મિનિમલ ઇન્ટરનેટ ગેટકીપર સ્ક્રીન (Clean & Minimal Offline Screen):**
-              - યુઝરના આપેલા સ્ક્રીનશોટ મુજબ માત્ર જરૂરી વિગતો જ રાખવામાં આવી છે (વધારાના બોક્સ, ચેકલિસ્ટ બટન અને ફૂટર હટાવી લીધા છે).
-              - રેડ-ઓરેન્જ સ્ક્વિર્કલ `WifiOff` + `OFFLINE` બેજ, શાનદાર ટાઇટલ અને માર્ગદર્શિકા.
-              - ફોનમાં મોબાઇલ ડેટા કે Wi-Fi ચાલુ થતાં જ ૧.૫ સેકન્ડમાં આપમેળે એપ ઓપન થઈ જશે.
-            - **👟 ૧૦૦% અવિરત સ્ટેપ કાઉન્ટિંગ (Uninterrupted Step Tracker):**
-              - એપ ભલે ૧૦૦% ઓનલાઇન મોડમાં ચાલે, પરંતુ ડગલાંની ગણતરી (સ્ટેપ્સ કાઉન્ટિંગ) સતત ચાલુ રહેશે!
-              - એન્ડ્રોઇડ હાર્ડવેર સેન્સર્સ અને બેકગ્રાઉન્ડ સર્વિસ દ્વારા દરરોજના તમામ ડગલાં સુરક્ષિત રીતે ગણાશે અને સેવ થશે.
-            - **📑 પ્રો PDF સ્કેનર ટૂલકિટ (Whiteboard, Book, Proper Crop, Adjust, Cleanup, Reorder).**
+            આ નવા વર્ઝન v1.0.39 માં કરવામાં આવેલા મહત્વપૂર્ણ સુધારાઓ:
+            - **⚡ ઓનલાઈન અને ઓફલાઈન બંને મોડમાં ૧૦૦% કાર્યરત (Dual Online & Offline Mode):**
+              - એપ ખોલતી વખતે આવતી બ્લોકિંગ સ્ક્રીન હટાવી લેવામાં આવી છે.
+              - નેટ ના હોય તો પણ એપ આસાનીથી ખૂલશે, તમામ નોટ્સ, હિસાબ, ડાયરી અને સ્ટેપ કાઉન્ટર ચાલશે.
+              - નેટ ચાલુ થતાં જ બધો ડેટા ક્લાઉડ સાથે ઓટો-સિંક થશે.
+            - **🎙️ બોલીને ખર્ચ નોંધવામાં મોટો સુધારો (Voice Expense Accuracy Fix):**
+              - "૨૦૦૦ નું પેટ્રોલ પુરાવ્યું" બોલતાં હવે પૂરા ₹૨,૦૦૦ ની જ એન્ટ્રી સેવ થશે (પહેલાં ડિફોલ્ટ ૧૦૦ થઈ જતું હતું તે સંપૂર્ણ ફિક્સ).
+              - "મેં રોકડે થી પુરાવ્યું" બોલતાં પેમેન્ટ મોડ આપોઆપ 'રોકડ (Cash)' તરીકે સિલેક્ટ થશે અને કેશ બેલેન્સમાંથી રકમ કપાશે.
+              - સ્માર્ટ આસિસ્ટન્ટમાં સેવ કરતાં પહેલાં રકમ એડિટ કરવાનો અને રોકડ/UPI/બેંક પસંદ કરવાનો વિકલ્પ પણ ઉમેરવામાં આવ્યો છે.
+            - **🧮 કેલ્ક્યુલેટર ચેઈન કેલ્ક્યુલેશન અને સીધો ખર્ચ સેવ (Calculator Quick Expense Drawer):**
+              - એકથી વધુ સરવાળા-બાદબાકી (જેમ કે ૧૦૦ + ૨૦૦ + ૩૦૦) ચોક્કસ પરિણામ આપશે.
+              - ગણતરી કરેલી રકમને સીધી ખર્ચ અથવા આવકમાં સેવ કરવા માટે સમર્પિત ડ્રોઅર જેમાં રોકડ/UPI/બેંક અને કેટેગરી પસંદ કરી શકાય છે.
+            - **📄 PDF સ્કેનર સેવ અને ગુગલ ડ્રાઈવ/ફાઈલ સ્ટોરેજ (PDF Scanner In-App & Drive Save):**
+              - સ્કેન કરેલ PDF હવે એપની અંદર '📁 સેવ કરેલા સ્કેન' ગેલેરીમાં હંમેશા માટે સચવાશે.
+              - ફોન સ્ટોરેજ, ગુગલ ડ્રાઈવ, WhatsApp કે ડાઉનલોડ્સ ફોલ્ડરમાં સેવ કરવાનો નેટિવ વિકલ્પ સંપૂર્ણ સક્રિય.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.38.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.39.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.38.apk
+            daily-diary-v1.0.39.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

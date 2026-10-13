@@ -23,11 +23,89 @@ export const normalizeNumerals = (str = '') => {
 };
 
 /**
- * Extract numerical currency amount from text (e.g. "૨૫૦ રૂપિયા", "₹1200", "5000 rs")
+ * Extract Payment Mode from text (Default: 'રોકડ (Cash)')
+ * Accurately parses: Cash/રોકડ, UPI/GPay/PhonePe, and Bank/Card
+ */
+export const extractPaymentMode = (text = '', defaultMode = 'રોકડ (Cash)') => {
+  const clean = text.toLowerCase();
+
+  // 1. Explicit Cash keywords in Gujarati, Hindi, English
+  if (
+    clean.includes('રોકડ') ||
+    clean.includes('રોકડે') ||
+    clean.includes('રોકડેથી') ||
+    clean.includes('રોકડા') ||
+    clean.includes('રોકડથી') ||
+    clean.includes('કેશ') ||
+    clean.includes('નકદ') ||
+    clean.includes('नकद') ||
+    clean.includes('रोकड़') ||
+    clean.includes('cash') ||
+    clean.includes('in cash') ||
+    clean.includes('by cash') ||
+    clean.includes('haath ma') ||
+    clean.includes('હાથમાં')
+  ) {
+    return 'રોકડ (Cash)';
+  }
+
+  // 2. Explicit UPI keywords
+  if (
+    clean.includes('યુપીઆઈ') ||
+    clean.includes('upi') ||
+    clean.includes('gpay') ||
+    clean.includes('google pay') ||
+    clean.includes('ગૂગલ પે') ||
+    clean.includes('ગૂગલપે') ||
+    clean.includes('phonepe') ||
+    clean.includes('ફોન પે') ||
+    clean.includes('ફોનપે') ||
+    clean.includes('paytm') ||
+    clean.includes('પેટીએમ') ||
+    clean.includes('qr') ||
+    clean.includes('ક્યૂઆર') ||
+    clean.includes('barcode') ||
+    clean.includes('ઓનલાઇન') ||
+    clean.includes('ઓનલાઈન') ||
+    clean.includes('online')
+  ) {
+    return 'UPI (GPay/PhonePe)';
+  }
+
+  // 3. Explicit Bank / Card keywords
+  if (
+    clean.includes('બેંક') ||
+    clean.includes('બેન્ક') ||
+    clean.includes('bank') ||
+    clean.includes('ચેક') ||
+    clean.includes('cheque') ||
+    clean.includes('check') ||
+    clean.includes('કાર્ડ') ||
+    clean.includes('card') ||
+    clean.includes('ડેબિટ') ||
+    clean.includes('debit') ||
+    clean.includes('ક્રેડિટ') ||
+    clean.includes('credit') ||
+    clean.includes('neft') ||
+    clean.includes('rtgs') ||
+    clean.includes('imps') ||
+    clean.includes('નેટબેંકિંગ') ||
+    clean.includes('netbanking')
+  ) {
+    return 'બેંક ટ્રાન્સફર (NEFT/IMPS)';
+  }
+
+  return defaultMode;
+};
+
+/**
+ * Extract numerical currency amount from text (e.g. "૨૫૦ રૂપિયા", "૨૦૦૦ નું પેટ્રોલ", "₹1200", "5000 rs")
+ * Accurately parses natural spoken Gujarati patterns like "૨૦૦૦ નું પેટ્રોલ પુરાવ્યું", "૫૦૦ ની દવા લીધી".
  * STRICT: Will NEVER confuse non-currency numbers like "૨ કિલો", "૧૧ વાગે", "૧ ગોળી", "૨ ગ્લાસ" as money!
  */
 export const extractAmount = (text = '') => {
   const clean = normalizeNumerals(text);
+  const lower = clean.toLowerCase();
 
   // 1. Explicit currency pattern: ₹500, 500 rs, 500 રૂપિયા, 500/-, રૂ. 500, etc.
   const explicitCurrencyMatch = clean.match(/(?:₹|rs\.?|રૂપિયા|रुपये|રૂ\.?|inr)\s*(\d+(?:[.,]\d+)?)|(\d+(?:[.,]\d+)?)\s*(?:₹|rs\.?|રૂપિયા|रुपये|રૂ\.?|\/-)/i);
@@ -37,34 +115,87 @@ export const extractAmount = (text = '') => {
     if (!isNaN(num) && num > 0) return num;
   }
 
-  // 2. If it contains financial transaction words, check for number that is NOT attached to weight, time, or tablet units
-  const lower = clean.toLowerCase();
-  const hasFinancialVerbs =
+  // 2. Natural spoken pattern: "<AMOUNT> નું/નો/ની/ના/વાળું <ITEM>"
+  // e.g. "૨૦૦૦ નું પેટ્રોલ", "૫૦૦ ની દવા", "૧૫૦ ના શાકભાજી", "૨૦૦ નો નાસ્તો", "૩૦૦ નું રિચાર્જ"
+  const spokenItemPattern = clean.match(/(\d+(?:[.,]\d+)?)\s*(?:નું|નો|ની|ના|વાળું|વાળા|rupees|rs|રૂપિયા|रुपये)?\s*(?:પેટ્રોલ|ડીઝલ|સીએનજી|ગેસ|સામાન|કરિયાણું|દૂધ|શાકભાજી|ફળ|નાસ્તો|ચા|જમવાનું|દવા|ગોળી|રિચાર્જ|લાઈટબિલ|બિલ|ભાડું|ફી|કપડાં|petrol|diesel|cng|gas)/i);
+  if (spokenItemPattern) {
+    const num = parseFloat(spokenItemPattern[1].replace(/,/g, ''));
+    if (!isNaN(num) && num > 0) return num;
+  }
+
+  // 3. Reversed pattern: "<ITEM> <AMOUNT> નું/નો/ની/ના"
+  // e.g. "પેટ્રોલ ૨૦૦૦ નું", "દવા ૫૦૦ ની", "શાકભાજી ૧૫૦ ના"
+  const reversedItemPattern = clean.match(/(?:પેટ્રોલ|ડીઝલ|સીએનજી|ગેસ|સામાન|કરિયાણું|દૂધ|શાકભાજી|ફળ|નાસ્તો|ચા|જમવાનું|દવા|ગોળી|રિચાર્જ|લાઈટબિલ|બિલ|ભાડું|ફી|કપડાં|petrol|diesel|cng|gas)\s*(\d+(?:[.,]\d+)?)\s*(?:નું|નો|ની|ના)?/i);
+  if (reversedItemPattern) {
+    const num = parseFloat(reversedItemPattern[1].replace(/,/g, ''));
+    if (!isNaN(num) && num > 0) return num;
+  }
+
+  // 4. Financial transaction verbs & expense nouns
+  const hasFinancialContext =
     lower.includes('ખર્ચ') ||
+    lower.includes('ખર્ચા') ||
+    lower.includes('ખર્ચ્યા') ||
+    lower.includes('ખર્ચ્યો') ||
     lower.includes('આપ્યા') ||
+    lower.includes('આપ્યો') ||
+    lower.includes('આપ્યું') ||
+    lower.includes('દીધા') ||
+    lower.includes('દીધું') ||
     lower.includes('ચૂકવ્યા') ||
+    lower.includes('ચૂકવ્યું') ||
     lower.includes('ભર્યા') ||
     lower.includes('ભરાવ્યા') ||
+    lower.includes('ભરાવ્યું') ||
+    lower.includes('પુરાવ્યા') ||
+    lower.includes('પુરાવ્યું') ||
+    lower.includes('પુરાવેલ') ||
+    lower.includes('પુરાવ્યો') ||
+    lower.includes('કરાવ્યું') ||
+    lower.includes('કરાવ્યા') ||
+    lower.includes('લીધા') ||
+    lower.includes('લીધું') ||
+    lower.includes('લીધી') ||
+    lower.includes('ખરીદ્યા') ||
+    lower.includes('ખરીદ્યું') ||
+    lower.includes('લાવ્યા') ||
+    lower.includes('લાવ્યો') ||
+    lower.includes('લાવ્યું') ||
+    lower.includes('વાપર્યા') ||
+    lower.includes('વાપર્યું') ||
+    lower.includes('નાખ્યા') ||
+    lower.includes('નાખ્યું') ||
+    lower.includes('થયો') ||
+    lower.includes('થઈ') ||
+    lower.includes('થયું') ||
     lower.includes('જમા') ||
     lower.includes('મળ્યા') ||
     lower.includes('પગાર') ||
     lower.includes('કમાણી') ||
+    lower.includes('પેટ્રોલ') ||
+    lower.includes('ડીઝલ') ||
+    lower.includes('સીએનજી') ||
+    lower.includes('ગેસ') ||
+    lower.includes('petrol') ||
+    lower.includes('diesel') ||
+    lower.includes('cng') ||
     lower.includes('spent') ||
     lower.includes('paid') ||
     lower.includes('cost') ||
     lower.includes('fee') ||
     lower.includes('ફી') ||
-    lower.includes('બિલ');
+    lower.includes('બિલ') ||
+    lower.includes('bill');
 
-  if (hasFinancialVerbs) {
+  if (hasFinancialContext) {
     // Strip non-currency numbers first:
-    // e.g. times ("11 વાગે", "5:00", "11 vage"), weights ("2 કિલો", "500 gram"), tablets ("1 ગોળી"), dates ("15 તારીખ")
+    // e.g. times ("11 વાગે", "5:00", "11 vage"), weights ("2 કિલો", "500 gram"), tablets ("1 ગોળી"), dates ("15 તારીખ"), glasses ("2 ગ્લાસ")
     const stripped = clean
       .replace(/\d{1,2}:\d{2}/g, ' ')
       .replace(/\d+\s*(?:વાગે|વાગ્યે|vage|vagye|baje|pm|am|o'clock)/gi, ' ')
       .replace(/\d+\s*(?:કિલો|કિ\.ગ્રા|kg|ગ્રામ|gram|gm|લિટર|લીટર|ltr|મિ\.લિ|ml|ગોળી|ટેબ્લેટ|tablet|ગ્લાસ|glass|તારીખ|તારીખે)/gi, ' ');
 
-    const fallbackMatch = stripped.match(/\b\d+(\.\d+)?\b/);
+    const fallbackMatch = stripped.match(/\b\d+(?:\.\d+)?\b/);
     if (fallbackMatch) {
       const num = parseFloat(fallbackMatch[0]);
       if (!isNaN(num) && num > 0) return num;
@@ -215,19 +346,24 @@ export const aiAssistantService = {
 
       if (forcedIntent === 'finance') {
         const isInc = lower.includes('જમા') || lower.includes('આવક') || lower.includes('પગાર') || lower.includes('મળ્યા') || lower.includes('salary');
-        const finAmount = amount || 100;
+        const finAmount = amount || (lower.includes('પેટ્રોલ') || lower.includes('ડીઝલ') ? 2000 : 100);
+        const pMode = extractPaymentMode(text, isInc ? 'બેંક ટ્રાન્સફર (NEFT/IMPS)' : 'રોકડ (Cash)');
+        let cat = isInc ? 'પગાર / આવક' : 'સામાન્ય ખર્ચ';
+        if (lower.includes('પેટ્રોલ') || lower.includes('ડીઝલ') || lower.includes('petrol') || lower.includes('diesel')) {
+          cat = 'પેટ્રોલ / મુસાફરી';
+        }
         return {
           intent: 'finance',
           type: isInc ? 'income' : 'expense',
           amount: finAmount,
-          category: isInc ? 'પગાર / આવક' : 'સામાન્ય ખર્ચ',
+          category: cat,
           description: text,
           date,
-          paymentMode: 'UPI (GPay/PhonePe)',
+          paymentMode: pMode,
           title: `${isInc ? 'આવક' : 'ખર્ચ'}: ₹${finAmount.toLocaleString()}`,
-          details: `રકમ: ₹${finAmount.toLocaleString()} | તારીખ: ${date}`,
+          details: `રકમ: ₹${finAmount.toLocaleString()} | મોડ: ${pMode} | તારીખ: ${date}`,
           targetTab: 'હિસાબ ટેબ (Finance Tab)',
-          confirmationMessage: `હિસાબમાં ₹${finAmount.toLocaleString()} નોંધવા માટે તૈયાર છે! 💰`,
+          confirmationMessage: `હિસાબમાં ₹${finAmount.toLocaleString()} (${pMode}) નોંધવા માટે તૈયાર છે! 💰`,
         };
       }
 
@@ -334,19 +470,31 @@ export const aiAssistantService = {
       };
     }
 
-    // 2. Medicine / Tablet Schedule Check
+    // 2. Medicine / Tablet Schedule Check (Excludes buying medicine expenses like "૫૦૦ ની દવા લીધી")
+    const isBuyingMedicineExpense = amount !== null && (
+      lower.includes('લીધી') ||
+      lower.includes('લાવ્યા') ||
+      lower.includes('ખરીદી') ||
+      lower.includes('ખરીદ્યા') ||
+      lower.includes('આપ્યા') ||
+      lower.includes('ખર્ચ') ||
+      lower.includes('ચૂકવ્યા') ||
+      lower.includes('ની દવા')
+    );
+
     if (
-      lower.includes('દવા') ||
-      lower.includes('ગોળી') ||
-      lower.includes('ટેબ્લેટ') ||
-      lower.includes('કેપ્સ્યુલ') ||
-      lower.includes('સિરપ') ||
-      lower.includes('medicine') ||
-      lower.includes('tablet') ||
-      lower.includes('pill') ||
-      lower.includes('capsule') ||
-      lower.includes('दवा') ||
-      lower.includes('गोली')
+      !isBuyingMedicineExpense &&
+      (lower.includes('દવા') ||
+       lower.includes('ગોળી') ||
+       lower.includes('ટેબ્લેટ') ||
+       lower.includes('કેપ્સ્યુલ') ||
+       lower.includes('સિરપ') ||
+       lower.includes('medicine') ||
+       lower.includes('tablet') ||
+       lower.includes('pill') ||
+       lower.includes('capsule') ||
+       lower.includes('दवा') ||
+       lower.includes('गोली'))
     ) {
       let timeSlot = 'morning';
       if (lower.includes('બપોરે') || lower.includes('afternoon') || lower.includes('दोपहर')) timeSlot = 'afternoon';
@@ -587,14 +735,29 @@ export const aiAssistantService = {
       };
     }
 
-    // 8. Expense Check (MUST have monetary amount or clear payment verbs)
+    // 8. Expense Check (MUST have monetary amount or clear payment verbs/nouns)
     if (
       amount !== null ||
       lower.includes('ખર્ચ') ||
+      lower.includes('ખર્ચા') ||
       lower.includes('આપ્યા') ||
+      lower.includes('આપ્યો') ||
+      lower.includes('આપ્યું') ||
+      lower.includes('દીધા') ||
+      lower.includes('દીધું') ||
       lower.includes('ચૂકવ્યા') ||
+      lower.includes('ચૂકવ્યું') ||
       lower.includes('ભર્યા') ||
       lower.includes('ભરાવ્યા') ||
+      lower.includes('ભરાવ્યું') ||
+      lower.includes('પુરાવ્યા') ||
+      lower.includes('પુરાવ્યું') ||
+      lower.includes('પુરાવેલ') ||
+      lower.includes('પુરાવ્યો') ||
+      lower.includes('પેટ્રોલ') ||
+      lower.includes('ડીઝલ') ||
+      lower.includes('petrol') ||
+      lower.includes('diesel') ||
       lower.includes('spent') ||
       lower.includes('paid') ||
       lower.includes('expense')
@@ -602,13 +765,14 @@ export const aiAssistantService = {
       let category = 'કરિયાણું / ઘરખર્ચ';
       if (lower.includes('દૂધ') || lower.includes('ચા') || lower.includes('નાસ્તો')) category = 'દૂધ અને ચા-નાસ્તો';
       else if (lower.includes('શાકભાજી') || lower.includes('ફળ')) category = 'શાકભાજી / ફળફળાદિ';
-      else if (lower.includes('પેટ્રોલ') || lower.includes('ડીઝલ') || lower.includes('મુસાફરી') || lower.includes('રિક્ષા')) category = 'પેટ્રોલ / મુસાફરી';
+      else if (lower.includes('પેટ્રોલ') || lower.includes('ડીઝલ') || lower.includes('મુસાફરી') || lower.includes('રિક્ષા') || lower.includes('ગેસ') || lower.includes('cng') || lower.includes('petrol') || lower.includes('diesel')) category = 'પેટ્રોલ / મુસાફરી';
       else if (lower.includes('દવા') || lower.includes('ડોક્ટર') || lower.includes('હોસ્પિટલ')) category = 'દવાઓ / હેલ્થ';
       else if (lower.includes('મોબાઈલ') || lower.includes('કવર') || lower.includes('ગ્લાસ') || lower.includes('રિચાર્જ') || lower.includes('ફોન') || lower.includes('બિલ')) category = 'મોબાઈલ / ગેજેટ્સ / રિચાર્જ';
       else if (lower.includes('સ્કૂલ') || lower.includes('કોલેજ') || lower.includes('ફી')) category = 'શિક્ષણ / ફી';
       else if (lower.includes('કપડાં') || lower.includes('શર્ટ') || lower.includes('પેન્ટ') || lower.includes('સાડી')) category = 'કપડાં / ખરીદી';
 
-      const expAmount = amount || 100;
+      const expAmount = amount || (lower.includes('પેટ્રોલ') || lower.includes('ડીઝલ') ? 2000 : 100);
+      const paymentMode = extractPaymentMode(text, 'રોકડ (Cash)');
       return {
         intent: 'finance',
         type: 'expense',
@@ -616,11 +780,11 @@ export const aiAssistantService = {
         category,
         description: text,
         date,
-        paymentMode: 'UPI (GPay/PhonePe)',
+        paymentMode,
         title: `ખર્ચ: ₹${expAmount.toLocaleString()} (${category})`,
-        details: `કેટેગરી: ${category} | તારીખ: ${date}`,
+        details: `કેટેગરી: ${category} | મોડ: ${paymentMode} | તારીખ: ${date}`,
         targetTab: 'હિસાબ ટેબ (Finance Tab)',
-        confirmationMessage: `ખર્ચમાં ₹${expAmount.toLocaleString()} નોંધવા માટે તૈયાર છે! 💸`,
+        confirmationMessage: `ખર્ચમાં ₹${expAmount.toLocaleString()} (${paymentMode}) નોંધવા માટે તૈયાર છે! 💸`,
       };
     }
 

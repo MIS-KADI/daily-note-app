@@ -76,7 +76,7 @@ export default function Navbar({
           )}
 
           <div
-            className={`hidden sm:flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold border transition ${
+            className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold border transition ${
               isOffline
                 ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
                 : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'

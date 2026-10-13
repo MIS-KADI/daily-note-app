@@ -37,6 +37,7 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { downloadOrSharePDF } from '../services/fileDownloadService';
+import { storageService } from '../services/storageService';
 import confetti from 'canvas-confetti';
 
 // Available Scan Modes
@@ -46,6 +47,7 @@ const SCAN_MODES = [
   { id: 'whiteboard', nameGu: '📋 વ્હાઇટબોર્ડ', nameHi: '📋 व्हाइटबोर्ड', nameEn: 'Whiteboard', icon: Layers, descGu: 'બોર્ડ નોટ્સ, માર્કર બૂસ્ટ' },
   { id: 'idcard', nameGu: '🪪 ID કાર્ડ (2-in-1)', nameHi: '🪪 आईडी કાર્ડ (2-in-1)', nameEn: 'ID Card (2-in-1)', icon: CreditCard, descGu: 'લાઈસન્સ, આધાર કાર્ડ વગેરે' },
   { id: 'bizcard', nameGu: '💼 વિઝિટિંગ કાર્ડ', nameHi: '💼 विजिटिंग કાર્ડ', nameEn: 'Business Card', icon: Briefcase, descGu: 'બિઝનેસ કાર્ડ ફ્રન્ટ & બેક' },
+  { id: 'saved_scans', nameGu: '📁 સેવ કરેલા સ્કેન', nameHi: '📁 સહેજેલા સ્કેન', nameEn: 'Saved Scans', icon: Grid, descGu: 'અગાઉ સેવ કરેલા દસ્તાવેજો' },
 ];
 
 // Available Filter Types
@@ -86,6 +88,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
   const [globalFilter, setGlobalFilter] = useState('clean_bw');
   const [pageSize, setPageSize] = useState('a4');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [savedScansList, setSavedScansList] = useState(() => storageService.getScannedDocs());
 
   // ID Card 2-in-1 State
   const [idType, setIdType] = useState('license');
@@ -990,6 +993,24 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
         autoShare: action === 'share',
       });
 
+      // Also permanently save record in App's Internal Scanned Documents
+      try {
+        const firstPageThumb = pages[0]?.processedUrl || pages[0]?.dataUrl || '';
+        storageService.saveScannedDoc({
+          id: 'scan-' + Date.now(),
+          title: docTitle.trim() || 'Scanned Document',
+          date: new Date().toISOString().split('T')[0],
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          pageCount: pages.length,
+          thumbnail: firstPageThumb,
+          scanMode,
+          fileName,
+        });
+        setSavedScansList(storageService.getScannedDocs());
+      } catch (errSave) {
+        console.warn('Failed saving scanned doc to app list:', errSave);
+      }
+
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
     } catch (err) {
       console.error('PDF generation error:', err);
@@ -1057,6 +1078,24 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
         lang,
         autoShare: action === 'share',
       });
+
+      // Save card scan record in app storage
+      try {
+        storageService.saveScannedDoc({
+          id: 'scan-' + Date.now(),
+          title: title.trim() || (type === 'idcard' ? 'ID Card Scan' : 'Business Card Scan'),
+          date: new Date().toISOString().split('T')[0],
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          pageCount: (type === 'idcard' ? (idFront && idBack ? 2 : 1) : (bizFront && bizBack ? 2 : 1)),
+          thumbnail: composite,
+          scanMode: type,
+          fileName,
+        });
+        setSavedScansList(storageService.getScannedDocs());
+      } catch (errCardSave) {
+        console.warn('Failed saving card scan to app list:', errCardSave);
+      }
+
       confetti({ particleCount: 55, spread: 65, origin: { y: 0.6 } });
     } catch (err) {
       alert(lang === 'gu' ? `નિકાસમાં ક્ષતિ આવી: ${err?.message || ''}` : `Error: ${err?.message || ''}`);
@@ -1752,6 +1791,102 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
               )}
             </div>
           )}
+
+          {/* ======================================================= */}
+          {/* MODE: SAVED SCANS GALLERY                               */}
+          {/* ======================================================= */}
+          {scanMode === 'saved_scans' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-black text-slate-800">
+                    {lang === 'gu' ? '📁 સેવ કરેલા સ્કેન દસ્તાવેજો' : '📁 Saved Scanned Documents'}
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    {savedScansList.length > 0
+                      ? `${savedScansList.length} ${lang === 'gu' ? 'દસ્તાવેજો ફોનમાં સાચવેલા છે' : 'documents saved locally'}`
+                      : (lang === 'gu' ? 'હજુ સુધી કોઈ સ્કેન સેવ કરેલ નથી' : 'No scans saved yet')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setScanMode('document')}
+                  className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl active:scale-95 transition"
+                >
+                  {lang === 'gu' ? '+ નવું સ્કેન કરો' : '+ New Scan'}
+                </button>
+              </div>
+
+              {savedScansList.length === 0 ? (
+                <div className="text-center py-12 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                  <span className="text-4xl block mb-2">📑</span>
+                  <p className="text-xs font-bold text-slate-600 mb-1">
+                    {lang === 'gu' ? 'તમારો કોઈપણ સ્કેન કરેલ PDF અહીં દેખાશે' : 'Your saved PDF scans will appear here'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mb-3">
+                    {lang === 'gu' ? 'દસ્તાવેજ કે કાર્ડ સ્કેન કરી "PDF ડાઉનલોડ" પર ટેપ કરો' : 'Scan a document or card and tap Download PDF'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setScanMode('document')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold active:scale-95 transition"
+                  >
+                    {lang === 'gu' ? 'હવે સ્કેન કરો' : 'Scan Now'}
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {savedScansList.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between gap-3 hover:border-blue-400 transition"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {doc.thumbnail ? (
+                          <img
+                            src={doc.thumbnail}
+                            alt={doc.title}
+                            className="w-12 h-14 object-cover rounded-lg border border-slate-200 shrink-0 bg-slate-100"
+                          />
+                        ) : (
+                          <div className="w-12 h-14 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl shrink-0">
+                            📄
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs font-extrabold text-slate-800 truncate">
+                            {doc.title}
+                          </p>
+                          <p className="text-[10px] text-slate-400">
+                            📅 {doc.date} {doc.time ? `• ${doc.time}` : ''}
+                          </p>
+                          <span className="text-[9px] bg-slate-100 text-slate-600 font-bold px-1.5 py-0.5 rounded-md inline-block mt-0.5">
+                            {doc.pageCount || 1} {lang === 'gu' ? 'પાના' : 'pages'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(lang === 'gu' ? 'આ સ્કેન કાઢી નાખવું છે?' : 'Delete this scan?')) {
+                              storageService.deleteScannedDoc(doc.id);
+                              setSavedScansList(storageService.getScannedDocs());
+                            }
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                          title="Delete"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer Page Size & Export Actions */}
@@ -1848,7 +1983,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   <Share2 size={15} />
                 </button>
               </>
-            ) : (
+            ) : scanMode === 'bizcard' ? (
               <>
                 <button
                   type="button"
@@ -1878,7 +2013,16 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   <Share2 size={15} />
                 </button>
               </>
-            )}
+            ) : scanMode === 'saved_scans' ? (
+              <button
+                type="button"
+                onClick={() => setScanMode('document')}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-98"
+              >
+                <FileText size={15} />
+                <span>{lang === 'gu' ? 'નવા દસ્તાવેજ સ્કેનરમાં જાઓ' : 'Back to Document Scanner'}</span>
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

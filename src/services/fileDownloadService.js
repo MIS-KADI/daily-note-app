@@ -67,23 +67,21 @@ export async function downloadOrSharePDF({
       console.warn('Could not write to Documents directory:', e);
     }
 
-    // 2. Open Android Native Share / App Chooser (Drive PDF, Adobe, WhatsApp, etc.)
-    if (autoShare) {
-      try {
-        await Share.share({
-          title,
-          text: `${title}: ${filename}`,
-          files: [cacheFile.uri],
-          dialogTitle:
-            lang === 'gu'
-              ? 'રિપોર્ટ ઓપન અથવા શેર કરો'
-              : lang === 'hi'
-              ? 'रिपोर्ट खोलें या शेयर करें'
-              : 'Open or Share Report',
-        });
-      } catch (shareErr) {
-        console.log('Share dismissed or cancelled by user:', shareErr);
-      }
+    // 2. Always Open Android Native Share / Save Chooser (Drive PDF, Files, WhatsApp, etc.)
+    try {
+      await Share.share({
+        title,
+        text: `${title}: ${filename}`,
+        files: [cacheFile.uri],
+        dialogTitle:
+          lang === 'gu'
+            ? '📄 PDF સાચવો (Google Drive / Files / WhatsApp)'
+            : lang === 'hi'
+            ? '📄 PDF सुरक्षित करें (Google Drive / Files / WhatsApp)'
+            : '📄 Save or Open PDF (Google Drive / Files)',
+      });
+    } catch (shareErr) {
+      console.log('Share dismissed or cancelled by user:', shareErr);
     }
 
     // 3. Trigger Notification

@@ -662,26 +662,67 @@ export default function App() {
     return true;
   };
 
-  // Transfer calculated amount directly to finance
-  const handleTransferAmount = (amount, type) => {
+  // Transfer calculated amount directly to finance (Supports direct object with paymentMode, category)
+  const handleTransferAmount = (entryOrAmount, typeOverride = 'expense') => {
     setActiveTab('finance');
-    const num = Number(amount || 0);
+    
+    let num = 0;
+    let type = typeOverride;
+    let paymentMode = 'રોકડ (Cash)';
+    let category = 'કરિયાણું / ઘરખર્ચ';
+    let description = 'કેલ્ક્યુલેટરમાંથી ગણેલ હિસાબ';
+    let date = new Date().toISOString().split('T')[0];
+
+    if (typeof entryOrAmount === 'object' && entryOrAmount !== null) {
+      num = Number(entryOrAmount.amount || 0);
+      type = entryOrAmount.type || typeOverride;
+      paymentMode = entryOrAmount.paymentMode || 'રોકડ (Cash)';
+      category = entryOrAmount.category || (type === 'income' ? 'પગાર / આવક' : 'કરિયાણું / ઘરખર્ચ');
+      description = entryOrAmount.description || 'કેલ્ક્યુલેટરમાંથી સેવ કરેલ રકમ';
+      date = entryOrAmount.date || date;
+    } else {
+      num = Number(entryOrAmount || 0);
+      category = type === 'expense' ? 'કરિયાણું / ઘરખર્ચ' : 'પગાર / આવક';
+    }
+
+    if (num <= 0) return;
+
     const newEntry = {
       id: 'fin-' + Date.now(),
       type,
       amount: num,
-      category: type === 'expense' ? 'કરિયાણું / ઘરખર્ચ' : 'પગાર / આવક',
-      description: 'કેલ્ક્યુલેટરમાંથી ગણેલ રકમ',
-      paymentMode: 'UPI (GPay/PhonePe)',
-      date: new Date().toISOString().split('T')[0],
+      category,
+      description,
+      paymentMode,
+      date,
     };
-    handleSaveFinance([newEntry, ...finance]);
 
-    if (num > 0) {
-      const currentBank = Number(accounts?.bankBalance || 0);
+    const latestFinance = storageService.getFinance() || finance || [];
+    handleSaveFinance([newEntry, ...latestFinance]);
+
+    // Update Accounts Balance (Bank or Cash) reliably
+    const latestAccounts = storageService.getAccounts() || accounts || { bankBalance: 0, cashBalance: 0 };
+    const currentBank = Number(latestAccounts?.bankBalance || 0);
+    const currentCash = Number(latestAccounts?.cashBalance || 0);
+
+    const isCash =
+      paymentMode.includes('રોકડ') ||
+      paymentMode.includes('Cash') ||
+      paymentMode.includes('નકદ') ||
+      paymentMode.includes('नकद');
+
+    if (isCash) {
+      const nextCash = type === 'income' ? currentCash + num : currentCash - num;
+      handleSaveAccounts({ ...latestAccounts, cashBalance: nextCash });
+    } else {
       const nextBank = type === 'income' ? currentBank + num : currentBank - num;
-      handleSaveAccounts({ ...accounts, bankBalance: nextBank });
+      handleSaveAccounts({ ...latestAccounts, bankBalance: nextBank });
     }
+
+    try {
+      confetti({ particleCount: 45, spread: 55, origin: { y: 0.65 } });
+    } catch {}
+    streakService.recordActivityToday();
   };
 
   // Smart Voice Assistant & Bank SMS Handlers
@@ -1081,16 +1122,6 @@ export default function App() {
     return () => clearInterval(timer);
   }, [medicines, reminders, medicineLogs, lang]);
 
-  // Strictly enforce 100% online requirement: If no internet, app must NOT open
-  if (isOffline) {
-    return (
-      <NoInternetGatekeeper
-        onRetry={verifyInternet}
-        lang={lang}
-      />
-    );
-  }
-
   return (
     <div className={`mobile-app-wrapper ${theme === 'dark' ? 'dark-theme dark' : ''}`}>
       {/* Top Navbar */}
@@ -1119,6 +1150,28 @@ export default function App() {
         }
         isOffline={isOffline}
       />
+      {/* Non-blocking Offline Mode Banner (Full Offline + Online Dual Operation) */}
+      {isOffline && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-900 dark:text-amber-200 px-3.5 py-1.5 text-[11px] font-bold flex items-center justify-between shrink-0 animate-in fade-in">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span>
+              {lang === 'gu'
+                ? '📴 ઑફલાઇન મોડ: તમામ સુવિધાઓ ચાલુ છે, ડેટા ફોનમાં સુરક્ષિત સેવ થાય છે.'
+                : lang === 'hi'
+                ? '📴 ऑफ़लाइन मोड: सभी सुविधाएं चालू हैं, डेटा फोन में सुरक्षित है।'
+                : '📴 Offline Mode: All features available, data safely saved locally.'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={verifyInternet}
+            className="text-[10px] bg-amber-500/20 hover:bg-amber-500/30 px-2 py-0.5 rounded-full transition active:scale-95 text-amber-800 dark:text-amber-300 font-bold"
+          >
+            {lang === 'gu' ? 'કનેક્ટ ચકાસો' : 'Verify'}
+          </button>
+        </div>
+      )}
 
       {/* 1-Tap Sensor Permission Banner for iOS / Browsers */}
       {needsSensorPermission && (

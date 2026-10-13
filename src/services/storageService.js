@@ -830,6 +830,41 @@ export const storageService = {
     };
   },
 
+  // Scanned Documents Storage
+  getScannedDocs() {
+    try {
+      const data = localStorage.getItem('daily_diary_scanned_docs');
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  saveScannedDoc(doc) {
+    try {
+      const existing = this.getScannedDocs();
+      const updated = [doc, ...existing.filter((d) => d.id !== doc.id)];
+      // Keep most recent 30 scans to protect local storage quota
+      const trimmed = updated.slice(0, 30);
+      localStorage.setItem('daily_diary_scanned_docs', JSON.stringify(trimmed));
+      return { success: true };
+    } catch (e) {
+      console.warn('Error saving scanned doc:', e);
+      return { success: false, error: e.message };
+    }
+  },
+
+  deleteScannedDoc(id) {
+    try {
+      const existing = this.getScannedDocs();
+      const filtered = existing.filter((d) => d.id !== id);
+      localStorage.setItem('daily_diary_scanned_docs', JSON.stringify(filtered));
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
   // Restore all data from a snapshot payload
   restoreAllData(parsed) {
     if (!parsed) return { success: false, error: 'Empty payload' };
