@@ -116,6 +116,83 @@ export const getSubtaskStats = (desc) => {
   return { total, completed, percent: Math.round((completed / total) * 100) };
 };
 
+// Smart Task & Checklist text dynamic translator for multilingual consistency
+export const formatTaskText = (text = '', targetLang = 'gu') => {
+  if (!text || targetLang === 'gu') return text;
+
+  let out = String(text);
+
+  if (targetLang === 'en') {
+    // Exact titles
+    if (out === 'કરિયાણું') return 'Groceries & Shopping';
+    if (out === 'શાકભાજી') return 'Vegetables';
+    if (out === 'દવાઓ') return 'Medicines';
+    if (out === 'સામાન્ય કામ') return 'General Task';
+    if (out === 'ઓફિસ કામ') return 'Office Work';
+    if (out === 'બેંક કામ') return 'Bank Work';
+    if (out === 'મીટિંગ') return 'Meeting';
+    if (out === 'બેંક ઓફ બરોડા - ચેક જમા કરાવવો') return 'Bank of Baroda - Deposit Cheque';
+    if (out === 'પ્રોજેક્ટ ટીમ સાથે મીટિંગ') return 'Meeting with Project Team';
+    if (out === 'લાઈટ બિલ અને મોબાઈલ રિચાર્જ') return 'Electricity Bill & Mobile Recharge';
+    if (out === 'ઘરનું કરિયાણું અને રાશન ખરીદી') return 'Home Groceries & Ration Shopping';
+    if (out === 'તાજી શાકભાજી અને ફળોની ખરીદી') return 'Fresh Vegetables & Fruits Shopping';
+    if (out === 'ડેરી પ્રોડક્ટ્સ અને નાસ્તો') return 'Dairy Products & Breakfast';
+
+    // Patterns & prefixes
+    out = out
+      .replace(/^ખરીદી:\s*/i, 'Shopping: ')
+      .replace(/^મીટિંગ:\s*/i, 'Meeting: ')
+      .replace(/^બેંક:\s*/i, 'Bank: ')
+      .replace(/^કામ:\s*/i, 'Task: ')
+      .replace(/^કેટેગરી:\s*/i, 'Category: ')
+      .replace(/કરિયાણું\s*\/\s*શાકભાજી/gi, 'Groceries / Vegetables')
+      .replace(/શાકભાજી\s*અને\s*ફ્રુટ/gi, 'vegetables and fruits')
+      .replace(/શાકભાજી\s*અને\s*ફળો/gi, 'vegetables and fruits')
+      .replace(/આજે શાકભાજી અને ફ્રુટ ઘરે લઈ જવાના છે\.?/gi, 'Bring vegetables and fruits home today.')
+      .replace(/આજે શાકભાજી અને ફ્રુટ ઘરે લઈ જવાના છે/gi, 'Bring vegetables and fruits home today')
+      .replace(/કરિયાણું/gi, 'Groceries')
+      .replace(/શાકભાજી/gi, 'Vegetables')
+      .replace(/દૂધ\s*\/\s*ડેરી/gi, 'Milk / Dairy')
+      .replace(/દવાઓ/gi, 'Medicines')
+      .replace(/ફળો/gi, 'Fruits');
+  } else if (targetLang === 'hi') {
+    // Exact titles
+    if (out === 'કરિયાણું') return 'किराना व खरीदारी';
+    if (out === 'શાકભાજી') return 'सब्जियां';
+    if (out === 'દવાઓ') return 'दवाइयां';
+    if (out === 'સામાન્ય કામ') return 'सामान्य कार्य';
+    if (out === 'ઓફિસ કામ') return 'ऑफिस कार्य';
+    if (out === 'બેંક કામ') return 'बैंक कार्य';
+    if (out === 'મીટિંગ') return 'मीटिंग';
+    if (out === 'બેંક ઓફ બરોડા - ચેક જમા કરાવવો') return 'बैंक ऑफ बड़ौदा - चेक जमा करना';
+    if (out === 'પ્રોજેક્ટ ટીમ સાથે મીટિંગ') return 'प्रोजेक्ट टीम के साथ मीटिंग';
+    if (out === 'લાઈટ બિલ અને મોબાઈલ રિચાર્જ') return 'बिजली बिल और मोबाइल रिचार्ज';
+    if (out === 'ઘરનું કરિયાણું અને રાશન ખરીદી') return 'घर का किराना व राशन खरीदारी';
+    if (out === 'તાજી શાકભાજી અને ફળોની ખરીદી') return 'ताजी सब्जियां व फल खरीदारी';
+    if (out === 'ડેરી પ્રોડક્ટ્સ અને નાસ્તો') return 'डेयरी उत्पाद व नाश्ता';
+
+    // Patterns & prefixes
+    out = out
+      .replace(/^ખરીદી:\s*/i, 'खरीदारी: ')
+      .replace(/^મીટિંગ:\s*/i, 'मीटिंग: ')
+      .replace(/^બેંક:\s*/i, 'बैंक: ')
+      .replace(/^કામ:\s*/i, 'कार्य: ')
+      .replace(/^કેટેગરી:\s*/i, 'श्रेणी: ')
+      .replace(/કરિયાણું\s*\/\s*શાકભાજી/gi, 'किराना / सब्जियां')
+      .replace(/શાકભાજી\s*અને\s*ફ્રુટ/gi, 'सब्जियां और फल')
+      .replace(/શાકભાજી\s*અને\s*ફળો/gi, 'सब्जियां और फल')
+      .replace(/આજે શાકભાજી અને ફ્રુટ ઘરે લઈ જવાના છે\.?/gi, 'आज सब्जियां और फल घर ले जाना है।')
+      .replace(/આજે શાકભાજી અને ફ્રુટ ઘરે લઈ જવાના છે/gi, 'आज सब्जियां और फल घर ले जाना है')
+      .replace(/કરિયાણું/gi, 'किराना')
+      .replace(/શાકભાજી/gi, 'सब्जियां')
+      .replace(/દૂધ\s*\/\s*ડેરી/gi, 'दूध / डेयरी')
+      .replace(/દવાઓ/gi, 'दवाइयां')
+      .replace(/ફળો/gi, 'फल');
+  }
+
+  return out;
+};
+
 export default function RemindersTab({
   reminders = [],
   onSaveReminders,
@@ -565,83 +642,87 @@ export default function RemindersTab({
       {/* ======================================================= */}
       {/* 1. TOP HEADER & ACTION BUTTONS                          */}
       {/* ======================================================= */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
-            {activeSubView === 'tasks' ? (
-              <ClockIcon className="text-indigo-600" size={22} />
-            ) : (
-              <CakeIcon className="text-pink-600" size={22} />
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3.5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
+              activeSubView === 'tasks'
+                ? 'bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white'
+                : 'bg-gradient-to-tr from-pink-600 to-rose-500 text-white'
+            }`}>
+              {activeSubView === 'tasks' ? <ClockIcon size={22} /> : <CakeIcon size={22} />}
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+                {activeSubView === 'tasks' ? t('reminders_title', lang) : t('events_title', lang)}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
+                {activeSubView === 'tasks' ? t('reminders_sub', lang) : t('events_sub', lang)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {activeSubView === 'tasks' && (
+              <button
+                onClick={() => setIsRingtoneModalOpen(true)}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2.5 px-3.5 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60 rounded-2xl text-xs font-bold shadow-2xs active:scale-95 transition"
+                title={lang === 'gu' ? 'રીંગટોન સેટિંગ્સ' : 'Ringtone Settings'}
+              >
+                <MusicIcon size={15} className="text-purple-600 dark:text-purple-400" />
+                <span>{lang === 'gu' ? 'રીંગટોન' : lang === 'hi' ? 'रिंगटोन' : 'Ringtone'}</span>
+              </button>
             )}
-            {activeSubView === 'tasks' ? t('reminders_title', lang) : t('events_title', lang)}
-          </h2>
-          <p className="text-xs text-slate-500 font-medium">
-            {activeSubView === 'tasks' ? t('reminders_sub', lang) : t('events_sub', lang)}
-          </p>
+
+            {activeSubView === 'tasks' ? (
+              <button
+                onClick={() => handleOpenAddTask(todayStr)}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-indigo-600/25 active:scale-95 transition"
+              >
+                <PlusIcon size={16} />
+                <span>{t('new_task', lang)}</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleOpenAddEvent}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2.5 px-4 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-pink-600/25 active:scale-95 transition"
+              >
+                <PlusIcon size={16} />
+                <span>{t('add_event', lang)}</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          {activeSubView === 'tasks' && (
-            <button
-              onClick={() => setIsRingtoneModalOpen(true)}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2 px-3 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-2xl text-xs font-bold shadow-2xs active:scale-95 transition"
-              title="રીંગટોન અને સાઉન્ડ સેટિંગ્સ"
-            >
-              <MusicIcon size={15} className="text-purple-600" />
-              <span>{lang === 'gu' ? '🔔 રીંગટોન' : '🔔 Ringtone'}</span>
-            </button>
-          )}
+        {/* 2. SUB-VIEW SWITCHER: TASKS vs CELEBRATIONS */}
+        <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl gap-1">
+          <button
+            onClick={() => setActiveSubView('tasks')}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+              activeSubView === 'tasks'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <ClockIcon size={15} />
+            <span>{t('subtab_tasks', lang)} ({reminders.length})</span>
+          </button>
 
-          {activeSubView === 'tasks' ? (
-            <button
-              onClick={() => handleOpenAddTask(todayStr)}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-indigo-500/25 active:scale-95 transition"
-            >
-              <PlusIcon size={16} />
-              <span>{t('new_task', lang)}</span>
-            </button>
-          ) : (
-            <button
-              onClick={handleOpenAddEvent}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2 px-3.5 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-pink-500/25 active:scale-95 transition"
-            >
-              <PlusIcon size={16} />
-              <span>{t('add_event', lang)}</span>
-            </button>
-          )}
+          <button
+            onClick={() => setActiveSubView('events')}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+              activeSubView === 'events'
+                ? 'bg-white dark:bg-slate-900 text-pink-600 dark:text-pink-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <GiftIcon size={15} />
+            <span>{t('subtab_events', lang)} ({events.length})</span>
+            {todayCelebrations.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping" />
+            )}
+          </button>
         </div>
-      </div>
-
-      {/* ======================================================= */}
-      {/* 2. SUB-VIEW SWITCHER: TASKS vs CELEBRATIONS             */}
-      {/* ======================================================= */}
-      <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
-        <button
-          onClick={() => setActiveSubView('tasks')}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
-            activeSubView === 'tasks'
-              ? 'bg-white text-indigo-600 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <ClockIcon size={15} />
-          <span>{t('subtab_tasks', lang)} ({reminders.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubView('events')}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
-            activeSubView === 'events'
-              ? 'bg-white text-pink-600 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <GiftIcon size={15} />
-          <span>{t('subtab_events', lang)} ({events.length})</span>
-          {todayCelebrations.length > 0 && (
-            <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping" />
-          )}
-        </button>
       </div>
 
       {/* ======================================================= */}
@@ -649,57 +730,80 @@ export default function RemindersTab({
       {/* ======================================================= */}
       {activeSubView === 'tasks' && (
         <div className="space-y-3.5">
-          {/* Smart Stats Summary Strip */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-2.5 shadow-2xs grid grid-cols-4 divide-x divide-slate-100 text-center">
-            <div className="px-1">
-              <span className="text-[10px] text-slate-500 font-bold block leading-tight">{lang === 'gu' ? 'કુલ કામો' : 'Total'}</span>
-              <span className="text-base font-black text-slate-800">{reminders.length}</span>
+          {/* Modern 4 Stats Summary Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="bg-white dark:bg-slate-800/90 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 p-3 shadow-2xs flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-500 font-bold block">{lang === 'gu' ? 'કુલ કામો' : lang === 'hi' ? 'कुल कार्य' : 'Total Tasks'}</span>
+                <span className="text-xl font-black text-slate-800 dark:text-slate-100">{reminders.length}</span>
+              </div>
+              <span className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-700/70 flex items-center justify-center text-slate-600 dark:text-slate-300">
+                <ClockIcon size={17} />
+              </span>
             </div>
-            <div className="px-1">
-              <span className="text-[10px] text-indigo-600 font-bold block leading-tight">{lang === 'gu' ? 'આજના' : 'Today'}</span>
-              <span className="text-base font-black text-indigo-600">{todayTasksCount}</span>
+
+            <div className="bg-gradient-to-br from-indigo-50/80 to-blue-50/60 dark:from-indigo-950/25 dark:to-blue-950/20 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/50 p-3 shadow-2xs flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-indigo-700 dark:text-indigo-400 font-bold block">{lang === 'gu' ? 'આજના કામ' : lang === 'hi' ? 'आज के कार्य' : 'Today Tasks'}</span>
+                <span className="text-xl font-black text-indigo-700 dark:text-indigo-300">{todayTasksCount}</span>
+              </div>
+              <span className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
+                <BellIcon size={17} />
+              </span>
             </div>
-            <div className="px-1">
-              <span className="text-[10px] text-rose-600 font-bold block leading-tight">{lang === 'gu' ? 'અગત્યનું' : 'Priority'}</span>
-              <span className="text-base font-black text-rose-600">{highPriorityCount}</span>
+
+            <div className="bg-gradient-to-br from-rose-50/80 to-pink-50/60 dark:from-rose-950/25 dark:to-pink-950/20 rounded-2xl border border-rose-200/80 dark:border-rose-800/50 p-3 shadow-2xs flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-rose-700 dark:text-rose-400 font-bold block">{lang === 'gu' ? 'અગત્યનું' : lang === 'hi' ? 'महत्वपूर्ण' : 'High Priority'}</span>
+                <span className="text-xl font-black text-rose-700 dark:text-rose-300">{highPriorityCount}</span>
+              </div>
+              <span className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-900/60 flex items-center justify-center text-rose-600 dark:text-rose-300">
+                <SparklesIcon size={17} />
+              </span>
             </div>
-            <div className="px-1">
-              <span className="text-[10px] text-emerald-600 font-bold block leading-tight">{lang === 'gu' ? 'પૂર્ણ' : 'Done'}</span>
-              <span className="text-base font-black text-emerald-600">{completedTasksCount}</span>
+
+            <div className="bg-gradient-to-br from-emerald-50/80 to-teal-50/60 dark:from-emerald-950/25 dark:to-teal-950/20 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/50 p-3 shadow-2xs flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold block">{lang === 'gu' ? 'પૂર્ણ થયેલ' : lang === 'hi' ? 'पूरा हुआ' : 'Done'}</span>
+                <span className="text-xl font-black text-emerald-700 dark:text-emerald-300">{completedTasksCount}</span>
+              </div>
+              <span className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-300">
+                <CheckCircle2Icon size={17} />
+              </span>
             </div>
           </div>
 
           {/* Consolidated Search & Filter Panel */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-3 shadow-2xs space-y-2.5">
-            {/* Search Box */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-3.5 shadow-2xs space-y-3">
+            {/* 1. Search Box */}
             <div className="relative">
-              <SearchIcon size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <SearchIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder={lang === 'gu' ? 'કામ કે વિગત શોધો...' : 'Search tasks & checklists...'}
+                placeholder={lang === 'gu' ? 'કામ, ખરીદી કે મીટિંગ શોધો...' : lang === 'hi' ? 'कार्य, खरीदारी या मीटिंग खोजें...' : 'Search tasks, shopping & checklists...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-xs pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:outline-indigo-500 font-medium placeholder:text-slate-400"
+                className="w-full text-xs pl-10 pr-9 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-indigo-500 font-medium placeholder:text-slate-400 text-slate-800 dark:text-slate-100"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
                 >
                   <XIcon size={14} />
                 </button>
               )}
             </div>
 
-            {/* Date Filter Tabs + Show Completed Checkbox */}
-            <div className="flex items-center justify-between gap-2 pt-0.5">
-              <div className="flex gap-1 overflow-x-auto scrollbar-none text-xs">
+            {/* 2. Timeline Filter + Done Toggle Row */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl gap-1 overflow-x-auto scrollbar-none text-xs">
                 <button
                   onClick={() => setDateFilter('all')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-xs ${
                     dateFilter === 'all'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
                   {t('filter_all', lang)} ({reminders.length})
@@ -707,10 +811,10 @@ export default function RemindersTab({
 
                 <button
                   onClick={() => setDateFilter('today')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-xs ${
                     dateFilter === 'today'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
                   {t('today', lang)} ({todayTasksCount})
@@ -718,64 +822,78 @@ export default function RemindersTab({
 
                 <button
                   onClick={() => setDateFilter('future')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-xs ${
                     dateFilter === 'future'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
-                  🚀 {lang === 'gu' ? 'આગામી' : t('upcoming', lang)} ({futureTasksCount})
+                  🚀 {lang === 'gu' ? 'આગામી' : lang === 'hi' ? 'आगामी' : 'Upcoming'} ({futureTasksCount})
                 </button>
               </div>
 
-              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-bold text-slate-600 shrink-0 select-none">
-                <input
-                  type="checkbox"
-                  checked={showCompleted}
-                  onChange={(e) => setShowCompleted(e.target.checked)}
-                  className="w-3.5 h-3.5 text-indigo-600 rounded-sm cursor-pointer accent-indigo-600"
-                />
-                <span>{lang === 'gu' ? 'પૂર્ણ બતાવો' : 'Done'}</span>
-              </label>
+              {/* Show Done Toggle Pill */}
+              <button
+                type="button"
+                onClick={() => setShowCompleted(!showCompleted)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-xs font-bold transition shrink-0 select-none border ${
+                  showCompleted
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                <div className={`w-3.5 h-3.5 rounded flex items-center justify-center ${showCompleted ? 'bg-emerald-600 text-white' : 'border border-slate-300 dark:border-slate-600'}`}>
+                  {showCompleted && <CheckIcon size={10} />}
+                </div>
+                <span>{lang === 'gu' ? 'પૂર્ણ બતાવો' : lang === 'hi' ? 'पूर्ण दिखाएं' : 'Show Done'}</span>
+              </button>
             </div>
 
-            {/* Category Chips Scroll */}
-            <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none pt-1.5 border-t border-slate-100">
-              {typesList.map((tItem) => (
-                <button
-                  key={tItem.id}
-                  onClick={() => setSelectedTaskType(tItem.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition ${
-                    selectedTaskType === tItem.id
-                      ? 'bg-slate-800 text-white shadow-2xs'
-                      : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  {tItem.label}
-                </button>
-              ))}
+            {/* 3. Category Chips Row */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-2 border-t border-slate-100 dark:border-slate-800">
+              {typesList.map((tItem) => {
+                const isSelected = selectedTaskType === tItem.id;
+                const IconComp = tItem.icon;
+                return (
+                  <button
+                    key={tItem.id}
+                    onClick={() => setSelectedTaskType(tItem.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 active:scale-95 ${
+                      isSelected
+                        ? 'bg-slate-900 dark:bg-indigo-600 text-white shadow-2xs'
+                        : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    {IconComp && <IconComp size={13} className={isSelected ? 'text-white' : 'text-slate-500'} />}
+                    <span>{tItem.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Priority Filter */}
+            {/* 4. Priority Filter Row */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-xs">
               {[
-                { id: 'all', label: lang === 'gu' ? 'બધી પ્રાથમિકતા' : 'All Priority' },
-                { id: 'high', label: '🔴 ' + t('priority_high', lang) },
-                { id: 'medium', label: '🟡 ' + t('priority_medium', lang) },
-                { id: 'low', label: '🟢 ' + t('priority_low', lang) },
-              ].map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPriorityFilter(p.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition whitespace-nowrap ${
-                    priorityFilter === p.id
-                      ? 'bg-indigo-900 text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
+                { id: 'all', label: lang === 'gu' ? 'બધી પ્રાથમિકતા' : lang === 'hi' ? 'सभी प्राथमिकता' : 'All Priority' },
+                { id: 'high', label: '🔴 ' + (lang === 'gu' ? 'તાકીદનું' : lang === 'hi' ? 'उच्च' : 'High') },
+                { id: 'medium', label: '🟡 ' + (lang === 'gu' ? 'મધ્યમ' : lang === 'hi' ? 'मध्यम' : 'Medium') },
+                { id: 'low', label: '🟢 ' + (lang === 'gu' ? 'સામાન્ય' : lang === 'hi' ? 'सामान्य' : 'Normal') },
+              ].map((p) => {
+                const isSelected = priorityFilter === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setPriorityFilter(p.id)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition whitespace-nowrap ${
+                      isSelected
+                        ? 'bg-indigo-900 dark:bg-indigo-500 text-white shadow-2xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -981,7 +1099,7 @@ export default function RemindersTab({
                           r.isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'
                         }`}
                       >
-                        {(r.title || '').replace(/\r?\n+/g, ' ').trim()}
+                        {formatTaskText((r.title || '').replace(/\r?\n+/g, ' ').trim(), lang)}
                       </h4>
 
                       {/* Interactive Shopping / Task Checklist Display */}
@@ -1027,12 +1145,12 @@ export default function RemindersTab({
                             if (cleanItemText) {
                               checklistItems.push({
                                 lineIndex: idx,
-                                text: cleanItemText,
+                                text: formatTaskText(cleanItemText, lang),
                                 isCompleted,
                               });
                             }
-                          } else if (!trimmed.startsWith('કેટેગરી:')) {
-                            noteLines.push(trimmed);
+                          } else if (!trimmed.startsWith('કેટેગરી:') && !trimmed.startsWith('Category:') && !trimmed.startsWith('श्रेणी:')) {
+                            noteLines.push(formatTaskText(trimmed, lang));
                           }
                         });
 

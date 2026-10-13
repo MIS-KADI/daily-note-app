@@ -574,25 +574,29 @@ export default function App() {
     storageService.saveTheme(next);
   };
 
-  // Language selection handler - dynamically translates all demo content if in demo mode
+  // Language selection handler - dynamically translates all content to match the newly selected language
   const handleSelectLang = (newLang) => {
     setLang(newLang);
     storageService.saveLanguage(newLang);
 
-    // If still in demo mode, update all demo entries to match the newly selected language!
-    if (isDemoMode) {
-      const newNotes = storageService.getDefaultNotes(newLang);
+    // If in demo mode OR items have default IDs, update all default entries to match the newly selected language!
+    if (isDemoMode || reminders.some((r) => r.id?.startsWith('rem-') || r.id?.startsWith('rem-shop-'))) {
       const newReminders = storageService.getDefaultReminders(newLang);
+      setReminders(newReminders);
+      storageService.saveReminders(newReminders);
+    }
+
+    if (isDemoMode || notes.some((n) => n.id?.startsWith('note-'))) {
+      const newNotes = storageService.getDefaultNotes(newLang);
+      setNotes(newNotes);
+      storageService.saveNotes(newNotes);
+    }
+
+    if (isDemoMode) {
       const newMeds = storageService.getDefaultMedicines(newLang);
       const newFin = storageService.getDefaultFinance(newLang);
       const newKhata = storageService.getDefaultKhata(newLang);
       const newEv = storageService.getDefaultEvents(newLang);
-
-      setNotes(newNotes);
-      storageService.saveNotes(newNotes);
-
-      setReminders(newReminders);
-      storageService.saveReminders(newReminders);
 
       setMedicines(newMeds);
       storageService.saveMedicines(newMeds);

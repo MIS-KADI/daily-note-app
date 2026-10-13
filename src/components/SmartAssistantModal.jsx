@@ -344,30 +344,55 @@ export default function SmartAssistantModal({
     if (!parsedResult) return;
     let updated = { ...parsedResult, intent: newIntent };
     if (newIntent === 'shopping') {
-      updated.targetTab = 'ખરીદી યાદી (Shopping List)';
-      const rawTitle = updated.title || inputText || 'નવી વસ્તુ';
-      const cleanName = rawTitle.replace(/^ખરીદી:\s*/, '').trim();
-      updated.title = `ખરીદી: ${cleanName}`;
+      const shopPrefix = currentLang === 'hi' ? 'खरीदारी: ' : currentLang === 'en' ? 'Shopping: ' : 'ખરીદી: ';
+      updated.targetTab = currentLang === 'hi' ? 'खरीदारी सूची (Shopping List)' : currentLang === 'en' ? 'Shopping List' : 'ખરીદી યાદી (Shopping List)';
+      const rawTitle = updated.title || inputText || (currentLang === 'hi' ? 'नई वस्तु' : currentLang === 'en' ? 'New Item' : 'નવી વસ્તુ');
+      const cleanName = rawTitle.replace(/^(ખરીદી|Shopping|खरीदारी):\s*/i, '').trim();
+      updated.title = `${shopPrefix}${cleanName}`;
       updated.name = cleanName;
       updated.quantity = updated.quantity || '૧';
-      updated.category = updated.category || 'કરિયાણું / શાકભાજી';
-      updated.details = `જથ્થો: ${updated.quantity} | કેટેગરી: ${updated.category}`;
-      updated.confirmationMessage = `ખરીદીની યાદીમાં '${cleanName}' (${updated.quantity}) ઉમેરવા માટે તૈયાર છે! 🛒`;
+      updated.category = updated.category || (currentLang === 'hi' ? 'किराना / सब्जियां' : currentLang === 'en' ? 'Groceries / Vegetables' : 'કરિયાણું / શાકભાજી');
+      updated.details = currentLang === 'hi'
+        ? `मात्रा: ${updated.quantity} | श्रेणी: ${updated.category}`
+        : currentLang === 'en'
+        ? `Quantity: ${updated.quantity} | Category: ${updated.category}`
+        : `જથ્થો: ${updated.quantity} | કેટેગરી: ${updated.category}`;
+      updated.confirmationMessage = currentLang === 'hi'
+        ? `खरीदारी सूची में '${cleanName}' (${updated.quantity}) जोड़ने के लिए तैयार है! 🛒`
+        : currentLang === 'en'
+        ? `Ready to add '${cleanName}' (${updated.quantity}) to Shopping List! 🛒`
+        : `ખરીદીની યાદીમાં '${cleanName}' (${updated.quantity}) ઉમેરવા માટે તૈયાર છે! 🛒`;
     } else if (newIntent === 'reminder') {
-      updated.targetTab = 'કામો અને મીટિંગ ટેબ (Reminders Tab)';
-      updated.title = (updated.title || inputText || 'કામ').replace(/^ખરીદી:\s*/, '').trim();
+      updated.targetTab = currentLang === 'hi' ? 'कार्य व मीटिंग टैब (Reminders Tab)' : currentLang === 'en' ? 'Reminders Tab' : 'કામો અને મીટિંગ ટેબ (Reminders Tab)';
+      updated.title = (updated.title || inputText || (currentLang === 'hi' ? 'कार्य' : currentLang === 'en' ? 'Task' : 'કામ')).replace(/^(ખરીદી|Shopping|खरीदारी):\s*/i, '').trim();
       updated.hasAlarm = true;
       updated.time = updated.time || '11:00';
       updated.date = updated.date || new Date().toISOString().split('T')[0];
-      updated.details = `સમય: ${updated.time} | તારીખ: ${updated.date} | ⏰ અલાર્મ સક્રિય`;
-      updated.confirmationMessage = `કામ/મીટિંગ '${updated.title}' સમય ${updated.time} વાગ્યે રીમાઇન્ડર તરીકે સેવ કરવા તૈયાર છે! ⏰`;
+      updated.details = currentLang === 'hi'
+        ? `समय: ${updated.time} | तारीख: ${updated.date} | ⏰ अलार्म सक्रिय`
+        : currentLang === 'en'
+        ? `Time: ${updated.time} | Date: ${updated.date} | ⏰ Alarm Active`
+        : `સમય: ${updated.time} | તારીખ: ${updated.date} | ⏰ અલાર્મ સક્રિય`;
+      updated.confirmationMessage = currentLang === 'hi'
+        ? `कार्य/मीटिंग '${updated.title}' समय ${updated.time} बजे रिमाइंडर के रूप में सहेजने के लिए तैयार है! ⏰`
+        : currentLang === 'en'
+        ? `Ready to save task/meeting '${updated.title}' at ${updated.time} as reminder! ⏰`
+        : `કામ/મીટિંગ '${updated.title}' સમય ${updated.time} વાગ્યે રીમાઇન્ડર તરીકે સેવ કરવા તૈયાર છે! ⏰`;
     } else if (newIntent === 'finance') {
-      updated.targetTab = 'હિસાબ ટેબ (Finance Tab)';
+      updated.targetTab = currentLang === 'hi' ? 'हिसाब टैब (Finance Tab)' : currentLang === 'en' ? 'Finance Tab' : 'હિસાબ ટેબ (Finance Tab)';
       updated.type = updated.type === 'income' ? 'income' : 'expense';
       updated.amount = updated.amount || 100;
-      updated.category = updated.category || 'સામાન્ય ખર્ચ';
-      updated.details = `રકમ: ₹${updated.amount} | પ્રકાર: ${updated.type === 'income' ? 'આવક' : 'ખર્ચ'}`;
-      updated.confirmationMessage = `હિસાબમાં ₹${updated.amount} ની એન્ટ્રી કરવા તૈયાર છે! 💰`;
+      updated.category = updated.category || (currentLang === 'hi' ? 'सामान्य खर्च' : currentLang === 'en' ? 'General Expense' : 'સામાન્ય ખર્ચ');
+      updated.details = currentLang === 'hi'
+        ? `राशि: ₹${updated.amount} | प्रकार: ${updated.type === 'income' ? 'आय' : 'खर्च'}`
+        : currentLang === 'en'
+        ? `Amount: ₹${updated.amount} | Type: ${updated.type === 'income' ? 'Income' : 'Expense'}`
+        : `રકમ: ₹${updated.amount} | પ્રકાર: ${updated.type === 'income' ? 'આવક' : 'ખર્ચ'}`;
+      updated.confirmationMessage = currentLang === 'hi'
+        ? `हिसाब में ₹${updated.amount} की प्रविष्टि करने के लिए तैयार है! 💰`
+        : currentLang === 'en'
+        ? `Ready to record ₹${updated.amount} entry in accounts! 💰`
+        : `હિસાબમાં ₹${updated.amount} ની એન્ટ્રી કરવા તૈયાર છે! 💰`;
     } else if (newIntent === 'medicine') {
       updated.targetTab = 'હેલ્થ હબ ટેબ (Health Hub)';
       updated.title = (updated.title || inputText || 'દવા').replace(/^ખરીદી:\s*/, '').trim();

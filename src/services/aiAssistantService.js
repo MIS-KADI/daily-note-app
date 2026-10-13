@@ -314,15 +314,26 @@ export const aiAssistantService = {
           category = 'તેલ / કરિયાણું';
         }
 
+        const shopPrefix = lang === 'hi' ? 'खरीदारी: ' : lang === 'en' ? 'Shopping: ' : 'ખરીદી: ';
+        const qtyPrefix = lang === 'hi' ? 'मात्रा: ' : lang === 'en' ? 'Quantity: ' : 'જથ્થો: ';
+        const catPrefix = lang === 'hi' ? 'श्रेणी: ' : lang === 'en' ? 'Category: ' : 'કેટેગરી: ';
+        const shopTab = lang === 'hi' ? 'खरीदारी सूची (Shopping List)' : lang === 'en' ? 'Shopping List' : 'ખરીદી યાદી (Shopping List)';
+        const confirmMsg =
+          lang === 'hi'
+            ? `खरीदारी सूची में '${itemName}' (${quantity}) जोड़ने के लिए तैयार है! 🛒`
+            : lang === 'en'
+            ? `Ready to add '${itemName}' (${quantity}) to Shopping List! 🛒`
+            : `ખરીદીની યાદીમાં '${itemName}' (${quantity}) ઉમેરવા માટે તૈયાર છે! 🛒`;
+
         return {
           intent: 'shopping',
           name: itemName,
           quantity,
           category,
-          title: `ખરીદી: ${itemName}`,
-          details: `જથ્થો: ${quantity} | કેટેગરી: ${category}`,
-          targetTab: 'ખરીદી યાદી (Shopping List)',
-          confirmationMessage: `ખરીદીની યાદીમાં '${itemName}' (${quantity}) ઉમેરવા માટે તૈયાર છે! 🛒`,
+          title: `${shopPrefix}${itemName}`,
+          details: `${qtyPrefix}${quantity} | ${catPrefix}${category}`,
+          targetTab: shopTab,
+          confirmationMessage: confirmMsg,
         };
       }
 
@@ -577,15 +588,26 @@ export const aiAssistantService = {
         category = 'તેલ / કરિયાણું';
       }
 
+      const shopPrefix = lang === 'hi' ? 'खरीदारी: ' : lang === 'en' ? 'Shopping: ' : 'ખરીદી: ';
+      const qtyPrefix = lang === 'hi' ? 'मात्रा: ' : lang === 'en' ? 'Quantity: ' : 'જથ્થો: ';
+      const catPrefix = lang === 'hi' ? 'श्रेणी: ' : lang === 'en' ? 'Category: ' : 'કેટેગરી: ';
+      const shopTab = lang === 'hi' ? 'खरीदारी सूची (Shopping List)' : lang === 'en' ? 'Shopping List' : 'ખરીદી યાદી (Shopping List)';
+      const confirmMsg =
+        lang === 'hi'
+          ? `खरीदारी सूची में '${itemName}' (${quantity}) जोड़ने के लिए तैयार है! 🛒`
+          : lang === 'en'
+          ? `Ready to add '${itemName}' (${quantity}) to Shopping List! 🛒`
+          : `ખરીદીની યાદીમાં '${itemName}' (${quantity}) ઉમેરવા માટે તૈયાર છે! 🛒`;
+
       return {
         intent: 'shopping',
         name: itemName,
         quantity,
         category,
-        title: `ખરીદી: ${itemName}`,
-        details: `જથ્થો: ${quantity} | કેટેગરી: ${category}`,
-        targetTab: 'ખરીદી યાદી (Shopping List)',
-        confirmationMessage: `ખરીદીની યાદીમાં '${itemName}' (${quantity}) ઉમેરવા માટે તૈયાર છે! 🛒`,
+        title: `${shopPrefix}${itemName}`,
+        details: `${qtyPrefix}${quantity} | ${catPrefix}${category}`,
+        targetTab: shopTab,
+        confirmationMessage: confirmMsg,
       };
     }
 
@@ -614,7 +636,7 @@ export const aiAssistantService = {
         remType === 'meeting'
           ? (text.length > 50 ? text.substring(0, 47) + '...' : text)
           : remType === 'bank'
-          ? `બેંક કામ: ${text}`
+          ? (lang === 'hi' ? `बैंक कार्य: ${text}` : lang === 'en' ? `Bank Work: ${text}` : `બેંક કામ: ${text}`)
           : text;
 
       return {
@@ -626,9 +648,19 @@ export const aiAssistantService = {
         time,
         hasAlarm: true,
         priority: 'high',
-        targetTab: 'કામો અને મીટિંગ ટેબ (Reminders Tab)',
-        details: `સમય: ${time} વાગ્યે | તારીખ: ${date} | ⏰ અલાર્મ સક્રિય`,
-        confirmationMessage: `આજે ${time} વાગ્યા માટે મીટિંગનું રીમાઇન્ડર અને અલાર્મ સેટ કરવા તૈયાર છે! ⏰`,
+        targetTab: lang === 'hi' ? 'कार्य व मीटिंग टैब (Reminders Tab)' : lang === 'en' ? 'Reminders Tab' : 'કામો અને મીટિંગ ટેબ (Reminders Tab)',
+        details:
+          lang === 'hi'
+            ? `समय: ${time} बजे | तारीख: ${date} | ⏰ अलार्म सक्रिय`
+            : lang === 'en'
+            ? `Time: ${time} | Date: ${date} | ⏰ Alarm Active`
+            : `સમય: ${time} વાગ્યે | તારીખ: ${date} | ⏰ અલાર્મ સક્રિય`,
+        confirmationMessage:
+          lang === 'hi'
+            ? `समय ${time} बजे के लिए रिमाइंडर और अलार्म सेट करने के लिए तैयार है! ⏰`
+            : lang === 'en'
+            ? `Ready to set reminder and alarm for ${time}! ⏰`
+            : `આજે ${time} વાગ્યા માટે મીટિંગનું રીમાઇન્ડર અને અલાર્મ સેટ કરવા તૈયાર છે! ⏰`,
       };
     }
 

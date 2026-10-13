@@ -2250,7 +2250,7 @@ export default function HealthHubTab({
               </div>
               {isEyeActive && (
                 <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/30 text-amber-200 border border-amber-400/30 animate-pulse">
-                  {eyeMode === 'full' ? `સ્ટેપ ${eyeFullStepIndex + 1}/5` : 'લાઇવ કસરત'}
+                  {eyeMode === 'full' ? `${lang === 'hi' ? 'स्टेप' : lang === 'en' ? 'Step' : 'સ્ટેપ'} ${eyeFullStepIndex + 1}/5` : (lang === 'hi' ? 'लाइव कसरत' : lang === 'en' ? 'Live Exercise' : 'લાઇવ કસરત')}
                 </span>
               )}
             </div>
@@ -2292,10 +2292,10 @@ export default function HealthHubTab({
               {eyeMode === 'full' && (
                 <div className="absolute top-2.5 inset-x-4 flex items-center justify-between text-xs z-20">
                   <span className="bg-amber-400 text-slate-950 font-black px-2.5 py-0.5 rounded-full text-[10px]">
-                    {FULL_ROUTINE_STEPS[eyeFullStepIndex].nameGu}
+                    {lang === 'hi' ? FULL_ROUTINE_STEPS[eyeFullStepIndex].nameHi : lang === 'en' ? FULL_ROUTINE_STEPS[eyeFullStepIndex].nameEn : FULL_ROUTINE_STEPS[eyeFullStepIndex].nameGu}
                   </span>
                   <span className="text-amber-300 font-mono font-bold text-[11px]">
-                    {eyeSecondsLeft}s બાકી
+                    {eyeSecondsLeft}s {lang === 'hi' ? 'शेष' : lang === 'en' ? 'left' : 'બાકી'}
                   </span>
                 </div>
               )}
@@ -2323,7 +2323,7 @@ export default function HealthHubTab({
                     <circle cx="100" cy="100" r="4" fill="rgba(255,255,255,0.4)" />
                   </svg>
                   <p className="text-xs text-amber-200 mt-2 font-bold text-center">
-                    {lang === 'gu' ? '👀 માથું હલાવ્યા વિના પીળા ગોળાને ગોળ-ગોળ અનુસરો' : 'Keep head still, follow the orb with eyes'}
+                    {lang === 'hi' ? '👀 सिर हिलाए बिना पीले गोले को घुमाते हुए देखें' : lang === 'en' ? 'Keep head still, trace the orb with eyes' : '👀 માથું હલાવ્યા વિના પીળા ગોળાને ગોળ-ગોળ અનુસરો'}
                   </p>
                 </div>
               )}
@@ -2355,7 +2355,7 @@ export default function HealthHubTab({
                     />
                   </svg>
                   <p className="text-xs text-amber-200 mt-2 font-bold text-center">
-                    {lang === 'gu' ? '♾️ આઠડા (∞) આકારમાં ફરતા ગોળાને એકાગ્રતાથી જુઓ' : 'Trace the figure-8 infinity loop with your eyes'}
+                    {lang === 'hi' ? '♾️ आठ (∞) के आकार में घूमते गोले को ध्यान से देखें' : lang === 'en' ? 'Trace the figure-8 infinity loop with your eyes' : '♾️ આઠડા (∞) આકારમાં ફરતા ગોળાને એકાગ્રતાથી જુઓ'}
                   </p>
                 </div>
               )}
@@ -2375,8 +2375,8 @@ export default function HealthHubTab({
                   <div className="mt-4 text-center">
                     <span className="px-3 py-1 rounded-full text-xs font-black bg-white/20 text-amber-300 shadow-xs">
                       {eyeFocusPhase === 'near'
-                        ? (lang === 'gu' ? '👇 ૧. સ્ક્રીન પર નજીક ફોકસ કરો' : 'Focus Near on Screen')
-                        : (lang === 'gu' ? '🌲 ૨. સ્ક્રીનથી દૂર અનંત અંતરે જુઓ' : 'Look into Far Distance')}
+                        ? (lang === 'hi' ? '👇 १. स्क्रीन पर पास फोकस करें' : lang === 'en' ? 'Focus Near on Screen' : '👇 ૧. સ્ક્રીન પર નજીક ફોકસ કરો')
+                        : (lang === 'hi' ? '🌲 २. स्क्रीन से दूर अनन्त में देखें' : lang === 'en' ? 'Look into Far Distance' : '🌲 ૨. સ્ક્રીનથી દૂર અનંત અંતરે જુઓ')}
                     </span>
                   </div>
                 </div>
@@ -2390,10 +2390,10 @@ export default function HealthHubTab({
                   </div>
                   <div className="text-center">
                     <p className="text-xs font-bold text-amber-200">
-                      {lang === 'gu' ? '💧 બીપના તાલે ઝડપથી આંખો પલકાવો (કુદરતી ભેજ)' : 'Blink rhythmically to moisturize dry eyes'}
+                      {lang === 'hi' ? '💧 बीप की ताल पर तेजी से पलकें झपकाएं' : lang === 'en' ? 'Blink rhythmically to moisturize dry eyes' : '💧 બીપના તાલે ઝડપથી આંખો પલકાવો (કુદરતી ભેજ)'}
                     </p>
                     <span className="text-[11px] font-mono text-amber-400 mt-0.5 block font-bold">
-                      પલકારા ગણતરી: {blinkCount} વખત
+                      {lang === 'hi' ? 'पलकें गिनती' : lang === 'en' ? 'Blink Count' : 'પલકારા ગણતરી'}: {blinkCount} {lang === 'hi' ? 'बार' : lang === 'en' ? 'times' : 'વખત'}
                     </span>
                   </div>
                 </div>
@@ -2405,12 +2405,14 @@ export default function HealthHubTab({
                   <span className="text-5xl animate-bounce">🤲</span>
                   <div className="max-w-xs space-y-1">
                     <h4 className="text-sm font-bold text-amber-300">
-                      {lang === 'gu' ? 'હથેળીઓ આંખો પર મૂકી આરામ કરો' : 'Warm Palming Rest'}
+                      {lang === 'hi' ? 'हथेलियों को आँखों पर रखकर विश्राम' : lang === 'en' ? 'Warm Palming Rest' : 'હથેળીઓ આંખો પર મૂકી આરામ કરો'}
                     </h4>
                     <p className="text-xs text-amber-100/90 leading-relaxed">
-                      {lang === 'gu'
-                        ? 'બંને હથેળીઓ ઘસીને ગરમ કરો અને આંખો પર હળવેથી મૂકો. સંપૂર્ણ અંધકારમાં આંખોને શાંતિ અનુભવો.'
-                        : 'Gently cup warm palms over closed eyes and rest in soothing darkness.'}
+                      {lang === 'hi'
+                        ? 'दोनों हथेलियों को रगड़कर गर्म करें और आँखों पर हल्के से रखें। पूर्ण अंधकार में आँखों को शांति का अनुभव कराएं।'
+                        : lang === 'en'
+                        ? 'Gently cup warm palms over closed eyes and rest in soothing darkness.'
+                        : 'બંને હથેળીઓ ઘસીને ગરમ કરો અને આંખો પર હળવેથી મૂકો. સંપૂર્ણ અંધકારમાં આંખોને શાંતિ અનુભવો.'}
                     </p>
                   </div>
                 </div>
@@ -2419,7 +2421,7 @@ export default function HealthHubTab({
               {/* Countdown Live Badge */}
               <div className="mt-3 px-3.5 py-1 rounded-full bg-black/50 border border-white/15 text-xs font-mono font-bold text-amber-300 flex items-center gap-1.5">
                 <Timer size={13} className="text-amber-400" />
-                <span>{eyeSecondsLeft} {lang === 'gu' ? 'સેકન્ડ બાકી' : 'seconds left'}</span>
+                <span>{eyeSecondsLeft} {lang === 'hi' ? 'सेकंड शेष' : lang === 'en' ? 'seconds left' : 'સેકન્ડ બાકી'}</span>
               </div>
             </div>
 
@@ -2440,8 +2442,8 @@ export default function HealthHubTab({
                   <Play size={16} fill="black" />
                   <span>
                     {eyeMode === 'full'
-                      ? (lang === 'gu' ? 'સંપૂર્ણ ૨-મિનિટ કસરત શરૂ કરો 🚀' : 'Start Full 2-Min Routine 🚀')
-                      : (lang === 'gu' ? 'કસરત શરૂ કરો (Start Exercise)' : 'Start Eye Exercise')}
+                      ? (lang === 'hi' ? 'पूर्ण २-मिनट कसरत शुरू करें 🚀' : lang === 'en' ? 'Start Full 2-Min Routine 🚀' : 'સંપૂર્ણ ૨-મિનિટ કસરત શરૂ કરો 🚀')
+                      : (lang === 'hi' ? 'कसरत शुरू करें' : lang === 'en' ? 'Start Eye Exercise' : 'કસરત શરૂ કરો (Start Exercise)')}
                   </span>
                 </button>
               ) : (
@@ -2454,7 +2456,7 @@ export default function HealthHubTab({
                     className="flex-1 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer"
                   >
                     <Pause size={16} />
-                    <span>{lang === 'gu' ? 'રોકો (Pause)' : 'Pause'}</span>
+                    <span>{lang === 'hi' ? 'रोकें (Pause)' : lang === 'en' ? 'Pause' : 'રોકો (Pause)'}</span>
                   </button>
                   <button
                     type="button"
@@ -2466,7 +2468,7 @@ export default function HealthHubTab({
                     className="py-3 px-4 rounded-2xl bg-white/15 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-98 transition cursor-pointer"
                   >
                     <RotateCcw size={16} />
-                    <span>{lang === 'gu' ? 'રીસેટ' : 'Reset'}</span>
+                    <span>{lang === 'hi' ? 'रीसेट' : lang === 'en' ? 'Reset' : 'રીસેટ'}</span>
                   </button>
                 </>
               )}
@@ -2482,13 +2484,13 @@ export default function HealthHubTab({
                 </span>
                 <div>
                   <h3 className="text-sm font-bold flex items-center gap-1.5">
-                    <span>૨૦-૨૦-૨૦ સ્ક્રીન બ્રેક ટાઇમર</span>
+                    <span>{lang === 'hi' ? '२०-२०-२० स्क्रीन ब्रेक टाइमर' : lang === 'en' ? '20-20-20 Screen Break Timer' : '૨૦-૨૦-૨૦ સ્ક્રીન બ્રેક ટાઇમર'}</span>
                     <span className="text-[10px] bg-blue-400/20 text-blue-300 font-bold px-2 py-0.5 rounded-full">
                       RULE
                     </span>
                   </h3>
                   <p className="text-[11px] text-blue-200">
-                    દર ૨૦ મિનિટે ૨૦ સેકન્ડ સુધી ૨૦ ફૂટ દૂર જુઓ
+                    {lang === 'hi' ? 'हर २० मिनट में २० सेकंड के लिए २० फीट दूर देखें' : lang === 'en' ? 'Every 20 mins, look at something 20 ft away for 20 secs' : 'દર ૨૦ મિનિટે ૨૦ સેકન્ડ સુધી ૨૦ ફૂટ દૂર જુઓ'}
                   </p>
                 </div>
               </div>
@@ -2504,7 +2506,9 @@ export default function HealthHubTab({
                     : 'bg-blue-600 hover:bg-blue-500 text-white'
                 }`}
               >
-                {is20RuleActive ? '⏸️ રોકો' : '▶️ શરૂ કરો'}
+                {is20RuleActive
+                  ? (lang === 'hi' ? '⏸️ रोकें' : lang === 'en' ? '⏸️ Pause' : '⏸️ રોકો')
+                  : (lang === 'hi' ? '▶️ शुरू करें' : lang === 'en' ? '▶️ Start' : '▶️ શરૂ કરો')}
               </button>
             </div>
 
@@ -2512,18 +2516,20 @@ export default function HealthHubTab({
             <div className="bg-white/10 rounded-2xl p-3 flex items-center justify-between">
               <div>
                 <span className="text-[11px] text-blue-200 block">
-                  {is20BreakTime ? '🚨 ૨૦ સેકન્ડનો વિઝન બ્રેક!' : 'કામ કરવાનો સમય (Work Timer):'}
+                  {is20BreakTime
+                    ? (lang === 'hi' ? '🚨 २० सेकंड का विजन ब्रेक!' : lang === 'en' ? '🚨 20-Second Vision Break!' : '🚨 ૨૦ સેકન્ડનો વિઝન બ્રેક!')
+                    : (lang === 'hi' ? 'काम का समय (Work Timer):' : lang === 'en' ? 'Work Timer:' : 'કામ કરવાનો સમય (Work Timer):')}
                 </span>
                 <span className="text-xl font-black font-mono text-amber-300">
                   {is20BreakTime
-                    ? `${breakSecondsLeft} સેકન્ડ`
-                    : `${Math.floor(rule20SecondsLeft / 60)}:${(rule20SecondsLeft % 60).toString().padStart(2, '0')} મિનિટ`}
+                    ? `${breakSecondsLeft} ${lang === 'hi' ? 'सेकंड' : lang === 'en' ? 'sec' : 'સેકન્ડ'}`
+                    : `${Math.floor(rule20SecondsLeft / 60)}:${(rule20SecondsLeft % 60).toString().padStart(2, '0')} ${lang === 'hi' ? 'मिनट' : lang === 'en' ? 'min' : 'મિનિટ'}`}
                 </span>
               </div>
               <p className="text-[11px] text-slate-300 max-w-xs text-right">
                 {is20BreakTime
-                  ? '👀 બારી બહાર ૨૦ ફૂટ દૂર જુઓ અને આંખોને આરામ આપો!'
-                  : 'ટાઇમર ચાલુ રાખો. સમય પૂરો થતાં એલાર્મ વાગશે.'}
+                  ? (lang === 'hi' ? '👀 खिड़की से २० फीट दूर देखें और आँखों को आराम दें!' : lang === 'en' ? '👀 Look 20 feet away to relax your eye muscles!' : '👀 બારી બહાર ૨૦ ફૂટ દૂર જુઓ અને આંખોને આરામ આપો!')
+                  : (lang === 'hi' ? 'टाइमर चालू रखें। समय समाप्त होने पर अलार्म बजेगा।' : lang === 'en' ? 'Keep timer running. Alarm rings when time is up.' : 'ટાઇમર ચાલુ રાખો. સમય પૂરો થતાં એલાર્મ વાગશે.')}
               </p>
             </div>
           </div>
@@ -2539,26 +2545,26 @@ export default function HealthHubTab({
               {[
                 {
                   icon: '🥕',
-                  title: lang === 'gu' ? 'વિટામિન-A & નેત્ર આહાર' : 'Vitamin-A Diet',
-                  desc: lang === 'gu' ? 'ગાજર, પપૈયું, પાલક અને બદામ આંખોની રોશની જાળવવામાં અદ્ભુત મદદ કરે છે.' : 'Carrots, papaya, spinach & almonds boost optic sharpness.',
+                  title: lang === 'hi' ? 'विटामिन-ए व आहार' : lang === 'en' ? 'Vitamin-A Diet' : 'વિટામિન-A & નેત્ર આહાર',
+                  desc: lang === 'hi' ? 'गाजर, पपीता, पालक और बादाम आँखों की रोशनी बनाए रखने में मदद करते हैं।' : lang === 'en' ? 'Carrots, papaya, spinach & almonds boost optic sharpness.' : 'ગાજર, પપૈયું, પાલક અને બદામ આંખોની રોશની જાળવવામાં અદ્ભુત મદદ કરે છે.',
                   bg: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40 text-amber-900 dark:text-amber-200',
                 },
                 {
                   icon: '💧',
-                  title: lang === 'gu' ? 'ઠંડા પાણીની છાલક' : 'Cold Water Splash',
-                  desc: lang === 'gu' ? 'સવારે ઉઠીને મોંમાં પાણી ભરીને આંખો પર ઠંડા પાણીની છાલક મારવાથી નેત્રતંતુઓ તાજા થાય છે.' : 'Splashing cold water on eyes in morning relieves strain.',
+                  title: lang === 'hi' ? 'ठंडे पानी के छींटे' : lang === 'en' ? 'Cold Water Splash' : 'ઠંડા પાણીની છાલક',
+                  desc: lang === 'hi' ? 'सुबह मुँह में पानी भरकर आँखों पर ठंडे पानी के छींटे मारने से आँखों को ताजगी मिलती है।' : lang === 'en' ? 'Splashing cold water on eyes in morning relieves strain.' : 'સવારે ઉઠીને મોંમાં પાણી ભરીને આંખો પર ઠંડા પાણીની છાલક મારવાથી નેત્રતંતુઓ તાજા થાય છે.',
                   bg: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/40 text-blue-900 dark:text-blue-200',
                 },
                 {
                   icon: '📱',
-                  title: lang === 'gu' ? 'મોબાઇલ સ્ક્રીન અંતર' : 'Safe Screen Distance',
-                  desc: lang === 'gu' ? 'મોબાઇલ હંમેશા આંખોથી ૧.૫ ફૂટ (૪૦ સે.મી.) દૂર રાખો અને રાત્રે રૂમની લાઈટ બંધ રાખી સ્ક્રીન ન જુઓ.' : 'Keep phone 40 cm away and avoid dark room glare.',
+                  title: lang === 'hi' ? 'सुरक्षित स्क्रीन दूरी' : lang === 'en' ? 'Safe Screen Distance' : 'મોબાઇલ સ્ક્રીન અંતર',
+                  desc: lang === 'hi' ? 'मोबाइल हमेशा आँखों से १.५ फीट (४० सेमी) दूर रखें और अंधेरे में स्क्रीन न देखें।' : lang === 'en' ? 'Keep phone 40 cm away and avoid dark room glare.' : 'મોબાઇલ હંમેશા આંખોથી ૧.૫ ફૂટ (૪૦ સે.મી.) દૂર રાખો અને રાત્રે રૂમની લાઈટ બંધ રાખી સ્ક્રીન ન જુઓ.',
                   bg: 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/40 text-indigo-900 dark:text-indigo-200',
                 },
                 {
                   icon: '😴',
-                  title: lang === 'gu' ? '૭-૮ કલાક પૂરતી ઊંઘ' : '7-8 Hours Sleep',
-                  desc: lang === 'gu' ? 'ઊંઘ દરમિયાન આંખોના કોષો પુનર્જીવિત થાય છે અને સુકાપણાની સમસ્યા મટે છે.' : 'Sleep rejuvenates optical cells and restores tears.',
+                  title: lang === 'hi' ? '७-८ घंटे की पर्याप्त नींद' : lang === 'en' ? '7-8 Hours Sleep' : '૭-૮ કલાક પૂરતી ઊંઘ',
+                  desc: lang === 'hi' ? 'नींद के दौरान आँखों की कोशिकाएं पुनर्जीवित होती हैं और सूखापन दूर होता है।' : lang === 'en' ? 'Sleep rejuvenates optical cells and restores moisture.' : 'ઊંઘ દરમિયાન આંખોના કોષો પુનર્જીવિત થાય છે અને સુકાપણાની સમસ્યા મટે છે.',
                   bg: 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-900/40 text-purple-900 dark:text-purple-200',
                 },
               ].map((tip, idx) => (
