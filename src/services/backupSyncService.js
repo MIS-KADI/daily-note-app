@@ -562,7 +562,7 @@ export const backupSyncService = {
    * Google Drive Auto-Sync Configuration
    */
   isGoogleDriveAutoSyncEnabled() {
-    return localStorage.getItem('daily_diary_gdrive_autosync_enabled') !== 'false';
+    return localStorage.getItem('daily_diary_gdrive_autosync_enabled') === 'true';
   },
 
   setGoogleDriveAutoSyncEnabled(enabled) {

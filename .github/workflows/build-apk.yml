@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.40.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.41.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.40.apk
+            daily-diary-v1.0.41.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,25 +68,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.40
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.40 Modern Reminders, Eye Care & Full Multilingual Support)"
+          tag_name: v1.0.41
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.41 Clean Profile & Update)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.40)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.41)
 
-            આ નવા વર્ઝન v1.0.40 માં કરવામાં આવેલા મહત્વપૂર્ણ સુધારાઓ:
-            - **✨ રિમાઇન્ડર્સ અને ટાસ્ક ટેબનું મોર્ડન અને સુંદર અરેન્જમેન્ટ (Redesigned Reminders Layout):**
-              - સ્ટેટ્સ કાર્ડ્સ (કુલ કામ, આજના, મહત્વપૂર્ણ, પૂર્ણ) સુંદર રંગબેરંગી અને આધુનિક ગ્રીડમાં ગોઠવાયા.
-              - સર્ચ બાર, ફિલ્ટર્સ અને કેટેગરી પિલ્સને પ્રીમિયમ લુક આપીને સ્પેસિંગ વધુ આકર્ષક બનાવવામાં આવી.
-            - **🌐 સંપૂર્ણ એપમાં ૧૦૦% ડાયનેમિક ભાષા પરિવર્તન (100% Dynamic Multilingual Consistency):**
-              - અંગ્રેજી (English), હિન્દી (Hindi) કે ગુજરાતી (Gujarati) પસંદ કરતાં સમગ્ર એપનું લખાણ તરત જ પસંદ કરેલી ભાષામાં બદલાશે.
-              - આંખોની કસરત (Eye Care) નું 20-20-20 સ્ક્રીન બ્રેક ટાઈમર અને ડોક્ટર ગાઈડલાઈન્સ હવે અંગ્રેજી અને હિન્દીમાં સંપૂર્ણ ઉપલબ્ધ.
-              - તમામ ટાસ્ક લિસ્ટ, ખરીદી યાદી (Shopping Checklist), પ્રિફિક્સ અને આસિસ્ટન્ટ આપોઆપ પસંદ કરેલી ભાષા અનુસાર અપડેટ થાય છે.
-            - **💾 ગૂગલ ડ્રાઈવ અને લોકલ સ્ટોરેજ એકીકરણ (Drive & Phone Storage):**
-              - PDF સ્કેન અને નોટ્સ સરળતાથી ગૂગલ ડ્રાઈવ અને ફોનના ડોક્યુમેન્ટ્સ/ડાઉનલોડ્સ ફોલ્ડરમાં સેવ કરવાની ક્ષમતા.
+            આ નવા વર્ઝન v1.0.41 માં કરવામાં આવેલા મહત્વપૂર્ણ સુધારાઓ:
+            - **✨ પ્રોફાઇલમાંથી Google Drive ઓટો-સિંક સેક્શન દૂર કરવામાં આવ્યું (Clean Profile):**
+              - યુઝરની વિનંતી મુજબ પ્રોફાઇલમાંથી Google Drive ઓટો-સિંક અને બેકઅપ કાર્ડ સંપૂર્ણપણે હટાવી લેવામાં આવ્યું છે.
+              - પ્રોફાઇલ પેજ હવે એકદમ સ્વચ્છ, સરળ અને ઝડપી બન્યું છે.
+            - **⚡ ફાસ્ટ અને સ્મૂથ પર્ફોર્મન્સ:**
+              - એપ્લિકેશનના તમામ ટેબ્સ (નોટ્સ, રિમાઇન્ડર્સ, હિસાબ, હેલ્થ/આંખોની કસરત, PDF સ્કેનર) વધુ ઝડપી અને સ્મૂથ રીતે કાર્ય કરે છે.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.40.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.41.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.40.apk
+            daily-diary-v1.0.41.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

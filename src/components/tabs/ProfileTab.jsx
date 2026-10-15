@@ -5,8 +5,6 @@ import {
   Phone,
   ShieldCheck,
   Lock,
-  Download,
-  Upload,
   KeyRound,
   CheckCircle2,
   AlertTriangle,
@@ -22,7 +20,6 @@ import {
   LogOut,
   Users,
   History,
-  Cloud,
   Database,
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
@@ -66,8 +63,6 @@ export default function ProfileTab({
   const [showHistory, setShowHistory] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState(() => propLastSyncTime || backupSyncService.getLastSyncTime());
   const [backupHistory, setBackupHistory] = useState(() => backupSyncService.getBackupHistory(user?.email || ''));
-  const [isGdriveAutoSync, setIsGdriveAutoSync] = useState(() => backupSyncService.isGoogleDriveAutoSyncEnabled());
-  const [lastGdriveSyncTime, setLastGdriveSyncTime] = useState(() => backupSyncService.getLastGoogleDriveSyncTime());
   const testHoldRef = useRef(null);
 
   // Keep local fields in sync if user changes externally (e.g. login/restore)
@@ -94,15 +89,9 @@ export default function ProfileTab({
         setBackupHistory(backupSyncService.getBackupHistory(email));
       }
     };
-    const handleGdriveSyncEvent = (e) => {
-      const time = e.detail?.timestamp || new Date().toISOString();
-      setLastGdriveSyncTime(time);
-    };
     window.addEventListener('daily_diary_sync_completed', handleSyncEvent);
-    window.addEventListener('daily_diary_gdrive_sync_completed', handleGdriveSyncEvent);
     return () => {
       window.removeEventListener('daily_diary_sync_completed', handleSyncEvent);
-      window.removeEventListener('daily_diary_gdrive_sync_completed', handleGdriveSyncEvent);
     };
   }, [email]);
 
@@ -342,75 +331,6 @@ export default function ProfileTab({
         alert('Could not find snapshot data');
       }
     }
-  };
-
-  const formatSyncTime = (isoStr) => {
-    if (!isoStr) {
-      return lang === 'gu' ? 'હજુ સુધી સિંક નથી થયું' : lang === 'hi' ? 'अभी तक सिंक नहीं हुआ' : 'Not synced yet';
-    }
-    try {
-      const d = new Date(isoStr);
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' (' + d.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' }) + ')';
-    } catch {
-      return isoStr;
-    }
-  };
-
-  const handleExport = () => {
-    storageService.exportBackup();
-  };
-
-  const handleToggleGdriveAutoSync = async (enabled) => {
-    setIsGdriveAutoSync(enabled);
-    backupSyncService.setGoogleDriveAutoSyncEnabled(enabled);
-    if (enabled) {
-      const cleanEmail = email || user?.email;
-      if (cleanEmail && cleanEmail.includes('@')) {
-        await backupSyncService.syncToGoogleDrive(cleanEmail);
-        setSyncNotice(lang === 'gu' ? '☁️ Google Drive ઓટો-સિંક સક્ષમ થયું અને ડેટા સિંક થયો!' : '☁️ Google Drive Auto-Sync enabled and synced!');
-        setTimeout(() => setSyncNotice(''), 3500);
-      }
-    }
-  };
-
-  const handleGoogleDriveBackup = async () => {
-    const cleanEmail = email || user?.email;
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      alert(lang === 'gu' ? 'કૃપા કરીને પહેલાં પ્રોફાઇલમાં તમારું Gmail / ઈમેલ દાખલ કરો!' : 'Please enter your email in profile first!');
-      return;
-    }
-    setIsSyncing(true);
-    const res = await backupSyncService.syncToGoogleDrive(cleanEmail);
-    setIsSyncing(false);
-    if (res?.success) {
-      setLastGdriveSyncTime(res.timestamp);
-      setSyncNotice(
-        lang === 'gu'
-          ? '☁️ Google Drive બેકઅપ ફાઇલ ડાઉનલોડ થઈ અને Google Drive ઓપન થઈ ગયું!'
-          : '☁️ Google Drive backup generated and opened!'
-      );
-      setTimeout(() => setSyncNotice(''), 4000);
-    }
-  };
-
-  const handleImportFile = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
-      if (typeof content === 'string') {
-        const res = storageService.importBackup(content);
-        if (res.success) {
-          alert(t('backup_restore_success', lang));
-          onReloadAllData();
-        } else {
-          alert(t('backup_file_error', lang) + res.error);
-        }
-      }
-    };
-    reader.readAsText(file);
   };
 
   return (
@@ -883,117 +803,6 @@ export default function ProfileTab({
         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-1">
           {t('privacy_guarantee_desc', lang)}
         </p>
-      </div>
-
-      {/* ==================================================== */}
-      {/* GOOGLE DRIVE AUTO-SYNC & CLOUD BACKUP CARD           */}
-      {/* ==================================================== */}
-      <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-3xl p-5 shadow-xl border border-emerald-500/30 space-y-4 relative overflow-hidden">
-        {/* Glow ambient circle */}
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 flex items-center justify-center font-black text-xl shadow-md shadow-emerald-500/25">
-              ☁️
-            </div>
-            <div>
-              <h3 className="text-sm font-black tracking-wide flex items-center gap-1.5">
-                <span>
-                  {lang === 'gu'
-                    ? 'Google Drive ઓટો-સિંક'
-                    : lang === 'hi'
-                    ? 'Google Drive ऑटो-सिंक'
-                    : 'Google Drive Auto-Sync'}
-                </span>
-                <span className="text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 font-bold px-2 py-0.5 rounded-full">
-                  CLOUD
-                </span>
-              </h3>
-              <p className="text-[11px] text-emerald-200/80">
-                {email ? `📧 ${email}` : (lang === 'gu' ? 'Google Drive સાથે ઓટો-જોડાણ' : 'Auto connected to Google Drive')}
-              </p>
-            </div>
-          </div>
-
-          {/* Auto-Sync Toggle */}
-          <div className="flex items-center gap-2">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isGdriveAutoSync}
-                onChange={(e) => handleToggleGdriveAutoSync(e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-            </label>
-          </div>
-        </div>
-
-        {/* Status Badge & Last Sync */}
-        <div className="bg-white/10 border border-white/10 rounded-2xl p-3 text-xs space-y-2 relative z-10">
-          <div className="flex items-center justify-between">
-            <span className="text-emerald-200 text-[11px] flex items-center gap-1 font-semibold">
-              <span className={`w-2 h-2 rounded-full ${isGdriveAutoSync ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
-              <span>
-                {isGdriveAutoSync
-                  ? (lang === 'gu' ? 'ઓટો-સિંક સક્રિય (ચાલુ છે)' : lang === 'hi' ? 'ऑटो-सिंक सक्रिय (चालू है)' : 'Auto-Sync Active')
-                  : (lang === 'gu' ? 'ઓટો-સિંક બંધ છે' : lang === 'hi' ? 'ऑटो-सिंक बंद है' : 'Auto-Sync Paused')}
-              </span>
-            </span>
-            <span className="font-mono text-[11px] font-bold text-amber-300">
-              {formatSyncTime(lastGdriveSyncTime)}
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-300 leading-relaxed">
-            {lang === 'gu'
-              ? '💡 તમારો તમામ ડેટા (ડાયરી નોંધો, આવક-ખર્ચ હિસાબ, કામો, દવાઓ) Google Drive ક્લાઉડ સ્ટોરેજમાં આપમેળે બેકઅપ થાય છે.'
-              : lang === 'hi'
-              ? '💡 आपका सारा डेटा Google Drive क्लाउड स्टोरेज में सुरक्षित ऑटो-सिंक होता है।'
-              : '💡 Notes, finance, tasks & medicines are automatically backed up to Google Drive.'}
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-2 relative z-10">
-          <button
-            type="button"
-            onClick={handleGoogleDriveBackup}
-            disabled={isSyncing}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-600 hover:opacity-95 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/25 active:scale-98 transition cursor-pointer"
-          >
-            <Cloud size={16} />
-            <span>
-              {lang === 'gu'
-                ? '☁️ Google Drive માં હમણાં સિંક કરો & ઓપન કરો'
-                : lang === 'hi'
-                ? '☁️ Google Drive में अभी सिंक करें व खोलें'
-                : '☁️ Sync Now & Open Google Drive'}
-            </span>
-          </button>
-
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <button
-              type="button"
-              onClick={handleExport}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition active:scale-98"
-            >
-              <Download size={15} />
-              {t('download_backup', lang)}
-            </button>
-
-            <label className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition cursor-pointer active:scale-98">
-              <Upload size={15} />
-              {t('restore_backup', lang)}
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImportFile}
-                className="hidden"
-              />
-            </label>
-          </div>
-        </div>
       </div>
 
       {/* ==================================================== */}
