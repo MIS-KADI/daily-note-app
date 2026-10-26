@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.41.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.42.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.41.apk
+            daily-diary-v1.0.42.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,21 +68,23 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.41
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.41 Clean Profile & Update)"
+          tag_name: v1.0.42
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.42 Profile Fix, Clean Home & Fresh Start)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.41)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.42)
 
-            આ નવા વર્ઝન v1.0.41 માં કરવામાં આવેલા મહત્વપૂર્ણ સુધારાઓ:
-            - **✨ પ્રોફાઇલમાંથી Google Drive ઓટો-સિંક સેક્શન દૂર કરવામાં આવ્યું (Clean Profile):**
-              - યુઝરની વિનંતી મુજબ પ્રોફાઇલમાંથી Google Drive ઓટો-સિંક અને બેકઅપ કાર્ડ સંપૂર્ણપણે હટાવી લેવામાં આવ્યું છે.
-              - પ્રોફાઇલ પેજ હવે એકદમ સ્વચ્છ, સરળ અને ઝડપી બન્યું છે.
-            - **⚡ ફાસ્ટ અને સ્મૂથ પર્ફોર્મન્સ:**
-              - એપ્લિકેશનના તમામ ટેબ્સ (નોટ્સ, રિમાઇન્ડર્સ, હિસાબ, હેલ્થ/આંખોની કસરત, PDF સ્કેનર) વધુ ઝડપી અને સ્મૂથ રીતે કાર્ય કરે છે.
+            આ નવા વર્ઝન v1.0.42 માં કરવામાં આવેલા મહત્વપૂર્ણ સુધારાઓ:
+            - **🛠️ PROFILE ટેબ સંપૂર્ણ ફિક્સ (Profile Tab Crash Fixed):**
+              - પ્રોફાઇલ ટેબમાં કંઈ દેખાતું નહોતું તે સમસ્યા કાયમ માટે ઉકેલી દેવાઈ છે. પ્રોફાઇલ પેજ, માહિતી, ફિંગરપ્રિન્ટ/PIN સુરક્ષા અને સેટિંગ્સ એકદમ યોગ્ય રીતે ખૂલે છે.
+            - **✨ હોમ સ્ક્રીન ક્લીન અને ઓનલાઈન/ઓફલાઈન ઈન્ડિકેટર મુક્ત (Clean Home & Header):**
+              - યુઝરની વિનંતી અનુસાર હેડરમાંથી ઓનલાઇન / ઓફલાઇન બેજ અને બેનર દૂર કરવામાં આવ્યા છે જેથી સ્ક્રીન એકદમ સાફ અને આકર્ષક લાગે.
+            - **🧹 ડિફોલ્ટ એન્ટ્રીઓ દૂર - સંપૂર્ણ ફ્રેશ શરૂઆત (Fresh Data & Clean Slate):**
+              - તમામ જૂની નમૂના/ડેમો એન્ટ્રીઓ (નોટ્સ, રિમાઇન્ડર્સ, દવાઓ, હિસાબ) દૂર કરી દેવામાં આવી છે.
+              - હવે તમે તમારી પોતાની નવી ફ્રેશ નોંધ, હિસાબ અને રીમાઇન્ડર્સ શરૂઆતથી ઉમેરી શકો છો. પ્રોફાઇલમાં સમર્પિત 'ડિફોલ્ટ એન્ટ્રીઓ સાફ કરો' બટન પણ આપેલ છે.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.41.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.42.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.41.apk
+            daily-diary-v1.0.42.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

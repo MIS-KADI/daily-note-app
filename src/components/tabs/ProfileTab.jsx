@@ -76,8 +76,6 @@ export default function ProfileTab({
     setPin(user?.pin || '1234');
     setIsBiometricEnabled(user?.isBiometricEnabled ?? true);
     setBackupHistory(backupSyncService.getBackupHistory(user?.email || ''));
-    setIsGdriveAutoSync(backupSyncService.isGoogleDriveAutoSyncEnabled());
-    setLastGdriveSyncTime(backupSyncService.getLastGoogleDriveSyncTime());
   }, [user]);
 
   // Listen to background auto-sync events
@@ -803,6 +801,50 @@ export default function ProfileTab({
         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-1">
           {t('privacy_guarantee_desc', lang)}
         </p>
+      </div>
+
+      {/* Fresh Start: Clear Default Entries Card */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-2xl text-lg shrink-0">
+            🧹
+          </div>
+          <div>
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+              {lang === 'gu' ? 'ડિફોલ્ટ એન્ટ્રીઓ સાફ કરો (ફ્રેશ શરૂઆત)' : lang === 'hi' ? 'डिफ़ॉल्ट प्रविष्टियां साफ़ करें (फ़्रेश शुरुआत)' : 'Clear Default Entries (Fresh Start)'}
+            </h3>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              {lang === 'gu' ? 'બધી નમૂના/ડેમો એન્ટ્રીઓ દૂર કરીને નવી ફ્રેશ નોંધ કરવા માટે' : lang === 'hi' ? 'सभी नमूना/डेमो प्रविष्टियों को हटाकर नई शुरुआत करें' : 'Remove all sample entries to start completely fresh'}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            const conf = window.confirm(
+              lang === 'gu'
+                ? 'શું તમે બધી ડિફોલ્ટ/ડેમો એન્ટ્રીઓ દૂર કરીને ફ્રેશ શરૂઆત કરવા માંગો છો?'
+                : lang === 'hi'
+                ? 'क्या आप सभी डिफ़ॉल्ट प्रविष्टियों को हटाकर फ़्रेश शुरुआत करना चाहते हैं?'
+                : 'Clear all default entries for a fresh start?'
+            );
+            if (conf) {
+              if (onClearDemo) onClearDemo();
+              else storageService.clearAllDemoData();
+              if (onReloadAllData) onReloadAllData();
+              alert(
+                lang === 'gu'
+                  ? '✅ તમામ ડિફોલ્ટ એન્ટ્રીઓ દૂર થઈ ગઈ છે! હવે તમે તમારી નવી ફ્રેશ નોંધ કરી શકો છો.'
+                  : lang === 'hi'
+                  ? '✅ सभी डिफ़ॉल्ट प्रविष्टियां हटा दी गई हैं! अब आप नई प्रविष्टियां कर सकते हैं।'
+                  : '✅ All default entries cleared! You can now start with fresh entries.'
+              );
+            }
+          }}
+          className="px-3.5 py-2 shrink-0 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-bold active:scale-95 transition"
+        >
+          {lang === 'gu' ? 'સાફ કરો' : lang === 'hi' ? 'साफ़ करें' : 'Clear'}
+        </button>
       </div>
 
       {/* ==================================================== */}

@@ -240,16 +240,10 @@ export const storageService = {
 
   getNotes() {
     const data = localStorage.getItem(STORAGE_KEYS.NOTES);
-    if (!data) {
-      if (this.isDemoMode()) {
-        const initial = getDefaultNotes(this.getLanguage());
-        localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(initial));
-        return initial;
-      }
-      return [];
-    }
+    if (!data) return [];
     try {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      return Array.isArray(parsed) ? parsed.filter((n) => !['note-1', 'note-2', 'demo-1'].includes(n.id)) : [];
     } catch {
       return [];
     }
@@ -261,16 +255,10 @@ export const storageService = {
 
   getReminders() {
     const data = localStorage.getItem(STORAGE_KEYS.REMINDERS);
-    if (!data) {
-      if (this.isDemoMode()) {
-        const initial = getDefaultReminders(this.getLanguage());
-        localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(initial));
-        return initial;
-      }
-      return [];
-    }
+    if (!data) return [];
     try {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      return Array.isArray(parsed) ? parsed.filter((r) => !['rem-1', 'rem-2', 'rem-3', 'rem-shop-1', 'rem-shop-2', 'rem-shop-3'].includes(r.id)) : [];
     } catch {
       return [];
     }
@@ -282,16 +270,10 @@ export const storageService = {
 
   getMedicines() {
     const data = localStorage.getItem(STORAGE_KEYS.MEDICINES);
-    if (!data) {
-      if (this.isDemoMode()) {
-        const initial = getDefaultMedicines(this.getLanguage());
-        localStorage.setItem(STORAGE_KEYS.MEDICINES, JSON.stringify(initial));
-        return initial;
-      }
-      return [];
-    }
+    if (!data) return [];
     try {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      return Array.isArray(parsed) ? parsed.filter((m) => !['med-1', 'med-2', 'med-3', 'med-4'].includes(m.id)) : [];
     } catch {
       return [];
     }
@@ -312,16 +294,10 @@ export const storageService = {
 
   getFinance() {
     const data = localStorage.getItem(STORAGE_KEYS.FINANCE);
-    if (!data) {
-      if (this.isDemoMode()) {
-        const initial = getDefaultFinance(this.getLanguage());
-        localStorage.setItem(STORAGE_KEYS.FINANCE, JSON.stringify(initial));
-        return initial;
-      }
-      return [];
-    }
+    if (!data) return [];
     try {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      return Array.isArray(parsed) ? parsed.filter((f) => !['fin-1', 'fin-2', 'fin-3', 'fin-4'].includes(f.id)) : [];
     } catch {
       return [];
     }
@@ -497,16 +473,10 @@ export const storageService = {
 
   getKhata() {
     const data = localStorage.getItem(STORAGE_KEYS.KHATA);
-    if (!data) {
-      if (this.isDemoMode()) {
-        const initial = getDefaultKhata(this.getLanguage());
-        localStorage.setItem(STORAGE_KEYS.KHATA, JSON.stringify(initial));
-        return initial;
-      }
-      return [];
-    }
+    if (!data) return [];
     try {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      return Array.isArray(parsed) ? parsed.filter((k) => !['kh-1', 'kh-2'].includes(k.id)) : [];
     } catch {
       return [];
     }
@@ -518,16 +488,10 @@ export const storageService = {
 
   getEvents() {
     const data = localStorage.getItem(STORAGE_KEYS.EVENTS);
-    if (!data) {
-      if (this.isDemoMode()) {
-        const initial = getDefaultEvents(this.getLanguage());
-        localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(initial));
-        return initial;
-      }
-      return [];
-    }
+    if (!data) return [];
     try {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      return Array.isArray(parsed) ? parsed.filter((e) => !['ev-1', 'ev-2'].includes(e.id)) : [];
     } catch {
       return [];
     }
@@ -547,110 +511,143 @@ export const storageService = {
   },
 
   cleanDefaultDummyDataOnce() {
-    const CLEAN_KEY = 'daily_diary_v17_cleaned_defaults';
-    if (localStorage.getItem(CLEAN_KEY)) return;
-
     try {
       // Clean dummy notes
       const notesData = localStorage.getItem(STORAGE_KEYS.NOTES);
       if (notesData) {
         const notes = JSON.parse(notesData);
-        const filtered = notes.filter((n) => !['note-1', 'note-2', 'demo-1'].includes(n.id));
-        this.saveNotes(filtered);
+        if (Array.isArray(notes)) {
+          const filtered = notes.filter((n) => !['note-1', 'note-2', 'demo-1'].includes(n.id));
+          this.saveNotes(filtered);
+        }
+      } else {
+        this.saveNotes([]);
       }
 
       // Clean dummy reminders
       const remData = localStorage.getItem(STORAGE_KEYS.REMINDERS);
       if (remData) {
         const rems = JSON.parse(remData);
-        const filtered = rems.filter((r) => !['rem-1', 'rem-2', 'rem-3', 'rem-shop-1'].includes(r.id));
-        this.saveReminders(filtered);
+        if (Array.isArray(rems)) {
+          const filtered = rems.filter((r) => !['rem-1', 'rem-2', 'rem-3', 'rem-shop-1', 'rem-shop-2', 'rem-shop-3'].includes(r.id));
+          this.saveReminders(filtered);
+        }
+      } else {
+        this.saveReminders([]);
       }
 
       // Clean dummy medicines
       const medData = localStorage.getItem(STORAGE_KEYS.MEDICINES);
       if (medData) {
         const meds = JSON.parse(medData);
-        const filtered = meds.filter((m) => !['med-1', 'med-2', 'med-3', 'med-4'].includes(m.id));
-        this.saveMedicines(filtered);
+        if (Array.isArray(meds)) {
+          const filtered = meds.filter((m) => !['med-1', 'med-2', 'med-3', 'med-4'].includes(m.id));
+          this.saveMedicines(filtered);
+        }
+      } else {
+        this.saveMedicines([]);
       }
 
       // Clean dummy finance
       const finData = localStorage.getItem(STORAGE_KEYS.FINANCE);
       if (finData) {
         const fin = JSON.parse(finData);
-        const filtered = fin.filter((f) => !['fin-1', 'fin-2', 'fin-3', 'fin-4'].includes(f.id));
-        this.saveFinance(filtered);
+        if (Array.isArray(fin)) {
+          const filtered = fin.filter((f) => !['fin-1', 'fin-2', 'fin-3', 'fin-4'].includes(f.id));
+          this.saveFinance(filtered);
+        }
+      } else {
+        this.saveFinance([]);
       }
 
       // Clean dummy khata
       const khataData = localStorage.getItem(STORAGE_KEYS.KHATA);
       if (khataData) {
         const kh = JSON.parse(khataData);
-        const filtered = kh.filter((k) => !['kh-1', 'kh-2'].includes(k.id));
-        this.saveKhata(filtered);
+        if (Array.isArray(kh)) {
+          const filtered = kh.filter((k) => !['kh-1', 'kh-2'].includes(k.id));
+          this.saveKhata(filtered);
+        }
+      } else {
+        this.saveKhata([]);
       }
 
       // Clean dummy events
       const evData = localStorage.getItem(STORAGE_KEYS.EVENTS);
       if (evData) {
         const ev = JSON.parse(evData);
-        const filtered = ev.filter((e) => !['ev-1', 'ev-2'].includes(e.id));
-        this.saveEvents(filtered);
+        if (Array.isArray(ev)) {
+          const filtered = ev.filter((e) => !['ev-1', 'ev-2'].includes(e.id));
+          this.saveEvents(filtered);
+        }
+      } else {
+        this.saveEvents([]);
       }
 
       // Clean dummy shopping
       const shopData = localStorage.getItem(STORAGE_KEYS.SHOPPING);
       if (shopData) {
         const shop = JSON.parse(shopData);
-        const filtered = shop.filter((s) => !['s-1', 's-2', 's-3', 's-4'].includes(s.id));
-        this.saveShopping(filtered);
+        if (Array.isArray(shop)) {
+          const filtered = shop.filter((s) => !['s-1', 's-2', 's-3', 's-4'].includes(s.id));
+          this.saveShopping(filtered);
+        }
+      } else {
+        this.saveShopping([]);
       }
 
       // Clean dummy accounts (42500, 6800)
       const accData = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
       if (accData) {
-        const acc = JSON.parse(accData);
-        if (acc.bankBalance === 42500 && acc.cashBalance === 6800) {
-          this.saveAccounts({ bankBalance: 0, cashBalance: 0 });
-        }
+        try {
+          const acc = JSON.parse(accData);
+          if (acc.bankBalance === 42500 && acc.cashBalance === 6800) {
+            this.saveAccounts({ bankBalance: 0, cashBalance: 0 });
+          }
+        } catch {}
+      } else {
+        this.saveAccounts({ bankBalance: 0, cashBalance: 0 });
       }
 
       // Clean dummy fitness steps (4250)
       const fitData = localStorage.getItem(STORAGE_KEYS.FITNESS);
       if (fitData) {
-        const fit = JSON.parse(fitData);
-        if (fit.steps === 4250) {
-          this.saveFitness({ ...fit, steps: 0, distanceKm: 0, calories: 0, workouts: [] });
-        }
+        try {
+          const fit = JSON.parse(fitData);
+          if (fit.steps === 4250) {
+            this.saveFitness({ ...fit, steps: 0, distanceKm: 0, calories: 0, workouts: [] });
+          }
+        } catch {}
       }
 
       // Clean dummy water (4)
       const waterData = localStorage.getItem(STORAGE_KEYS.WATER);
       if (waterData) {
-        const w = JSON.parse(waterData);
-        if (w.glasses === 4) {
-          this.saveWater({ ...w, glasses: 0 });
-        }
+        try {
+          const w = JSON.parse(waterData);
+          if (w.glasses === 4) {
+            this.saveWater({ ...w, glasses: 0 });
+          }
+        } catch {}
       }
 
       // Clean default user mobile '0000000001'
       const userProfile = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
       if (userProfile) {
-        const u = JSON.parse(userProfile);
-        if (u.mobile === '0000000001') {
-          u.mobile = '';
-          if (u.name === 'પ્રિય યુઝર') u.name = '';
-          this.saveUserProfile(u);
-        }
+        try {
+          const u = JSON.parse(userProfile);
+          if (u.mobile === '0000000001') {
+            u.mobile = '';
+            if (u.name === 'પ્રિય યુઝર') u.name = '';
+            this.saveUserProfile(u);
+          }
+        } catch {}
       }
 
       // Disable demo mode
       this.setDemoMode(false);
-      localStorage.setItem(CLEAN_KEY, 'true');
     } catch (err) {
       console.warn('cleanDefaultDummyDataOnce error:', err);
-      localStorage.setItem(CLEAN_KEY, 'true');
     }
   },
 
@@ -781,16 +778,6 @@ export const storageService = {
     } catch (e) {
       return { success: false, error: e.message };
     }
-  },
-
-  // Pedometer Auto Tracking Preference (Defaults to true)
-  getPedometerAutoEnabled() {
-    const val = localStorage.getItem('auto_pedometer_enabled');
-    return val === null ? true : val === 'true';
-  },
-
-  setPedometerAutoEnabled(enabled) {
-    localStorage.setItem('auto_pedometer_enabled', enabled ? 'true' : 'false');
   },
 
   // 7-Day Step History for Charts

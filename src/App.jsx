@@ -574,42 +574,10 @@ export default function App() {
     storageService.saveTheme(next);
   };
 
-  // Language selection handler - dynamically translates all content to match the newly selected language
+  // Language selection handler
   const handleSelectLang = (newLang) => {
     setLang(newLang);
     storageService.saveLanguage(newLang);
-
-    // If in demo mode OR items have default IDs, update all default entries to match the newly selected language!
-    if (isDemoMode || reminders.some((r) => r.id?.startsWith('rem-') || r.id?.startsWith('rem-shop-'))) {
-      const newReminders = storageService.getDefaultReminders(newLang);
-      setReminders(newReminders);
-      storageService.saveReminders(newReminders);
-    }
-
-    if (isDemoMode || notes.some((n) => n.id?.startsWith('note-'))) {
-      const newNotes = storageService.getDefaultNotes(newLang);
-      setNotes(newNotes);
-      storageService.saveNotes(newNotes);
-    }
-
-    if (isDemoMode) {
-      const newMeds = storageService.getDefaultMedicines(newLang);
-      const newFin = storageService.getDefaultFinance(newLang);
-      const newKhata = storageService.getDefaultKhata(newLang);
-      const newEv = storageService.getDefaultEvents(newLang);
-
-      setMedicines(newMeds);
-      storageService.saveMedicines(newMeds);
-
-      setFinance(newFin);
-      storageService.saveFinance(newFin);
-
-      setKhata(newKhata);
-      storageService.saveKhata(newKhata);
-
-      setEvents(newEv);
-      storageService.saveEvents(newEv);
-    }
   };
 
   // Demo Mode Action Handlers
@@ -1154,28 +1122,6 @@ export default function App() {
         }
         isOffline={isOffline}
       />
-      {/* Non-blocking Offline Mode Banner (Full Offline + Online Dual Operation) */}
-      {isOffline && (
-        <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-900 dark:text-amber-200 px-3.5 py-1.5 text-[11px] font-bold flex items-center justify-between shrink-0 animate-in fade-in">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span>
-              {lang === 'gu'
-                ? '📴 ઑફલાઇન મોડ: તમામ સુવિધાઓ ચાલુ છે, ડેટા ફોનમાં સુરક્ષિત સેવ થાય છે.'
-                : lang === 'hi'
-                ? '📴 ऑफ़लाइन मोड: सभी सुविधाएं चालू हैं, डेटा फोन में सुरक्षित है।'
-                : '📴 Offline Mode: All features available, data safely saved locally.'}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={verifyInternet}
-            className="text-[10px] bg-amber-500/20 hover:bg-amber-500/30 px-2 py-0.5 rounded-full transition active:scale-95 text-amber-800 dark:text-amber-300 font-bold"
-          >
-            {lang === 'gu' ? 'કનેક્ટ ચકાસો' : 'Verify'}
-          </button>
-        </div>
-      )}
 
       {/* 1-Tap Sensor Permission Banner for iOS / Browsers */}
       {needsSensorPermission && (
