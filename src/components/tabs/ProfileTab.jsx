@@ -15,9 +15,6 @@ import {
   Shield,
   FileText,
   RefreshCw,
-  LogIn,
-  LogOut,
-  Users,
   History,
   Database,
 } from 'lucide-react';
@@ -339,53 +336,13 @@ export default function ProfileTab({
             <UserCheck className="text-blue-600" size={22} />
             {t('profile_title', lang)}
           </h2>
-          <p className="text-xs text-slate-500">
-            {t('profile_sub', lang)}
-          </p>
         </div>
       </div>
 
-      {/* Linked Account Card */}
+      {/* Profile Details Card */}
       <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xl flex items-center justify-center shadow-md shadow-blue-500/20">
-              {name ? name.charAt(0).toUpperCase() : 'U'}
-            </div>
-            <div>
-              <h3 className="font-bold text-sm text-slate-800">{name || t('user_profile_heading', lang)}</h3>
-            </div>
-          </div>
-
-          {/* Quick Account Switch & Logout Actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {onOpenAuthModal && (
-              <button
-                type="button"
-                onClick={onOpenAuthModal}
-                className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl border border-blue-200 transition active:scale-95 flex items-center gap-1"
-                title={lang === 'gu' ? 'એકાઉન્ટ સ્વિચ / લૉગિન' : 'Switch / Login'}
-              >
-                <Users size={13} className="text-blue-600" />
-                <span>{lang === 'gu' ? 'સ્વિચ' : lang === 'hi' ? 'स्विच' : 'Switch'}</span>
-              </button>
-            )}
-            {onLogout && (
-              <button
-                type="button"
-                onClick={onLogout}
-                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition active:scale-95 flex items-center gap-1"
-                title={lang === 'gu' ? 'લૉગઆઉટ' : 'Logout'}
-              >
-                <LogOut size={13} className="text-rose-600" />
-                <span>{lang === 'gu' ? 'લૉગઆઉટ' : lang === 'hi' ? 'लॉगआउट' : 'Logout'}</span>
-              </button>
-            )}
-          </div>
-        </div>
-
         {/* Edit Form */}
-        <form onSubmit={handleSaveProfile} className="space-y-3 pt-2">
+        <form onSubmit={handleSaveProfile} className="space-y-3">
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1">
               {t('full_name', lang)}

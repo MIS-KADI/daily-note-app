@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.43.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.44.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.43.apk
+            daily-diary-v1.0.44.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,20 +68,19 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.43
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.43 Clean Profile & Privacy Update)"
+          tag_name: v1.0.44
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.44 Streamlined Profile)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.43)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.44)
 
-            આ નવા વર્ઝન v1.0.43 માં કરવામાં આવેલા મહત્વપૂર્ણ સુધારાઓ:
-            - **✨ પ્રોફાઇલમાંથી 'મોબાઇલ & ઈમેઇલ લિંક્ડ છે' બેજ હટાવ્યો (Image-1 Update):**
-              - યુઝર પ્રોફાઇલ કાર્ડમાંથી લિંક્ડ બેજ સંપૂર્ણપણે દૂર કરીને પ્રોફાઇલ હેડર એકદમ સ્વચ્છ કરવામાં આવ્યું.
-            - **🚫 પ્રાઈવસી પોલિસીમાંથી 'જાહેરાત મુક્ત (No Ads)' સેક્શન હટાવ્યું (Image-2 Update):**
-              - પ્રાઈવસી પોલિસી મોડલમાંથી જાહેરાત મુક્ત વાળું સેક્શન સંપૂર્ણપણે હટાવી લીધું છે.
+            આ નવા વર્ઝન v1.0.44 માં કરવામાં આવેલા મહત્વપૂર્ણ સુધારાઓ:
+            - **✨ પ્રોફાઇલ પેજ વધુ સરળ અને સ્વચ્છ બનાવ્યું:**
+              - યુઝર પ્રોફાઇલ કાર્ડમાંથી એવતાર [U], હેડિંગ, સ્વિચ અને લૉગઆઉટ બટન તેમજ સબ-ટાઈટલ સંપૂર્ણપણે દૂર કરવામાં આવ્યા.
+              - હવે સીધું જ ફોર્મ ઓપન થશે અને યુઝર પોતાનું નામ, મોબાઈલ, ઈમેઈલ અને સેટિંગ્સ સરળતાથી સેવ કરી શકશે.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.43.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.44.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.43.apk
+            daily-diary-v1.0.44.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
