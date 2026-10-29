@@ -6,7 +6,6 @@ import {
   ShieldCheck,
   Lock,
   KeyRound,
-  CheckCircle2,
   AlertTriangle,
   Save,
   HelpCircle,
@@ -355,10 +354,6 @@ export default function ProfileTab({
             </div>
             <div>
               <h3 className="font-bold text-sm text-slate-800">{name || t('user_profile_heading', lang)}</h3>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full mt-0.5">
-                <CheckCircle2 size={12} />
-                {t('mobile_email_linked', lang)}
-              </span>
             </div>
           </div>
 
@@ -930,24 +925,11 @@ export default function ProfileTab({
                 </p>
               </div>
 
-              {/* Point 5: Zero Ads & Complete Data Ownership */}
-              <div className="p-3 rounded-2xl bg-purple-50/60 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-900/60 space-y-1">
-                <span className="font-black text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
-                  <span>🚫</span>
-                  <span>{lang === 'gu' ? '૫. કોઈ જાહેરાતો નહીં & સંપૂર્ણ ડેટા માલિકી (No Ads & Full Ownership)' : '5. Ad-Free & Data Ownership'}</span>
-                </span>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                  {lang === 'gu'
-                    ? 'એપ સંપૂર્ણપણે જાહેરાત મુક્ત (Ad-Free) છે. તમે કોઈપણ સમયે બેકઅપ ડાઉનલોડ કરી શકો છો અથવા એક ક્લિકમાં તમારો તમામ ડેટા ભૂંસી શકો છો.'
-                    : 'This app is 100% ad-free and tracker-free. You have full ownership to export backups or wipe all stored data at any time.'}
-                </p>
-              </div>
-
-              {/* Point 6: Photos & Media Vault Privacy */}
+              {/* Point 5: Photos & Media Vault Privacy */}
               <div className="p-3 rounded-2xl bg-pink-50/60 dark:bg-pink-950/40 border border-pink-200/80 dark:border-pink-900/60 space-y-1">
                 <span className="font-black text-pink-900 dark:text-pink-200 flex items-center gap-1.5">
                   <span>📸</span>
-                  <span>{lang === 'gu' ? '૬. ફોટો અને મીડિયા ગોપનીયતા (Photos & Media Vault Privacy)' : '6. Photos & Media Vault Privacy'}</span>
+                  <span>{lang === 'gu' ? '૫. ફોટો અને મીડિયા ગોપનીયતા (Photos & Media Vault Privacy)' : '5. Photos & Media Vault Privacy'}</span>
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
@@ -956,11 +938,11 @@ export default function ProfileTab({
                 </p>
               </div>
 
-              {/* Point 7: Contacts Privacy */}
+              {/* Point 6: Contacts Privacy */}
               <div className="p-3 rounded-2xl bg-teal-50/60 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-900/60 space-y-1">
                 <span className="font-black text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
                   <span>👥</span>
-                  <span>{lang === 'gu' ? '૭. સંપર્કોની સુરક્ષા (Contacts Access Privacy)' : '7. Contacts Access Privacy'}</span>
+                  <span>{lang === 'gu' ? '૬. સંપર્કોની સુરક્ષા (Contacts Access Privacy)' : '6. Contacts Access Privacy'}</span>
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
