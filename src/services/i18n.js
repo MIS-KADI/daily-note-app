@@ -3030,8 +3030,8 @@ export const translations = {
     ar: 'سعرات المشي',
   },
   quick_steps: {
-    gu: 'ઝડપી સ્ટેપ ઉમેરો (Quick Steps):',
-    hi: 'त्वरित कदम जोड़ें (Quick Steps):',
+    gu: 'ઝડપી સ્ટેપ ઉમેરો:',
+    hi: 'त्वरित कदम जोड़ें:',
     en: 'Quick Add Steps:',
     es: 'Añadir Pasos Rápidos:',
     fr: 'Ajout Rapide de Pas :',
@@ -3983,6 +3983,111 @@ export const translations = {
     fr: 'Plus tard',
     de: 'Später',
     ar: 'لاحقاً',
+  },
+  steps: {
+    gu: 'સ્ટેપ્સ',
+    hi: 'कदम',
+    en: 'steps',
+  },
+  gym_workouts: {
+    gu: 'જીમ & કસરત લૉગ',
+    hi: 'जिम और व्यायाम लॉग',
+    en: 'Gym & Workouts',
+  },
+  duration_mins: {
+    gu: 'સમય (મિનિટ)',
+    hi: 'समय (मिनट)',
+    en: 'Duration (mins)',
+  },
+  add_workout: {
+    gu: 'કસરત ઉમેરો',
+    hi: 'व्यायाम जोड़ें',
+    en: 'Add Workout',
+  },
+  pulse_tap_reader: {
+    gu: 'પલ્સ / હાર્ટ રેટ રીડર',
+    hi: 'पल्स / हार्ट रेट रीडर',
+    en: 'Pulse / Heart Rate Reader',
+  },
+  tap_pulse_hint: {
+    gu: 'તમારી નાડી પ્રમાણે નીચેના બટન પર લયબદ્ધ ટેપ કરો',
+    hi: 'अपनी नाड़ी की गति से नीचे दिए बटन पर लगातार टैप करें',
+    en: 'Tap rhythmically below in sync with your heartbeat',
+  },
+  bmi_calculator: {
+    gu: 'BMI અને આદર્શ વજન કેલ્ક્યુલેટર',
+    hi: 'BMI और आदर्श वजन कैलकुलेटर',
+    en: 'BMI & Ideal Weight Calculator',
+  },
+  weight_kg: {
+    gu: 'વજન (kg)',
+    hi: 'वजन (kg)',
+    en: 'Weight (kg)',
+  },
+  height_cm: {
+    gu: 'ઊંચાઈ (cm)',
+    hi: 'ऊंचाई (cm)',
+    en: 'Height (cm)',
+  },
+  ideal_weight: {
+    gu: 'આદર્શ વજન રેન્જ',
+    hi: 'आदर्श वजन सीमा',
+    en: 'Ideal Weight Range',
+  },
+  birthday_today: {
+    gu: 'આજે જન્મદિવસ!',
+    hi: 'आज जन्मदिन!',
+    en: 'Birthday Today!',
+  },
+  anniversary_today: {
+    gu: 'આજે લગ્ન વર્ષગાંઠ!',
+    hi: 'आज सालगिरह!',
+    en: 'Anniversary Today!',
+  },
+  untitled_note: {
+    gu: 'શીર્ષક વિનાની નોંધ',
+    hi: 'बिना शीर्षक नोट',
+    en: 'Untitled Note',
+  },
+  note_date: {
+    gu: 'તારીખ:',
+    hi: 'तारीख:',
+    en: 'Date:',
+  },
+  events_sub: {
+    gu: 'પરિવારના જન્મદિવસ અને શુભ પ્રસંગો યાદ રાખો',
+    hi: 'परिवार के जन्मदिन और खास अवसर याद रखें',
+    en: 'Remember family birthdays and special occasions',
+  },
+  type: {
+    gu: 'પ્રકાર',
+    hi: 'प्रकार',
+    en: 'Type',
+  },
+  time: {
+    gu: 'સમય',
+    hi: 'समय',
+    en: 'Time',
+  },
+  priority: {
+    gu: 'પ્રાથમિકતા',
+    hi: 'प्राथमिकता',
+    en: 'Priority',
+  },
+  relation: {
+    gu: 'સંબંધ',
+    hi: 'संबंध',
+    en: 'Relation',
+  },
+  notes: {
+    gu: 'નોંધ',
+    hi: 'नोट्स',
+    en: 'Notes',
+  },
+  finance: {
+    gu: 'હિસાબ & ખાતાવહી',
+    hi: 'हिसाब और खाता',
+    en: 'Finance & Khata',
   },
 };
 

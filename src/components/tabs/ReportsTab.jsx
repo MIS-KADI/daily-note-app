@@ -256,7 +256,7 @@ export default function ReportsTab({
       });
     } catch (e) {
       console.error('CSV export error:', e);
-      alert(lang === 'gu' ? 'એક્સેલ / CSV ડાઉનલોડ કરવામાં અડચણ આવી.' : 'Error downloading CSV.');
+      alert(lang === 'gu' ? 'એક્સેલ / CSV ડાઉનલોડ કરવામાં અડચણ આવી.' : lang === 'hi' ? 'एक्सेल / CSV डाउनलोड करने में समस्या आई।' : 'Error downloading CSV.');
     } finally {
       setDownloading(false);
     }
@@ -345,7 +345,7 @@ export default function ReportsTab({
           <div className="pt-1 animate-in fade-in">
             <input
               type="password"
-              placeholder={lang === 'gu' ? 'PDF ખોલવા માટે પાસવર્ડ દાખલ કરો (દા.ત. 1234)' : 'Enter password to unlock PDF'}
+              placeholder={lang === 'gu' ? 'PDF ખોલવા માટે પાસવર્ડ દાખલ કરો' : lang === 'hi' ? 'PDF खोलने के लिए पासवर्ड दर्ज करें' : 'Enter password to unlock PDF'}
               value={pdfPassword}
               onChange={(e) => setPdfPassword(e.target.value)}
               className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-bold focus:outline-blue-500"
@@ -353,6 +353,8 @@ export default function ReportsTab({
             <p className="text-[10px] text-slate-400 mt-1">
               {lang === 'gu'
                 ? 'ℹ️ આ PDF ઓપન કરતી વખતે પાસવર્ડ માંગવામાં આવશે.'
+                : lang === 'hi'
+                ? 'ℹ️ यह PDF खोलते समय पासवर्ड मांगा जाएगा।'
                 : 'ℹ️ Anyone opening this PDF will be prompted for this password.'}
             </p>
           </div>
@@ -556,7 +558,9 @@ export default function ReportsTab({
                       : 'Report Ready!'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {readyFile.type === 'pdf' ? 'PDF દસ્તાવેજ' : 'Excel / CSV સ્પ્રેડશીટ'}
+                    {readyFile.type === 'pdf'
+                      ? (lang === 'hi' ? 'PDF दस्तावेज़' : lang === 'en' ? 'PDF Document' : 'PDF દસ્તાવેજ')
+                      : (lang === 'hi' ? 'Excel / CSV स्प्रेडशीट' : lang === 'en' ? 'Excel / CSV Spreadsheet' : 'Excel / CSV સ્પ્રેડશીટ')}
                   </p>
                 </div>
               </div>
@@ -579,7 +583,7 @@ export default function ReportsTab({
                 </p>
                 <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium mt-0.5">
                   <Check size={13} />
-                  {lang === 'gu' ? 'ડાઉનલોડ / સેવ થયેલ' : 'Downloaded / Saved'}
+                  {lang === 'gu' ? 'ડાઉનલોડ / સેવ થયેલ' : lang === 'hi' ? 'डाउनलोड / सहेजा गया' : 'Downloaded / Saved'}
                 </p>
               </div>
             </div>

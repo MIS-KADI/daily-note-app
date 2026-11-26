@@ -21,27 +21,43 @@ export default function UpiPaymentModal({
   lang = 'gu',
 }) {
   const [copied, setCopied] = useState(false);
-  const [upiId, setUpiId] = useState(user?.upiId || '9876543210@paytm');
+  const [upiId, setUpiId] = useState(user?.upiId || '');
   const [amount, setAmount] = useState(party?.amount || 0);
 
   if (!isOpen || !party) return null;
 
-  const partyName = party.partyName || 'મિત્ર';
+  const partyName = party.partyName || (lang === 'hi' ? 'मित्र' : lang === 'en' ? 'Friend' : 'મિત્ર');
   const userName = user?.name || 'Daily Diary User';
 
+  const hasValidUpi = upiId && upiId.includes('@');
   // Standard UPI URI format
-  const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(userName)}&am=${encodeURIComponent(amount)}&cu=INR&tn=${encodeURIComponent('Khata_Payment_' + partyName)}`;
+  const upiUri = hasValidUpi
+    ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(userName)}&am=${encodeURIComponent(amount)}&cu=INR&tn=${encodeURIComponent('Khata_Payment_' + partyName)}`
+    : '';
 
   // Public QR Code Image generator URL
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUri)}`;
+  const qrCodeUrl = hasValidUpi
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUri)}`
+    : '';
 
   const handleCopyLink = () => {
+    if (!hasValidUpi) return;
     navigator.clipboard.writeText(upiUri);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSendOnWhatsApp = () => {
+    if (!hasValidUpi) {
+      alert(
+        lang === 'hi'
+          ? 'कृपया पहले अपनी UPI ID दर्ज करें!'
+          : lang === 'en'
+          ? 'Please enter your UPI ID first!'
+          : 'કૃપા કરીને પહેલાં તમારી UPI ID દાખલ કરો!'
+      );
+      return;
+    }
     const formattedAmt = Number(amount).toLocaleString();
     let message = '';
 
@@ -67,8 +83,12 @@ export default function UpiPaymentModal({
               <QrCode size={20} />
             </span>
             <div>
-              <h3 className="font-bold text-base leading-tight">UPI પેમેન્ટ QR & લિંક</h3>
-              <p className="text-xs text-emerald-100">{partyName} માટે સ્કેનર</p>
+              <h3 className="font-bold text-base leading-tight">
+                {lang === 'hi' ? 'UPI पेमेंट QR और लिंक' : lang === 'en' ? 'UPI Payment QR & Link' : 'UPI પેમેન્ટ QR & લિંક'}
+              </h3>
+              <p className="text-xs text-emerald-100">
+                {lang === 'hi' ? `${partyName} के लिए स्कैनर` : lang === 'en' ? `Scanner for ${partyName}` : `${partyName} માટે સ્કેનર`}
+              </p>
             </div>
           </div>
           <button
@@ -84,32 +104,59 @@ export default function UpiPaymentModal({
           {/* Party & Amount Tag */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex justify-between items-center text-left">
             <div>
-              <span className="text-[10px] text-slate-400 font-semibold block">પાર્ટીનું નામ</span>
+              <span className="text-[10px] text-slate-400 font-semibold block">
+                {lang === 'hi' ? 'पार्टी का नाम' : lang === 'en' ? 'Party Name' : 'પાર્ટીનું નામ'}
+              </span>
               <span className="text-sm font-bold text-slate-800">{partyName}</span>
             </div>
             <div className="text-right">
-              <span className="text-[10px] text-slate-400 font-semibold block">બાકી રકમ</span>
+              <span className="text-[10px] text-slate-400 font-semibold block">
+                {lang === 'hi' ? 'बकाया राशि' : lang === 'en' ? 'Balance Amount' : 'બાકી રકમ'}
+              </span>
               <span className="text-base font-black text-emerald-600">₹{Number(amount).toLocaleString()}</span>
             </div>
           </div>
 
           {/* QR Code Container */}
           <div className="flex flex-col items-center justify-center p-4 bg-slate-50 border-2 border-dashed border-emerald-300 rounded-3xl relative">
-            <img
-              src={qrCodeUrl}
-              alt="UPI QR Code"
-              className="w-48 h-48 rounded-2xl shadow-sm bg-white p-2 border border-slate-200"
-            />
-            <span className="mt-2.5 text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-              <ShieldCheck size={14} className="text-emerald-600" />
-              GPay, PhonePe, Paytm કે BHIM થી સ્કેન કરો
-            </span>
+            {hasValidUpi ? (
+              <>
+                <img
+                  src={qrCodeUrl}
+                  alt="UPI QR Code"
+                  className="w-48 h-48 rounded-2xl shadow-sm bg-white p-2 border border-slate-200"
+                />
+                <span className="mt-2.5 text-[11px] font-semibold text-slate-600 flex items-center gap-1">
+                  <ShieldCheck size={14} className="text-emerald-600" />
+                  {lang === 'hi'
+                    ? 'GPay, PhonePe, Paytm या BHIM से स्कैन करें'
+                    : lang === 'en'
+                    ? 'Scan with GPay, PhonePe, Paytm or BHIM'
+                    : 'GPay, PhonePe, Paytm કે BHIM થી સ્કેન કરો'}
+                </span>
+              </>
+            ) : (
+              <div className="py-8 px-4 text-slate-500 text-xs space-y-2">
+                <QrCode size={40} className="mx-auto text-emerald-400" />
+                <p className="font-bold text-slate-700">
+                  {lang === 'hi'
+                    ? 'QR कोड बनाने के लिए नीचे अपनी UPI ID दर्ज करें'
+                    : lang === 'en'
+                    ? 'Enter your UPI ID below to generate QR code'
+                    : 'QR કોડ બનાવવા માટે નીચે તમારી UPI ID દાખલ કરો'}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* User's Receiving UPI ID config */}
           <div className="text-left space-y-1">
             <label className="block text-[11px] font-semibold text-slate-600">
-              તમારી UPI ID (રકમ જમા કરવા માટે):
+              {lang === 'hi'
+                ? 'आपकी UPI ID (राशि प्राप्त करने के लिए):'
+                : lang === 'en'
+                ? 'Your UPI ID (to receive payment):'
+                : 'તમારી UPI ID (રકમ જમા કરવા માટે):'}
             </label>
             <div className="flex gap-2">
               <input
@@ -120,7 +167,7 @@ export default function UpiPaymentModal({
                   onUpdateUserUpi?.(e.target.value);
                 }}
                 className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                placeholder="yourname@okhdfcbank"
+                placeholder=""
               />
             </div>
           </div>
@@ -132,24 +179,42 @@ export default function UpiPaymentModal({
               className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-98 transition"
             >
               <MessageCircle size={17} />
-              WhatsApp પર QR પેમેન્ટ લિંક મોકલો
+              {lang === 'hi'
+                ? 'WhatsApp पर QR पेमेंट लिंक भेजें'
+                : lang === 'en'
+                ? 'Send QR Payment Link on WhatsApp'
+                : 'WhatsApp પર QR પેમેન્ટ લિંક મોકલો'}
             </button>
 
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={handleCopyLink}
-                className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold active:scale-98 transition"
+                disabled={!hasValidUpi}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold active:scale-98 transition disabled:opacity-50"
               >
                 {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-                {copied ? 'લિંક કોપી થઈ ગઈ!' : 'UPI લિંક કોપી'}
+                {copied
+                  ? lang === 'hi'
+                    ? 'लिंक कॉपी हो गया!'
+                    : lang === 'en'
+                    ? 'Link Copied!'
+                    : 'લિંક કોપી થઈ ગઈ!'
+                  : lang === 'hi'
+                  ? 'UPI लिंक कॉपी'
+                  : lang === 'en'
+                  ? 'Copy UPI Link'
+                  : 'UPI લિંક કોપી'}
               </button>
 
               <a
-                href={upiUri}
-                className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold active:scale-98 transition"
+                href={hasValidUpi ? upiUri : undefined}
+                onClick={(e) => {
+                  if (!hasValidUpi) e.preventDefault();
+                }}
+                className={`flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold active:scale-98 transition ${!hasValidUpi ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <ExternalLink size={14} />
-                UPI એપમાં ખોલો
+                {lang === 'hi' ? 'UPI ऐप में खोलें' : lang === 'en' ? 'Open in UPI App' : 'UPI એપમાં ખોલો'}
               </a>
             </div>
           </div>

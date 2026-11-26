@@ -57,7 +57,14 @@ export default function HomeTab({
   onToggleReminder,
   onOpenCalculator,
 }) {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const nowDate = new Date();
+  const todayStr = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}-${String(nowDate.getDate()).padStart(2, '0')}`;
+  const stepsCount = Math.max(0, Number(fitness?.steps) || 0);
+  const stepGoal = Math.max(500, Number(fitness?.stepTarget) || 8000);
+  const stepPct = Math.min(100, Math.round((stepsCount / stepGoal) * 100));
+  const waterGlasses = Math.max(0, Number(water?.glasses) || 0);
+  const waterTarget = Math.max(1, Number(water?.target) || 8);
+  const waterPct = Math.min(100, Math.round((waterGlasses / waterTarget) * 100));
 
   // Calculations
   const todayMedicines = medicines.filter((m) => m.active);
@@ -333,7 +340,7 @@ export default function HomeTab({
                   {lang === 'gu' ? 'મારી યાદગાર ફોટો ગેલેરી' : lang === 'hi' ? 'मेरी पसंदीदा फोटो गैलरी' : 'Favorite Photo Gallery'}
                 </span>
                 <span className="text-[9px] bg-white/25 px-1.5 py-0.2 rounded-full uppercase font-bold text-white">
-                  ⭐ ફેવરિટ
+                  ⭐ {lang === 'hi' ? 'पसंदीदा' : lang === 'en' ? 'Favorite' : 'ફેવરિટ'}
                 </span>
               </div>
               <p className="text-[11px] text-pink-100 truncate mt-0.5">
@@ -444,6 +451,102 @@ export default function HomeTab({
           </div>
           <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate max-w-full">{t('btn_emergency', lang)}</span>
         </button>
+      </div>
+
+      {/* Quick Daily Steps & Water Tracker Widget */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {/* Steps Card */}
+        <div
+          onClick={() => onNavigate('health')}
+          className="bg-white dark:bg-slate-900 rounded-3xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2 cursor-pointer hover:border-teal-300 transition"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1">
+              <span>👟</span>
+              <span>{t('steps_today', lang)}</span>
+            </span>
+            {isStepSensorActive && (
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            )}
+          </div>
+          <div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-lg font-black text-teal-700 dark:text-teal-400">{stepsCount.toLocaleString()}</span>
+              <span className="text-[10px] font-semibold text-slate-400">/ {stepGoal.toLocaleString()}</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1.5">
+              <div className="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full transition-all duration-300" style={{ width: `${stepPct}%` }} />
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-0.5" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => onToggleStepSensor?.()}
+              className={`text-[10px] font-bold px-2 py-1 rounded-lg transition ${
+                isStepSensorActive
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {isStepSensorActive ? (lang === 'hi' ? 'चालू' : lang === 'en' ? 'Active' : 'ચાલુ') : (lang === 'hi' ? 'सेंसर' : lang === 'en' ? 'Sensor' : 'સેન્સર')}
+            </button>
+            <button
+              type="button"
+              onClick={() => onStepIncrement?.(500)}
+              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 transition active:scale-95"
+            >
+              +500
+            </button>
+          </div>
+        </div>
+
+        {/* Water Intake Card */}
+        <div
+          onClick={() => onNavigate('health')}
+          className="bg-white dark:bg-slate-900 rounded-3xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2 cursor-pointer hover:border-cyan-300 transition"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1">
+              <span>💧</span>
+              <span>{lang === 'hi' ? 'पानी' : lang === 'en' ? 'Water' : 'પાણી'}</span>
+            </span>
+            <span className="text-[10px] font-bold text-cyan-600">{waterPct}%</span>
+          </div>
+          <div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-lg font-black text-cyan-700 dark:text-cyan-400">{waterGlasses}</span>
+              <span className="text-[10px] font-semibold text-slate-400">
+                / {waterTarget} {lang === 'hi' ? 'गिलास' : lang === 'en' ? 'gl' : 'ગ્લાસ'}
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1.5">
+              <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full transition-all duration-300" style={{ width: `${waterPct}%` }} />
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-0.5" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => waterGlasses > 0 && onUpdateWater?.({ ...water, glasses: waterGlasses - 1 })}
+              disabled={waterGlasses === 0}
+              className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 transition active:scale-95"
+            >
+              -1
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const next = waterGlasses + 1;
+                onUpdateWater?.({ ...water, glasses: next });
+                if (next >= waterTarget && waterGlasses < waterTarget) {
+                  confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+                }
+              }}
+              className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white transition active:scale-95"
+            >
+              +1 {lang === 'hi' ? 'गिलास' : lang === 'en' ? 'Glass' : 'ગ્લાસ'}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Priority 1: Today's Medicine Routine Tracker */}
@@ -570,7 +673,7 @@ export default function HomeTab({
             {/* Full Width Continuous (સળંગ) Note Description */}
             {nextMeetingOrBank.description && (
               <p className="text-xs text-slate-600 mt-2 leading-relaxed bg-white/70 p-2.5 rounded-xl border border-amber-100/90 break-normal">
-                <span className="font-bold text-amber-950">📝 {lang === 'gu' ? 'નોંધ:' : 'Note:'} </span>
+                <span className="font-bold text-amber-950">📝 {lang === 'hi' ? 'नोट:' : lang === 'en' ? 'Note:' : 'નોંધ:'} </span>
                 <span>{nextMeetingOrBank.description}</span>
               </p>
             )}

@@ -384,7 +384,7 @@ export default function ProfileTab({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              placeholder="user@example.com"
+              placeholder=""
               required
             />
           </div>
@@ -403,7 +403,7 @@ export default function ProfileTab({
               />
               <div className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 flex items-center justify-between pointer-events-none shadow-2xs">
                 <span className="font-mono">
-                  {dob ? dob.split('-').reverse().join('/') : (lang === 'hi' ? 'DD/MM/YYYY (चुनें)' : 'DD/MM/YYYY (પસંદ કરો)')}
+                  {dob ? dob.split('-').reverse().join('/') : (lang === 'hi' ? 'DD/MM/YYYY (चुनें)' : lang === 'en' ? 'DD/MM/YYYY (Select)' : 'DD/MM/YYYY (પસંદ કરો)')}
                 </span>
                 <span className="text-[10px] text-blue-600 font-semibold">📅 (DD/MM/YYYY)</span>
               </div>
@@ -424,7 +424,7 @@ export default function ProfileTab({
               value={upiId}
               onChange={(e) => setUpiId(e.target.value)}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              placeholder="9876543210@paytm / name@oksbi"
+              placeholder=""
             />
           </div>
 
@@ -556,7 +556,7 @@ export default function ProfileTab({
                     className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 active:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center gap-1.5 transition active:scale-98"
                   >
                     <Fingerprint size={14} className="text-blue-600" />
-                    <span>{lang === 'gu' ? 'સિસ્ટમ સેન્સર ટેસ્ટ' : 'Native Sensor'}</span>
+                    <span>{lang === 'gu' ? 'સિસ્ટમ સેન્સર ટેસ્ટ' : lang === 'hi' ? 'नेटिव सेंसर टेस्ट' : 'Native Sensor'}</span>
                   </button>
 
                   <button
@@ -581,15 +581,22 @@ export default function ProfileTab({
                     )}
                     <span className="relative z-10">
                       {isTestingHold
-                        ? `${lang === 'gu' ? 'ટેસ્ટ...' : 'Testing...'} ${testHoldProgress}%`
+                        ? `${lang === 'gu' ? 'ટેસ્ટ...' : lang === 'hi' ? 'जांच...' : 'Testing...'} ${testHoldProgress}%`
                         : lang === 'gu'
-                        ? '👆 ટચ કરી રાખો (Hold)'
+                        ? '👆 ટચ કરી રાખો'
+                        : lang === 'hi'
+                        ? '👆 दबाए रखें'
                         : '👆 Touch & Hold'}
                     </span>
                   </button>
                 </div>
                 <p className="text-[10px] text-slate-500 text-center">
-                  💡 {lang === 'gu' ? 'તમે ગમે તે ફોન કે સ્ક્રીન પર ફિંગરપ્રિન્ટ ટચ કરીને એપ અનલૉક કરી શકો છો.' : 'Touch & hold works universally across all devices.'}
+                  💡{' '}
+                  {lang === 'gu'
+                    ? 'તમે ગમે તે ફોન કે સ્ક્રીન પર ફિંગરપ્રિન્ટ ટચ કરીને એપ અનલૉક કરી શકો છો.'
+                    : lang === 'hi'
+                    ? 'आप किसी भी फोन या स्क्रीन पर फिंगरप्रिंट टच करके ऐप अनलॉक कर सकते हैं।'
+                    : 'Touch & hold works universally across all devices.'}
                 </p>
               </div>
             )}
@@ -813,10 +820,10 @@ export default function ProfileTab({
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                    {lang === 'gu' ? 'પ્રાઇવસી પોલિસી (Privacy Policy)' : lang === 'hi' ? 'प्राइवेसी पॉलिसी (Privacy Policy)' : 'Privacy Policy & Terms'}
+                    {lang === 'gu' ? 'પ્રાઇવસી પોલિસી' : lang === 'hi' ? 'प्राइवेसी पॉलिसी' : 'Privacy Policy & Terms'}
                   </h3>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                    {lang === 'gu' ? 'તમારા ડેટાની ૧૦૦% ગોપનીયતા અને સુરક્ષા ગેરંટી' : '100% Privacy & Data Security Protection'}
+                    {lang === 'gu' ? 'તમારા ડેટાની ૧૦૦% ગોપનીયતા અને સુરક્ષા ગેરંટી' : lang === 'hi' ? 'आपके डेटा की 100% गोपनीयता और सुरक्षा गारंटी' : '100% Privacy & Data Security Protection'}
                   </p>
                 </div>
               </div>
@@ -830,16 +837,18 @@ export default function ProfileTab({
 
             {/* Modal Body - Scrollable content */}
             <div className="p-4 overflow-y-auto space-y-3.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-              {/* Point 1: 100% Online Security */}
+              {/* Point 1 */}
               <div className="p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60 space-y-1">
                 <span className="font-black text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
                   <span>🛡️</span>
-                  <span>{lang === 'gu' ? '૧. ૧૦૦% ઓનલાઇન ક્લાઉડ સુરક્ષા (100% Online Cloud Security)' : lang === 'hi' ? '१. १००% ऑनलाइन क्लाउड सुरक्षा' : '1. 100% Online Cloud Security'}</span>
+                  <span>{lang === 'gu' ? '૧. સંપૂર્ણ ડેટા સુરક્ષા અને ગોપનીયતા' : lang === 'hi' ? '1. पूर्ण डेटा सुरक्षा और गोपनीयता' : '1. Complete Data Security & Privacy'}</span>
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
-                    ? 'તમારી તમામ વ્યક્તિગત ડાયરીની નોંધો, દવાઓનું શિડ્યુલ, રોકડ અને બેંકનો હિસાબ ૧૦૦% ઓનલાઇન એન્ક્રિપ્શન સાથે સુરક્ષિત રહે છે. ઇન્ટરનેટ કનેક્શન સાથે જ એપ ઓપન થાય છે જેથી તમારો ડેટા સુરક્ષિત રહે.'
-                    : 'All your diary notes, health vitals, finances, and shopping lists operate with 100% online real-time encryption and cloud protection.'}
+                    ? 'તમારી તમામ વ્યક્તિગત ડાયરીની નોંધો, દવાઓનું શિડ્યુલ, રોકડ અને બેંકનો હિસાબ તમારા ઉપકરણ અને એન્ક્રિપ્ટેડ બેકઅપમાં સંપૂર્ણ સુરક્ષિત રહે છે.'
+                    : lang === 'hi'
+                    ? 'आपकी सभी व्यक्तिगत डायरी प्रविष्टियां, दवाओं का शेड्यूल और वित्तीय विवरण पूरी तरह सुरक्षित रहते हैं।'
+                    : 'All your diary notes, health vitals, finances, and shopping lists are securely stored with encryption and backup protection.'}
                 </p>
               </div>
 
@@ -847,12 +856,14 @@ export default function ProfileTab({
               <div className="p-3 rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 space-y-1">
                 <span className="font-black text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
                   <span>🔐</span>
-                  <span>{lang === 'gu' ? '૨. ફિંગરપ્રિન્ટ & બાયોમેટ્રિક સુરક્ષા (Biometric Security)' : '2. Biometric Fingerprint & Security'}</span>
+                  <span>{lang === 'gu' ? '૨. ફિંગરપ્રિન્ટ & બાયોમેટ્રિક સુરક્ષા' : lang === 'hi' ? '2. फ़िंगरप्रिंट और बायोमेट्रिक सुरक्षा' : '2. Biometric Fingerprint & Security'}</span>
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
-                    ? 'ફિંગરપ્રિન્ટ કે ફેસ લૉક સંપૂર્ણપણે તમારા ફોનના હાર્ડવેર સિક્યુરિટી એન્ક્લેવ દ્વારા જ ચકાસાય છે. અમારી એપ્લિકેશન તમારી ફિંગરપ્રિન્ટ ક્યારેય કોપી કે સેવ કરતી નથી.'
-                    : 'Biometric authorization is handled strictly by your device Android Biometric hardware enclave. The application never stores or has access to your raw biometric fingerprints.'}
+                    ? 'ફિંગરપ્રિન્ટ કે ફેસ લૉક સંપૂર્ણપણે તમારા ફોનના હાર્ડવેર સિક્યુરિટી દ્વારા જ ચકાસાય છે. એપ્લિકેશન તમારી ફિંગરપ્રિન્ટ ક્યારેય કોપી કે સેવ કરતી નથી.'
+                    : lang === 'hi'
+                    ? 'फ़िंगरप्रिंट या फेस लॉक आपके फ़ोन के सुरक्षित हार्डवेयर द्वारा ही जांचा जाता है। ऐप आपकी फ़िंगरप्रिंट कभी सेव नहीं करता।'
+                    : 'Biometric authorization is handled strictly by your device hardware enclave. The app never stores or accesses raw fingerprints.'}
                 </p>
               </div>
 
@@ -860,12 +871,14 @@ export default function ProfileTab({
               <div className="p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 space-y-1">
                 <span className="font-black text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
                   <span>🎙️</span>
-                  <span>{lang === 'gu' ? '૩. માઇક્રોફોન અને વૉઇસ ટાઇપિંગ (Voice Typing)' : '3. Microphone & Voice Recognition'}</span>
+                  <span>{lang === 'gu' ? '૩. માઇક્રોફોન અને વૉઇસ ટાઇપિંગ' : lang === 'hi' ? '3. माइक्रोफ़ोन और वॉइस टाइपिंग' : '3. Microphone & Voice Recognition'}</span>
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
                     ? 'માઇક્રોફોન પરવાનગીનો ઉપયોગ ફક્ત ત્યારે જ થાય છે જ્યારે તમે વૉઇસ ટાઇપિંગ બટન દબાવો છો. અવાજ કોઈપણ સર્વર પર રેકોર્ડ થતો નથી.'
-                    : 'Microphone permission is strictly used in real-time when voice typing is activated by the user. No audio recordings are permanently stored or uploaded.'}
+                    : lang === 'hi'
+                    ? 'माइक्रोफ़ोन का उपयोग केवल तभी होता है जब आप वॉइस बटन दबाते हैं। आपकी आवाज़ कहीं रिकॉर्ड नहीं होती।'
+                    : 'Microphone permission is strictly used in real-time when voice typing is activated by the user. No audio recordings are stored.'}
                 </p>
               </div>
 
@@ -873,12 +886,14 @@ export default function ProfileTab({
               <div className="p-3 rounded-2xl bg-cyan-50/60 dark:bg-cyan-950/40 border border-cyan-200/80 dark:border-cyan-900/60 space-y-1">
                 <span className="font-black text-cyan-900 dark:text-cyan-200 flex items-center gap-1.5">
                   <span>👟</span>
-                  <span>{lang === 'gu' ? '૪. ફિટનેસ & સ્ટેપ સેન્સર (Motion Sensors & Step Counter)' : '4. Fitness & Motion Sensors'}</span>
+                  <span>{lang === 'gu' ? '૪. ફિટનેસ & સ્ટેપ સેન્સર' : lang === 'hi' ? '4. फ़िटनेस और स्टेप सेंसर' : '4. Fitness & Motion Sensors'}</span>
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
-                    ? 'દૈનિક ચાલવાના પગલાં ગણવા માટે મોબાઇલના મોશન સેન્સરનો ઉપયોગ થાય છે જેથી તમારી ફિટનેસ સુધારી શકાય. આ ગણતરી ફક્ત તમારા ફોનમાં જ રહે છે.'
-                    : 'Motion sensors are used to calculate daily walking steps and burnt calories locally without sharing movement coordinates.'}
+                    ? 'દૈનિક ચાલવાના પગલાં ગણવા માટે મોબાઇલના મોશન સેન્સરનો ઉપયોગ થાય છે. આ ગણતરી ફક્ત તમારા ફોનમાં જ રહે છે.'
+                    : lang === 'hi'
+                    ? 'दैनिक कदम गिनने के लिए मोबाइल के मोशन सेंसर का उपयोग होता है। यह डेटा केवल आपके फ़ोन में रहता है।'
+                    : 'Motion sensors are used locally to calculate daily walking steps and calories without sharing location coordinates.'}
                 </p>
               </div>
 
@@ -886,12 +901,14 @@ export default function ProfileTab({
               <div className="p-3 rounded-2xl bg-pink-50/60 dark:bg-pink-950/40 border border-pink-200/80 dark:border-pink-900/60 space-y-1">
                 <span className="font-black text-pink-900 dark:text-pink-200 flex items-center gap-1.5">
                   <span>📸</span>
-                  <span>{lang === 'gu' ? '૫. ફોટો અને મીડિયા ગોપનીયતા (Photos & Media Vault Privacy)' : '5. Photos & Media Vault Privacy'}</span>
+                  <span>{lang === 'gu' ? '૫. ફોટો અને મીડિયા ગોપનીયતા' : lang === 'hi' ? '5. फ़ोटो और मीडिया गोपनीयता' : '5. Photos & Media Vault Privacy'}</span>
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
-                    ? 'તમારી ફોટો ગેલેરીના તમામ ફેવરિટ ફોટા માત્ર તમારા મોબાઇલમાં જ સ્થાનિક રીતે સચવાય છે. તે કોઈ સર્વર પર અપલોડ થતા નથી અને તમે તેને વ્યક્તિગત PIN અથવા ફિંગરપ્રિન્ટ લૉક વડે સુરક્ષિત રાખી શકો છો.'
-                    : 'All photos in your favorite gallery vault are saved locally on your device only. They are never transmitted to any external server and can be secured with a PIN or fingerprint lock.'}
+                    ? 'તમારી ફોટો ગેલેરીના તમામ ફેવરિટ ફોટા માત્ર તમારા મોબાઇલમાં જ સ્થાનિક રીતે સચવાય છે અને PIN અથવા ફિંગરપ્રિન્ટ વડે સુરક્ષિત રાખી શકાય છે.'
+                    : lang === 'hi'
+                    ? 'आपकी फ़ोटो गैलरी के सभी फ़ोटो केवल आपके मोबाइल में सुरक्षित रहते हैं और इन्हें PIN या फ़िंगरप्रिंट से लॉक किया जा सकता है।'
+                    : 'All photos in your favorite gallery vault are saved locally on your device and can be secured with a PIN or fingerprint lock.'}
                 </p>
               </div>
 
@@ -899,12 +916,14 @@ export default function ProfileTab({
               <div className="p-3 rounded-2xl bg-teal-50/60 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-900/60 space-y-1">
                 <span className="font-black text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
                   <span>👥</span>
-                  <span>{lang === 'gu' ? '૬. સંપર્કોની સુરક્ષા (Contacts Access Privacy)' : '6. Contacts Access Privacy'}</span>
+                  <span>{lang === 'gu' ? '૬. સંપર્કોની સુરક્ષા' : lang === 'hi' ? '6. कॉन्टैक्ट्स की सुरक्षा' : '6. Contacts Access Privacy'}</span>
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
-                    ? 'સંપર્કોની પરવાનગી માત્ર ખાતાવહી, કામોના રિમાઇન્ડર અને ઇમરજન્સી હેલ્પલાઇન માટે તમારા ફોનમાંથી સીધા નામ અને નંબર પસંદ કરવા માટે જ વપરાય છે. તમારી કોન્ટેક્ટ બુક ક્યારેય કોઈ સાથે શેર થતી નથી.'
-                    : 'Contact access is strictly utilized on-demand when selecting contacts for khata transactions, reminders, or emergency speed-dial. Your phonebook is never uploaded, synced, or shared.'}
+                    ? 'સંપર્કોની પરવાનગી માત્ર ખાતાવહી, કામોના રિમાઇન્ડર અને ઇમરજન્સી હેલ્પલાઇન માટે સીધા નામ અને નંબર પસંદ કરવા માટે જ વપરાય છે.'
+                    : lang === 'hi'
+                    ? 'कॉन्टैक्ट की अनुमति केवल खाता बही, रिमाइंडर और इमरजेंसी नंबर चुनने के लिए ही उपयोग होती है। आपकी कॉन्टैक्ट बुक साझा नहीं होती।'
+                    : 'Contact access is strictly utilized on-demand when selecting contacts for khata, reminders, or emergency speed-dial.'}
                 </p>
               </div>
             </div>

@@ -372,8 +372,30 @@ export const storageService = {
     localStorage.setItem(STORAGE_KEYS.LANGUAGE, safeLang);
   },
 
+  getLocalDateStr(date = new Date()) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  },
+
+  getDailyStepMap() {
+    try {
+      const raw = localStorage.getItem('daily_step_history_map');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading daily step map:', e);
+    }
+    return {};
+  },
+
   getFitness() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = this.getLocalDateStr();
     const data = localStorage.getItem(STORAGE_KEYS.FITNESS);
     if (!data) {
       const initial = {
@@ -399,10 +421,10 @@ export const storageService = {
       if (parsed.date !== todayStr) {
         if (parsed.steps > 0) {
           try {
-            const hist = this.getWeeklyStepHistory();
-            const yDate = parsed.date || new Date(Date.now() - 86400000).toISOString().split('T')[0];
-            const updatedHist = hist.map((h) => (h.date === yDate ? { ...h, steps: parsed.steps } : h));
-            this.saveWeeklyStepHistory(updatedHist);
+            const yDate = parsed.date || this.getLocalDateStr(new Date(Date.now() - 86400000));
+            const map = this.getDailyStepMap();
+            map[yDate] = Math.max(0, Number(parsed.steps) || 0);
+            localStorage.setItem('daily_step_history_map', JSON.stringify(map));
           } catch (e) {
             console.warn('Archive history error:', e);
           }
@@ -440,7 +462,16 @@ export const storageService = {
   },
 
   saveFitness(fitness) {
-    localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(fitness));
+    const todayStr = fitness?.date || this.getLocalDateStr();
+    const toSave = { ...fitness, date: todayStr };
+    localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(toSave));
+    try {
+      const map = this.getDailyStepMap();
+      map[todayStr] = Math.max(0, Number(toSave.steps) || 0);
+      localStorage.setItem('daily_step_history_map', JSON.stringify(map));
+    } catch (e) {
+      console.warn('Error saving daily step map:', e);
+    }
   },
 
   getPedometerAutoEnabled() {
@@ -631,17 +662,42 @@ export const storageService = {
         } catch {}
       }
 
-      // Clean default user mobile '0000000001'
+      // Clean default user mobile '0000000001' or dummy UPI
       const userProfile = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
       if (userProfile) {
         try {
           const u = JSON.parse(userProfile);
+          let changed = false;
           if (u.mobile === '0000000001') {
             u.mobile = '';
-            if (u.name === 'પ્રિય યુઝર') u.name = '';
-            this.saveUserProfile(u);
+            changed = true;
+          }
+          if (u.name === 'પ્રિય યુઝર') {
+            u.name = '';
+            changed = true;
+          }
+          if (u.upiId === '9876543210@paytm') {
+            u.upiId = '';
+            changed = true;
+          }
+          if (changed) this.saveUserProfile(u);
+        } catch {}
+      }
+
+      // One-time cleanup of old random/mock weekly_step_history so step graph reflects actual walked steps
+      if (!localStorage.getItem('daily_diary_step_map_v1')) {
+        localStorage.removeItem('weekly_step_history');
+        try {
+          const fitRaw = localStorage.getItem(STORAGE_KEYS.FITNESS);
+          if (fitRaw) {
+            const fit = JSON.parse(fitRaw);
+            const dateKey = fit?.date || this.getLocalDateStr();
+            const map = this.getDailyStepMap();
+            map[dateKey] = Math.max(0, Number(fit?.steps) || 0);
+            localStorage.setItem('daily_step_history_map', JSON.stringify(map));
           }
         } catch {}
+        localStorage.setItem('daily_diary_step_map_v1', 'true');
       }
 
       // Disable demo mode
@@ -780,27 +836,62 @@ export const storageService = {
     }
   },
 
-  // 7-Day Step History for Charts
-  getWeeklyStepHistory() {
+  // 7-Day Real Step History for Charts (Mon-Sun localized, 0 for days without steps)
+  getWeeklyStepHistory(lang = 'gu') {
+    const dayNamesByLang = {
+      gu: ['સોમ', 'મંગળ', 'બુધ', 'ગુરુ', 'શુક્ર', 'શનિ', 'રવિ'],
+      hi: ['सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि', 'रवि'],
+      en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      es: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+      fr: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+      de: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+      ar: ['إث', 'ثل', 'أر', 'خم', 'جم', 'سب', 'أح'],
+    };
+    const days = dayNamesByLang[lang] || dayNamesByLang.en;
+    const now = new Date();
+    const todayStr = this.getLocalDateStr(now);
+    const todayIndex = (now.getDay() + 6) % 7; // Monday = 0
+    const map = this.getDailyStepMap();
+
+    let todayFitnessSteps = 0;
     try {
-      const data = localStorage.getItem('weekly_step_history');
-      if (data) return JSON.parse(data);
-    } catch (e) {
-      console.warn('Error reading step history:', e);
-    }
-    // Default 7-day realistic mock/seed so user immediately sees a lively chart
-    const days = ['સોમ', 'મંગળ', 'બુધ', 'ગુરુ', 'શુક્ર', 'શનિ', 'રવિ'];
-    const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0
-    return days.map((day, idx) => ({
-      day,
-      date: new Date(Date.now() - (todayIndex - idx) * 86400000).toISOString().split('T')[0],
-      steps: idx === todayIndex ? 6450 : Math.round(5000 + Math.random() * 4500),
-      isToday: idx === todayIndex,
-    }));
+      const fitRaw = localStorage.getItem(STORAGE_KEYS.FITNESS);
+      if (fitRaw) {
+        const fit = JSON.parse(fitRaw);
+        if (fit?.date === todayStr) {
+          todayFitnessSteps = Math.max(0, Number(fit.steps) || 0);
+        }
+      }
+    } catch {}
+
+    return days.map((day, idx) => {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (todayIndex - idx));
+      const dateStr = this.getLocalDateStr(d);
+      const isToday = dateStr === todayStr;
+      const recorded = isToday ? todayFitnessSteps : Math.max(0, Number(map[dateStr]) || 0);
+      return {
+        day,
+        date: dateStr,
+        steps: recorded,
+        isToday,
+      };
+    });
   },
 
   saveWeeklyStepHistory(history) {
+    if (!Array.isArray(history)) return;
     localStorage.setItem('weekly_step_history', JSON.stringify(history));
+    try {
+      const map = this.getDailyStepMap();
+      history.forEach((item) => {
+        if (item?.date && typeof item.steps === 'number') {
+          map[item.date] = Math.max(0, item.steps);
+        }
+      });
+      localStorage.setItem('daily_step_history_map', JSON.stringify(map));
+    } catch (e) {
+      console.warn('Error syncing weekly history map:', e);
+    }
   },
 
   // Daily Diary Writing Reminder Settings

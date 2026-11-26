@@ -45,9 +45,9 @@ const SCAN_MODES = [
   { id: 'document', nameGu: '📄 દસ્તાવેજ', nameHi: '📄 दस्तावेज़', nameEn: 'Document', icon: FileText, descGu: 'મલ્ટી-પેજ ડોક્યુમેન્ટ / ફાઇલો' },
   { id: 'book', nameGu: '📖 પુસ્તક / બુક', nameHi: '📖 पुस्तक / बुक', nameEn: 'Book', icon: BookOpen, descGu: 'ચોપડી, રજિસ્ટર કે નોટબુક' },
   { id: 'whiteboard', nameGu: '📋 વ્હાઇટબોર્ડ', nameHi: '📋 व्हाइटबोर्ड', nameEn: 'Whiteboard', icon: Layers, descGu: 'બોર્ડ નોટ્સ, માર્કર બૂસ્ટ' },
-  { id: 'idcard', nameGu: '🪪 ID કાર્ડ (2-in-1)', nameHi: '🪪 आईडी કાર્ડ (2-in-1)', nameEn: 'ID Card (2-in-1)', icon: CreditCard, descGu: 'લાઈસન્સ, આધાર કાર્ડ વગેરે' },
-  { id: 'bizcard', nameGu: '💼 વિઝિટિંગ કાર્ડ', nameHi: '💼 विजिटिंग કાર્ડ', nameEn: 'Business Card', icon: Briefcase, descGu: 'બિઝનેસ કાર્ડ ફ્રન્ટ & બેક' },
-  { id: 'saved_scans', nameGu: '📁 સેવ કરેલા સ્કેન', nameHi: '📁 સહેજેલા સ્કેન', nameEn: 'Saved Scans', icon: Grid, descGu: 'અગાઉ સેવ કરેલા દસ્તાવેજો' },
+  { id: 'idcard', nameGu: '🪪 ID કાર્ડ (2-in-1)', nameHi: '🪪 आईडी कार्ड (2-in-1)', nameEn: 'ID Card (2-in-1)', icon: CreditCard, descGu: 'લાઈસન્સ, આધાર કાર્ડ વગેરે' },
+  { id: 'bizcard', nameGu: '💼 વિઝિટિંગ કાર્ડ', nameHi: '💼 विजिटिंग कार्ड', nameEn: 'Business Card', icon: Briefcase, descGu: 'બિઝનેસ કાર્ડ ફ્રન્ટ & બેક' },
+  { id: 'saved_scans', nameGu: '📁 સેવ કરેલા સ્કેન', nameHi: '📁 सहेजे गए स्कैन', nameEn: 'Saved Scans', icon: Grid, descGu: 'અગાઉ સેવ કરેલા દસ્તાવેજો' },
 ];
 
 // Available Filter Types
@@ -62,10 +62,10 @@ const SCAN_FILTERS = [
 
 // Page Sizes
 const PAGE_SIZES = [
-  { id: 'a4', labelGu: 'A4 પાનું', labelEn: 'A4', w: 210, h: 297 },
-  { id: 'letter', labelGu: 'Letter', labelEn: 'Letter', w: 215.9, h: 279.4 },
-  { id: 'legal', labelGu: 'Legal', labelEn: 'Legal', w: 215.9, h: 355.6 },
-  { id: 'fit', labelGu: 'ઓટો ફિટ (Fit)', labelEn: 'Auto Fit', w: 0, h: 0 },
+  { id: 'a4', labelGu: 'A4 પાનું', labelHi: 'A4 पेज', labelEn: 'A4', w: 210, h: 297 },
+  { id: 'letter', labelGu: 'Letter', labelHi: 'Letter', labelEn: 'Letter', w: 215.9, h: 279.4 },
+  { id: 'legal', labelGu: 'Legal', labelHi: 'Legal', labelEn: 'Legal', w: 215.9, h: 355.6 },
+  { id: 'fit', labelGu: 'ઓટો ફિટ', labelHi: 'ऑटो फिट', labelEn: 'Auto Fit', w: 0, h: 0 },
 ];
 
 const ID_CARD_TYPES = [
@@ -330,7 +330,15 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
     ctx.fillStyle = '#64748b';
     ctx.font = '18px sans-serif';
     const dateStr = new Date().toLocaleDateString('en-GB');
-    ctx.fillText(`દૈનિક ડાયરી સ્કેનર • ઓળખપત્ર પ્રમાણિત નકલ (2-in-1 Scan) • તારીખ: ${dateStr}`, A4_W / 2, 120);
+    ctx.fillText(
+      lang === 'gu'
+        ? `દૈનિક ડાયરી સ્કેનર • ઓળખપત્ર પ્રમાણિત નકલ • તારીખ: ${dateStr}`
+        : lang === 'hi'
+        ? `दैनिक डायरी स्कैनर • प्रमाणित आईडी कॉपी • दिनांक: ${dateStr}`
+        : `Daily Diary Scanner • Certified 2-in-1 ID Copy • Date: ${dateStr}`,
+      A4_W / 2,
+      120
+    );
 
     ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 2;
@@ -384,14 +392,26 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
           ctx.fillStyle = '#94a3b8';
           ctx.font = '22px sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('➕ (પાછળની બાજુ સ્કેન કરવાની બાકી છે)', A4_W / 2, yPos + CARD_H / 2);
+          ctx.fillText(
+            lang === 'gu' ? '➕ પાછળની બાજુ સ્કેન કરવાની બાકી છે' : lang === 'hi' ? '➕ पीछे की ओर स्कैन बाकी है' : '➕ Back Side Pending',
+            A4_W / 2,
+            yPos + CARD_H / 2
+          );
           resolve();
         }
       });
     };
 
-    await drawCardSlot(idFront?.processedUrl || idFront?.dataUrl, '૧. આગળની બાજુ (FRONT SIDE)', FRONT_Y);
-    await drawCardSlot(idBack?.processedUrl || idBack?.dataUrl, '૨. પાછળની બાજુ (BACK SIDE)', BACK_Y);
+    await drawCardSlot(
+      idFront?.processedUrl || idFront?.dataUrl,
+      lang === 'gu' ? '૧. આગળની બાજુ' : lang === 'hi' ? '१. आगे की ओर' : '1. FRONT SIDE',
+      FRONT_Y
+    );
+    await drawCardSlot(
+      idBack?.processedUrl || idBack?.dataUrl,
+      lang === 'gu' ? '૨. પાછળની બાજુ' : lang === 'hi' ? '२. पीछे की ओर' : '2. BACK SIDE',
+      BACK_Y
+    );
 
     ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 1.5;
@@ -403,7 +423,15 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
     ctx.fillStyle = '#94a3b8';
     ctx.font = '16px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🔒 સુરક્ષિત સ્કેન • ૧૦૦% ઓફલાઈન અને એન્ક્રિપ્ટેડ ડિવાઇસ સંગ્રહ', A4_W / 2, 1465);
+    ctx.fillText(
+      lang === 'gu'
+        ? '🔒 સુરક્ષિત સ્કેન • ૧૦૦% ઓફલાઈન અને એન્ક્રિપ્ટેડ ડિવાઇસ સંગ્રહ'
+        : lang === 'hi'
+        ? '🔒 सुरक्षित स्कैन • 100% ऑफ़लाइन और एन्क्रिप्टेड डिवाइस स्टोरेज'
+        : '🔒 Secure Scan • 100% Offline & Encrypted Device Storage',
+      A4_W / 2,
+      1465
+    );
 
     setIdCompositePreview(canvas.toDataURL('image/jpeg', 0.92));
   }, [idFront, idBack, idType, lang]);
@@ -432,7 +460,11 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 36px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('💼 BUSINESS CARD (વિઝિટિંગ કાર્ડ)', A4_W / 2, 90);
+    ctx.fillText(
+      lang === 'gu' ? '💼 વિઝિટિંગ કાર્ડ (Business Card)' : lang === 'hi' ? '💼 विजिटिंग कार्ड (Business Card)' : '💼 BUSINESS CARD',
+      A4_W / 2,
+      90
+    );
 
     const CARD_W = 840;
     const CARD_H = 480; // Standard 3.5:2 ratio
@@ -479,17 +511,29 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
           ctx.fillStyle = '#94a3b8';
           ctx.font = '20px sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('➕ પાછળની બાજુ (BACK SIDE)', A4_W / 2, yPos + CARD_H / 2);
+          ctx.fillText(
+            lang === 'gu' ? '➕ પાછળની બાજુ' : lang === 'hi' ? '➕ पीछे की ओर' : '➕ BACK SIDE',
+            A4_W / 2,
+            yPos + CARD_H / 2
+          );
           resolve();
         }
       });
     };
 
-    await drawBizSlot(bizFront?.processedUrl || bizFront?.dataUrl, '૧. આગળની બાજુ (FRONT)', FRONT_Y);
-    await drawBizSlot(bizBack?.processedUrl || bizBack?.dataUrl, '૨. પાછળની બાજુ (BACK)', BACK_Y);
+    await drawBizSlot(
+      bizFront?.processedUrl || bizFront?.dataUrl,
+      lang === 'gu' ? '૧. આગળની બાજુ' : lang === 'hi' ? '१. आगे की ओर' : '1. FRONT SIDE',
+      FRONT_Y
+    );
+    await drawBizSlot(
+      bizBack?.processedUrl || bizBack?.dataUrl,
+      lang === 'gu' ? '૨. પાછળની બાજુ' : lang === 'hi' ? '२. पीछे की ओर' : '2. BACK SIDE',
+      BACK_Y
+    );
 
     setBizCompositePreview(canvas.toDataURL('image/jpeg', 0.92));
-  }, [bizFront, bizBack]);
+  }, [bizFront, bizBack, lang]);
 
   useEffect(() => {
     if (scanMode === 'bizcard') generateBizCardComposite();
@@ -578,7 +622,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
           await track.applyConstraints({ advanced: [{ torch: nextVal }] });
           setIsTorchOn(nextVal);
         } else {
-          alert(lang === 'gu' ? 'આ કેમેરામાં ટોર્ચ સપોર્ટ નથી.' : 'Torch not supported.');
+          alert(lang === 'gu' ? 'આ કેમેરામાં ટોર્ચ સપોર્ટ નથી.' : lang === 'hi' ? 'इस कैमरे में टॉर्च सपोर्ट नहीं है।' : 'Torch not supported.');
         }
       } catch (_) {}
     }
@@ -921,7 +965,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
   // Export Multi-page PDF
   const handleExportDocPdf = async (action = 'download') => {
     if (pages.length === 0) {
-      alert(lang === 'gu' ? 'કૃપા કરીને ઓછામાં ઓછું ૧ પાનું સ્કેન કરો.' : 'Please add at least 1 page.');
+      alert(lang === 'gu' ? 'કૃપા કરીને ઓછામાં ઓછું ૧ પાનું સ્કેન કરો.' : lang === 'hi' ? 'कृपया कम से कम 1 पेज स्कैन करें।' : 'Please add at least 1 page.');
       return;
     }
 
@@ -1014,7 +1058,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
     } catch (err) {
       console.error('PDF generation error:', err);
-      alert(lang === 'gu' ? `PDF બનાવવામાં ક્ષતિ આવી: ${err?.message || ''}` : `Error: ${err?.message || ''}`);
+      alert(lang === 'gu' ? `PDF બનાવવામાં ક્ષતિ આવી: ${err?.message || ''}` : lang === 'hi' ? `PDF बनाने में त्रुटि हुई: ${err?.message || ''}` : `Error: ${err?.message || ''}`);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -1026,7 +1070,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
     const title = type === 'idcard' ? idDocTitle : bizDocTitle;
 
     if (!composite) {
-      alert(lang === 'gu' ? 'કૃપા કરીને કાર્ડની આગળ અથવા પાછળની બાજુ સ્કેન કરો.' : 'Please scan card sides.');
+      alert(lang === 'gu' ? 'કૃપા કરીને કાર્ડની આગળ અથવા પાછળની બાજુ સ્કેન કરો.' : lang === 'hi' ? 'कृपया कार्ड के आगे या पीछे का हिस्सा स्कैन करें।' : 'Please scan card sides.');
       return;
     }
 
@@ -1098,7 +1142,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
 
       confetti({ particleCount: 55, spread: 65, origin: { y: 0.6 } });
     } catch (err) {
-      alert(lang === 'gu' ? `નિકાસમાં ક્ષતિ આવી: ${err?.message || ''}` : `Error: ${err?.message || ''}`);
+      alert(lang === 'gu' ? `નિકાસમાં ક્ષતિ આવી: ${err?.message || ''}` : lang === 'hi' ? `निर्यात में त्रुटि हुई: ${err?.message || ''}` : `Error: ${err?.message || ''}`);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -1668,14 +1712,16 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
             <div className="space-y-3.5">
               <div className="bg-blue-50 p-2 rounded-xl text-blue-900 text-xs font-bold flex items-center gap-2">
                 <span>💼</span>
-                <span>{lang === 'gu' ? 'વિઝિટિંગ કાર્ડ સ્કેનર: આગળ અને પાછળ બંને બાજુ ક્રિસ્પ હાઇ-ક્વોલિટીમાં સેવ થશે.' : 'Visiting Card Scanner: Front & Back.'}</span>
+                <span>{lang === 'gu' ? 'વિઝિટિંગ કાર્ડ સ્કેનર: આગળ અને પાછળ બંને બાજુ ક્રિસ્પ હાઇ-ક્વોલિટીમાં સેવ થશે.' : lang === 'hi' ? 'विजिटिंग कार्ड स्कैनर: आगे और पीछे दोनों साइड एक साथ सहेजें।' : 'Visiting Card Scanner: Front & Back.'}</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Front Side */}
                 <div className="bg-slate-50 rounded-2xl p-2.5 border border-slate-200 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-sky-900">૧. આગળની બાજુ (FRONT)</span>
+                    <span className="text-xs font-black text-sky-900">
+                      {lang === 'hi' ? '1. आगे का भाग (FRONT)' : lang === 'en' ? '1. Front Side' : '૧. આગળની બાજુ (FRONT)'}
+                    </span>
                     {bizFront && (
                       <div className="flex items-center gap-1">
                         <button type="button" onClick={() => handleOpenRetake('bizFront')} className="p-1 rounded-lg text-amber-600 hover:bg-amber-100" title="Retake">
@@ -1698,7 +1744,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   ) : (
                     <div className="rounded-xl border-2 border-dashed border-sky-300 bg-sky-50/50 aspect-[1.75/1] flex flex-col items-center justify-center p-3 text-center gap-2">
                       <span className="text-xl">💼</span>
-                      <span className="text-[11px] font-bold text-sky-800">{lang === 'gu' ? 'વિઝિટિંગ કાર્ડ આગળની બાજુ' : 'Business Card Front'}</span>
+                      <span className="text-[11px] font-bold text-sky-800">{lang === 'gu' ? 'વિઝિટિંગ કાર્ડ આગળની બાજુ' : lang === 'hi' ? 'विजिटिंग कार्ड आगे का भाग' : 'Business Card Front'}</span>
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"
@@ -1709,7 +1755,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                           className="px-2.5 py-1.5 bg-sky-600 text-white rounded-lg text-[10px] font-bold flex items-center gap-1"
                         >
                           <Camera size={12} />
-                          <span>{lang === 'gu' ? 'કેમેરા' : 'Camera'}</span>
+                          <span>{lang === 'gu' ? 'કેમેરા' : lang === 'hi' ? 'कैमरा' : 'Camera'}</span>
                         </button>
                         <button
                           type="button"
@@ -1717,7 +1763,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                           className="px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold flex items-center gap-1"
                         >
                           <Upload size={12} />
-                          <span>{lang === 'gu' ? 'ફોટો' : 'Photo'}</span>
+                          <span>{lang === 'gu' ? 'ફોટો' : lang === 'hi' ? 'फ़ोटो' : 'Photo'}</span>
                         </button>
                       </div>
                     </div>
@@ -1727,7 +1773,9 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                 {/* Back Side */}
                 <div className="bg-slate-50 rounded-2xl p-2.5 border border-slate-200 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-sky-900">૨. પાછળની બાજુ (BACK)</span>
+                    <span className="text-xs font-black text-sky-900">
+                      {lang === 'hi' ? '2. पीछे का भाग (BACK)' : lang === 'en' ? '2. Back Side' : '૨. પાછળની બાજુ (BACK)'}
+                    </span>
                     {bizBack && (
                       <div className="flex items-center gap-1">
                         <button type="button" onClick={() => handleOpenRetake('bizBack')} className="p-1 rounded-lg text-amber-600 hover:bg-amber-100" title="Retake">
@@ -1750,7 +1798,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   ) : (
                     <div className="rounded-xl border-2 border-dashed border-sky-300 bg-sky-50/50 aspect-[1.75/1] flex flex-col items-center justify-center p-3 text-center gap-2">
                       <span className="text-xl">🔄</span>
-                      <span className="text-[11px] font-bold text-sky-800">{lang === 'gu' ? 'વિઝિટિંગ કાર્ડ પાછળની બાજુ' : 'Business Card Back'}</span>
+                      <span className="text-[11px] font-bold text-sky-800">{lang === 'gu' ? 'વિઝિટિંગ કાર્ડ પાછળની બાજુ' : lang === 'hi' ? 'विजिटिंग कार्ड पीछे का भाग' : 'Business Card Back'}</span>
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"
@@ -1761,7 +1809,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                           className="px-2.5 py-1.5 bg-sky-600 text-white rounded-lg text-[10px] font-bold flex items-center gap-1"
                         >
                           <Camera size={12} />
-                          <span>{lang === 'gu' ? 'કેમેરા' : 'Camera'}</span>
+                          <span>{lang === 'gu' ? 'કેમેરા' : lang === 'hi' ? 'कैमरा' : 'Camera'}</span>
                         </button>
                         <button
                           type="button"
@@ -1769,7 +1817,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                           className="px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold flex items-center gap-1"
                         >
                           <Upload size={12} />
-                          <span>{lang === 'gu' ? 'ફોટો' : 'Photo'}</span>
+                          <span>{lang === 'gu' ? 'ફોટો' : lang === 'hi' ? 'फ़ोटो' : 'Photo'}</span>
                         </button>
                       </div>
                     </div>
@@ -1782,7 +1830,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                 <div className="space-y-1">
                   <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
                     <Eye size={13} className="text-sky-600" />
-                    <span>{lang === 'gu' ? '📄 ૧-પેજ A4 વિઝિટિંગ કાર્ડ કમ્બાઈન પ્રિવ્યૂ:' : 'Business Card Preview:'}</span>
+                    <span>{lang === 'gu' ? '📄 ૧-પેજ A4 વિઝિટિંગ કાર્ડ કમ્બાઈન પ્રિવ્યૂ:' : lang === 'hi' ? '📄 1-पेज विजिटिंग कार्ड प्रीव्यू:' : 'Business Card Preview:'}</span>
                   </span>
                   <div className="bg-slate-800 p-2.5 rounded-2xl flex items-center justify-center">
                     <img src={bizCompositePreview} alt="Composite" className="max-h-[300px] w-auto object-contain rounded-lg shadow-lg bg-white" />
@@ -1800,12 +1848,12 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-sm font-black text-slate-800">
-                    {lang === 'gu' ? '📁 સેવ કરેલા સ્કેન દસ્તાવેજો' : '📁 Saved Scanned Documents'}
+                    {lang === 'gu' ? '📁 સેવ કરેલા સ્કેન દસ્તાવેજો' : lang === 'hi' ? '📁 सहेजे गए स्कैन दस्तावेज़' : '📁 Saved Scanned Documents'}
                   </h4>
                   <p className="text-[11px] text-slate-500">
                     {savedScansList.length > 0
-                      ? `${savedScansList.length} ${lang === 'gu' ? 'દસ્તાવેજો ફોનમાં સાચવેલા છે' : 'documents saved locally'}`
-                      : (lang === 'gu' ? 'હજુ સુધી કોઈ સ્કેન સેવ કરેલ નથી' : 'No scans saved yet')}
+                      ? `${savedScansList.length} ${lang === 'gu' ? 'દસ્તાવેજો ફોનમાં સાચવેલા છે' : lang === 'hi' ? 'दस्तावेज़ फ़ोन में सहेजे गए हैं' : 'documents saved locally'}`
+                      : (lang === 'gu' ? 'હજુ સુધી કોઈ સ્કેન સેવ કરેલ નથી' : lang === 'hi' ? 'अभी तक कोई स्कैन सहेजा नहीं गया' : 'No scans saved yet')}
                   </p>
                 </div>
                 <button
@@ -1813,7 +1861,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   onClick={() => setScanMode('document')}
                   className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl active:scale-95 transition"
                 >
-                  {lang === 'gu' ? '+ નવું સ્કેન કરો' : '+ New Scan'}
+                  {lang === 'gu' ? '+ નવું સ્કેન કરો' : lang === 'hi' ? '+ नया स्कैन करें' : '+ New Scan'}
                 </button>
               </div>
 
@@ -1821,17 +1869,17 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                 <div className="text-center py-12 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
                   <span className="text-4xl block mb-2">📑</span>
                   <p className="text-xs font-bold text-slate-600 mb-1">
-                    {lang === 'gu' ? 'તમારો કોઈપણ સ્કેન કરેલ PDF અહીં દેખાશે' : 'Your saved PDF scans will appear here'}
+                    {lang === 'gu' ? 'તમારો કોઈપણ સ્કેન કરેલ PDF અહીં દેખાશે' : lang === 'hi' ? 'आपके स्कैन किए गए PDF यहाँ दिखेंगे' : 'Your saved PDF scans will appear here'}
                   </p>
                   <p className="text-[10px] text-slate-400 mb-3">
-                    {lang === 'gu' ? 'દસ્તાવેજ કે કાર્ડ સ્કેન કરી "PDF ડાઉનલોડ" પર ટેપ કરો' : 'Scan a document or card and tap Download PDF'}
+                    {lang === 'gu' ? 'દસ્તાવેજ કે કાર્ડ સ્કેન કરી "PDF ડાઉનલોડ" પર ટેપ કરો' : lang === 'hi' ? 'दस्तावेज़ स्कैन करके "PDF डाउनलोड" पर टैप करें' : 'Scan a document or card and tap Download PDF'}
                   </p>
                   <button
                     type="button"
                     onClick={() => setScanMode('document')}
                     className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold active:scale-95 transition"
                   >
-                    {lang === 'gu' ? 'હવે સ્કેન કરો' : 'Scan Now'}
+                    {lang === 'gu' ? 'હવે સ્કેન કરો' : lang === 'hi' ? 'अभी स्कैन करें' : 'Scan Now'}
                   </button>
                 </div>
               ) : (
@@ -1861,7 +1909,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                             📅 {doc.date} {doc.time ? `• ${doc.time}` : ''}
                           </p>
                           <span className="text-[9px] bg-slate-100 text-slate-600 font-bold px-1.5 py-0.5 rounded-md inline-block mt-0.5">
-                            {doc.pageCount || 1} {lang === 'gu' ? 'પાના' : 'pages'}
+                            {doc.pageCount || 1} {lang === 'gu' ? 'પાના' : lang === 'hi' ? 'पेज' : 'pages'}
                           </span>
                         </div>
                       </div>
@@ -1870,7 +1918,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                         <button
                           type="button"
                           onClick={() => {
-                            if (window.confirm(lang === 'gu' ? 'આ સ્કેન કાઢી નાખવું છે?' : 'Delete this scan?')) {
+                            if (window.confirm(lang === 'gu' ? 'આ સ્કેન કાઢી નાખવું છે?' : lang === 'hi' ? 'क्या यह स्कैन हटाना है?' : 'Delete this scan?')) {
                               storageService.deleteScannedDoc(doc.id);
                               setSavedScansList(storageService.getScannedDocs());
                             }
@@ -1896,7 +1944,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
             <div className="flex items-center justify-between text-xs font-bold text-slate-600">
               <span className="text-[11px] flex items-center gap-1">
                 <Settings2 size={13} />
-                <span>{lang === 'gu' ? 'પેજ સાઇઝ (Resize):' : 'Page Size:'}</span>
+                <span>{lang === 'gu' ? 'પેજ સાઇઝ:' : lang === 'hi' ? 'पेज साइज:' : 'Page Size:'}</span>
               </span>
               <div className="flex items-center gap-1">
                 {PAGE_SIZES.map((sz) => (
@@ -1910,7 +1958,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    {sz.labelGu}
+                    {lang === 'hi' ? (sz.labelHi || sz.labelEn) : lang === 'en' ? sz.labelEn : sz.labelGu}
                   </button>
                 ))}
               </div>
@@ -1924,7 +1972,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
               onClick={onClose}
               className="py-2.5 px-3.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs transition"
             >
-              {lang === 'gu' ? 'રદ કરો' : 'Cancel'}
+              {lang === 'gu' ? 'રદ કરો' : lang === 'hi' ? 'रद्द करें' : 'Cancel'}
             </button>
 
             {scanMode === 'document' || scanMode === 'book' || scanMode === 'whiteboard' ? (
@@ -1938,8 +1986,8 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   <Download size={15} />
                   <span>
                     {isGeneratingPdf
-                      ? (lang === 'gu' ? 'PDF બની રહ્યું છે...' : 'Generating...')
-                      : (lang === 'gu' ? `PDF ડાઉનલોડ (${pages.length} પાના)` : `Download PDF (${pages.length})`)}
+                      ? (lang === 'gu' ? 'PDF બની રહ્યું છે...' : lang === 'hi' ? 'PDF बन रहा है...' : 'Generating...')
+                      : (lang === 'gu' ? `PDF ડાઉનલોડ (${pages.length} પાના)` : lang === 'hi' ? `PDF डाउनलोड (${pages.length} पेज)` : `Download PDF (${pages.length})`)}
                   </span>
                 </button>
                 <button
@@ -1961,7 +2009,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/25 active:scale-98 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   <Download size={15} />
-                  <span>{lang === 'gu' ? '૧-પેજ PDF ડાઉનલોડ' : 'Download 1-Page PDF'}</span>
+                  <span>{lang === 'gu' ? '૧-પેજ PDF ડાઉનલોડ' : lang === 'hi' ? '1-पेज PDF डाउनलोड' : 'Download 1-Page PDF'}</span>
                 </button>
                 <button
                   type="button"
@@ -1992,7 +2040,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   className="flex-1 py-2.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-xl text-xs font-bold shadow-md active:scale-98 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   <Download size={15} />
-                  <span>{lang === 'gu' ? 'કાર્ડ PDF ડાઉનલોડ' : 'Download PDF'}</span>
+                  <span>{lang === 'gu' ? 'કાર્ડ PDF ડાઉનલોડ' : lang === 'hi' ? 'कार्ड PDF डाउनलोड' : 'Download PDF'}</span>
                 </button>
                 <button
                   type="button"
@@ -2089,7 +2137,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   <RefreshCw size={18} />
                 </span>
                 <h4 className="font-bold text-sm text-slate-800">
-                  {lang === 'gu' ? 'ફોટો ફરી પાડો (Retake)' : 'Retake Photo'}
+                  {lang === 'gu' ? 'ફોટો ફરી પાડો' : lang === 'hi' ? 'फोटो फिर से लें' : 'Retake Photo'}
                 </h4>
               </div>
               <button onClick={() => setRetakeTarget(null)} className="p-1 rounded-full text-slate-400 hover:text-slate-600">
@@ -2097,7 +2145,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
               </button>
             </div>
             <p className="text-xs text-slate-500">
-              {lang === 'gu' ? 'આ પાનાનો ફોટો બદલવા માટે વિકલ્પ પસંદ કરો:' : 'Choose how to retake this page:'}
+              {lang === 'gu' ? 'આ પાનાનો ફોટો બદલવા માટે વિકલ્પ પસંદ કરો:' : lang === 'hi' ? 'इस पेज की फोटो बदलने के लिए विकल्प चुनें:' : 'Choose how to retake this page:'}
             </p>
             <div className="grid grid-cols-2 gap-2.5">
               <button
@@ -2109,7 +2157,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                 className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl flex flex-col items-center gap-1.5 font-bold text-xs shadow-md active:scale-95 transition"
               >
                 <Camera size={20} />
-                <span>{lang === 'gu' ? 'કેમેરાથી પાડો' : 'Camera'}</span>
+                <span>{lang === 'gu' ? 'કેમેરાથી પાડો' : lang === 'hi' ? 'कैमरा' : 'Camera'}</span>
               </button>
               <button
                 type="button"
@@ -2117,7 +2165,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                 className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl flex flex-col items-center gap-1.5 font-bold text-xs shadow-md active:scale-95 transition"
               >
                 <Upload size={20} />
-                <span>{lang === 'gu' ? 'ગેલેરીમાંથી લો' : 'Gallery'}</span>
+                <span>{lang === 'gu' ? 'ગેલેરીમાંથી લો' : lang === 'hi' ? 'गैलरी' : 'Gallery'}</span>
               </button>
             </div>
           </div>
@@ -2135,11 +2183,13 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
             </div>
             <div>
               <h4 className="font-bold text-sm text-slate-800">
-                {lang === 'gu' ? 'પાનું કાઢી નાખવું છે?' : 'Delete Page?'}
+                {lang === 'gu' ? 'પાનું કાઢી નાખવું છે?' : lang === 'hi' ? 'क्या पेज हटाना है?' : 'Delete Page?'}
               </h4>
               <p className="text-xs text-slate-500 mt-1">
                 {lang === 'gu'
                   ? `શું તમે ખરેખર પાનું #${deleteConfirmIndex + 1} કાઢી નાખવા માંગો છો?`
+                  : lang === 'hi'
+                  ? `क्या आप वाकई पेज #${deleteConfirmIndex + 1} को हटाना चाहते हैं?`
                   : `Are you sure you want to delete Page #${deleteConfirmIndex + 1}?`}
               </p>
             </div>
@@ -2149,14 +2199,14 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                 onClick={() => setDeleteConfirmIndex(null)}
                 className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
               >
-                {lang === 'gu' ? 'રદ કરો' : 'Cancel'}
+                {lang === 'gu' ? 'રદ કરો' : lang === 'hi' ? 'रद्द करें' : 'Cancel'}
               </button>
               <button
                 type="button"
                 onClick={() => handleDeletePage(deleteConfirmIndex)}
                 className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md"
               >
-                {lang === 'gu' ? 'હા, કાઢી નાખો' : 'Yes, Delete'}
+                {lang === 'gu' ? 'હા, કાઢી નાખો' : lang === 'hi' ? 'हाँ, हटाएं' : 'Yes, Delete'}
               </button>
             </div>
           </div>
@@ -2184,16 +2234,20 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
               <Camera size={14} className="text-amber-400 animate-pulse" />
               <span className="text-xs font-bold">
                 {cameraTarget === 'doc'
-                  ? (scanMode === 'whiteboard' ? '📋 વ્હાઇટબોર્ડ સ્કેન' : scanMode === 'book' ? '📖 પુસ્તક સ્કેન' : '📄 દસ્તાવેજ સ્કેન')
+                  ? scanMode === 'whiteboard'
+                    ? (lang === 'hi' ? '📋 व्हाइटबोर्ड स्कैन' : lang === 'en' ? '📋 Whiteboard Scan' : '📋 વ્હાઇટબોર્ડ સ્કેન')
+                    : scanMode === 'book'
+                    ? (lang === 'hi' ? '📖 पुस्तक स्कैन' : lang === 'en' ? '📖 Book Scan' : '📖 પુસ્તક સ્કેન')
+                    : (lang === 'hi' ? '📄 दस्तावेज़ स्कैन' : lang === 'en' ? '📄 Document Scan' : '📄 દસ્તાવેજ સ્કેન')
                   : cameraTarget === 'retake'
-                  ? '🔄 રીટેક ફોટો'
+                  ? (lang === 'hi' ? '🔄 रीटेक फोटो' : lang === 'en' ? '🔄 Retake Photo' : '🔄 રીટેક ફોટો')
                   : cameraTarget === 'idFront'
-                  ? '🪪 ID આગળની બાજુ'
+                  ? (lang === 'hi' ? '🪪 ID आगे का भाग' : lang === 'en' ? '🪪 ID Front Side' : '🪪 ID આગળની બાજુ')
                   : cameraTarget === 'idBack'
-                  ? '🪪 ID પાછળની બાજુ'
+                  ? (lang === 'hi' ? '🪪 ID पीछे का भाग' : lang === 'en' ? '🪪 ID Back Side' : '🪪 ID પાછળની બાજુ')
                   : cameraTarget === 'bizFront'
-                  ? '💼 વિઝિટિંગ આગળની બાજુ'
-                  : '💼 વિઝિટિંગ પાછળની બાજુ'}
+                  ? (lang === 'hi' ? '💼 विजिटिंग आगे का भाग' : lang === 'en' ? '💼 Card Front' : '💼 વિઝિટિંગ આગળની બાજુ')
+                  : (lang === 'hi' ? '💼 विजिटिंग पीछे का भाग' : lang === 'en' ? '💼 Card Back' : '💼 વિઝિટિંગ પાછળની બાજુ')}
               </span>
             </div>
 
@@ -2245,7 +2299,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-cyan-400 rounded-br-lg" />
                     <div className="absolute bottom-2 inset-x-0 text-center">
                       <span className="bg-black/70 text-cyan-200 text-[11px] font-bold px-3 py-1 rounded-full">
-                        📋 વ્હાઇટબોર્ડ ફ્રેમમાં ગોઠવો
+                        {lang === 'hi' ? '📋 व्हाइटबोर्ड को फ्रेम में रखें' : lang === 'en' ? '📋 Align Whiteboard in Frame' : '📋 વ્હાઇટબોર્ડ ફ્રેમમાં ગોઠવો'}
                       </span>
                     </div>
                   </div>
@@ -2257,7 +2311,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-cyan-400 rounded-br-lg" />
                     <div className="absolute bottom-2 inset-x-0 text-center">
                       <span className="bg-black/70 text-white text-[11px] font-bold px-3 py-1 rounded-full">
-                        📄 દસ્તાવેજ કે બુક આ ફ્રેમમાં ગોઠવો
+                        {lang === 'hi' ? '📄 दस्तावेज़ को इस फ्रेम में रखें' : lang === 'en' ? '📄 Align Document in Frame' : '📄 દસ્તાવેજ કે બુક આ ફ્રેમમાં ગોઠવો'}
                       </span>
                     </div>
                   </div>
@@ -2270,7 +2324,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   <div className="absolute -bottom-1 -right-1 w-7 h-7 border-b-4 border-r-4 border-amber-400 rounded-br-xl" />
                   <div className="absolute bottom-2 inset-x-0 text-center">
                     <span className="bg-black/75 text-amber-300 text-[11px] font-bold px-3 py-1 rounded-full">
-                      🪪 કાર્ડ આ ફ્રેમમાં સીધું ગોઠવો
+                      {lang === 'hi' ? '🪪 कार्ड को फ्रेम में सीधा रखें' : lang === 'en' ? '🪪 Align Card Inside Frame' : '🪪 કાર્ડ આ ફ્રેમમાં સીધું ગોઠવો'}
                     </span>
                   </div>
                 </div>
@@ -2286,7 +2340,9 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                   <span className="w-8 h-8 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center text-xs font-black text-white shadow-md">
                     {pages.length}
                   </span>
-                  <span className="text-[10px] text-slate-300 font-bold mt-0.5">પાના</span>
+                  <span className="text-[10px] text-slate-300 font-bold mt-0.5">
+                    {lang === 'hi' ? 'पेज' : lang === 'en' ? 'Pages' : 'પાના'}
+                  </span>
                 </div>
               )}
             </div>
@@ -2304,7 +2360,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                 </div>
               </button>
               <span className="text-[11px] font-bold text-white mt-1 drop-shadow-md">
-                📸 ફોટો પાડો
+                {lang === 'hi' ? '📸 फोटो लें' : lang === 'en' ? '📸 Capture' : '📸 ફોટો પાડો'}
               </span>
             </div>
 
@@ -2315,7 +2371,7 @@ export default function PdfScannerModal({ isOpen, onClose, lang = 'gu' }) {
                 className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md active:scale-95 transition flex items-center gap-1"
               >
                 <Check size={14} />
-                <span>પૂર્ણ</span>
+                <span>{lang === 'hi' ? 'पूर्ण' : lang === 'en' ? 'Done' : 'પૂર્ણ'}</span>
               </button>
             </div>
           </div>
@@ -2432,7 +2488,7 @@ function CropModalOverlay({ cropState, onClose, onApply, lang }) {
             <Crop size={16} />
           </span>
           <span className="font-bold text-sm">
-            {lang === 'gu' ? 'દસ્તાવેજ ક્રોપ & ઓટો પેજ એડજસ્ટ' : 'Crop & Auto Page Adjust'}
+            {lang === 'gu' ? 'દસ્તાવેજ ક્રોપ અને ઓટો પેજ એડજસ્ટ' : lang === 'hi' ? 'दस्तावेज़ क्रॉप और ऑटो पेज एडजस्ट' : 'Crop & Auto Page Adjust'}
           </span>
         </div>
         <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-white/20 text-white">
@@ -2583,7 +2639,7 @@ function CropModalOverlay({ cropState, onClose, onApply, lang }) {
             className="py-1 text-[11px] font-bold text-white hover:bg-white/10 rounded-xl transition flex flex-col items-center gap-0.5"
           >
             <CreditCard size={14} />
-            <span>ID કાર્ડ</span>
+            <span>{lang === 'hi' ? 'ID कार्ड' : lang === 'en' ? 'ID Card' : 'ID કાર્ડ'}</span>
           </button>
           <button
             type="button"
@@ -2591,7 +2647,7 @@ function CropModalOverlay({ cropState, onClose, onApply, lang }) {
             className="py-1 text-[11px] font-bold text-white hover:bg-white/10 rounded-xl transition flex flex-col items-center gap-0.5"
           >
             <Briefcase size={14} />
-            <span>વિઝિટિંગ</span>
+            <span>{lang === 'hi' ? 'विजिटिंग' : lang === 'en' ? 'Biz Card' : 'વિઝિટિંગ'}</span>
           </button>
         </div>
 
@@ -2601,7 +2657,7 @@ function CropModalOverlay({ cropState, onClose, onApply, lang }) {
             onClick={onClose}
             className="flex-1 py-2.5 bg-white/15 hover:bg-white/20 text-white font-bold text-xs rounded-xl"
           >
-            {lang === 'gu' ? 'રદ કરો' : 'Cancel'}
+            {lang === 'gu' ? 'રદ કરો' : lang === 'hi' ? 'रद्द करें' : 'Cancel'}
           </button>
           <button
             type="button"
@@ -2609,7 +2665,7 @@ function CropModalOverlay({ cropState, onClose, onApply, lang }) {
             className="flex-1 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5"
           >
             <Check size={16} />
-            <span>{lang === 'gu' ? 'ક્રોપ લાગુ કરો' : 'Apply Crop'}</span>
+            <span>{lang === 'gu' ? 'ક્રોપ લાગુ કરો' : lang === 'hi' ? 'क्रॉप लागू करें' : 'Apply Crop'}</span>
           </button>
         </div>
       </div>
@@ -2633,7 +2689,7 @@ function AdjustModalOverlay({ adjustState, onClose, onApply, lang }) {
               <Sliders size={18} />
             </span>
             <h4 className="font-bold text-sm text-slate-800">
-              {lang === 'gu' ? 'બ્રાઇટનેસ & કોન્ટ્રાસ્ટ એડજસ્ટ' : 'Adjust Brightness & Contrast'}
+              {lang === 'gu' ? 'બ્રાઇટનેસ & કોન્ટ્રાસ્ટ એડજસ્ટ' : lang === 'hi' ? 'ब्राइटनेस व कंट्रास्ट एडजस्ट' : 'Adjust Brightness & Contrast'}
             </h4>
           </div>
           <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:text-slate-600">
@@ -2657,7 +2713,7 @@ function AdjustModalOverlay({ adjustState, onClose, onApply, lang }) {
         <div className="space-y-3">
           <div>
             <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
-              <span>{lang === 'gu' ? 'બ્રાઇટનેસ (Brightness)' : 'Brightness'}</span>
+              <span>{lang === 'gu' ? 'બ્રાઇટનેસ' : lang === 'hi' ? 'ब्राइटनेस' : 'Brightness'}</span>
               <span>{brightness > 0 ? `+${brightness}` : brightness}</span>
             </div>
             <input
@@ -2672,7 +2728,7 @@ function AdjustModalOverlay({ adjustState, onClose, onApply, lang }) {
 
           <div>
             <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
-              <span>{lang === 'gu' ? 'કોન્ટ્રાસ્ટ (Contrast)' : 'Contrast'}</span>
+              <span>{lang === 'gu' ? 'કોન્ટ્રાસ્ટ' : lang === 'hi' ? 'कंट्रास्ट' : 'Contrast'}</span>
               <span>{contrast > 0 ? `+${contrast}` : contrast}</span>
             </div>
             <input
@@ -2696,14 +2752,14 @@ function AdjustModalOverlay({ adjustState, onClose, onApply, lang }) {
             }}
             className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
           >
-            {lang === 'gu' ? 'રીસેટ' : 'Reset'}
+            {lang === 'gu' ? 'રીસેટ' : lang === 'hi' ? 'रीसेट' : 'Reset'}
           </button>
           <button
             type="button"
             onClick={() => onApply(brightness, contrast)}
             className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md"
           >
-            {lang === 'gu' ? 'લાગુ કરો' : 'Apply'}
+            {lang === 'gu' ? 'લાગુ કરો' : lang === 'hi' ? 'लागू करें' : 'Apply'}
           </button>
         </div>
       </div>
@@ -2788,7 +2844,7 @@ function CleanupModalOverlay({ cleanupState, onClose, onApply, lang }) {
             <Eraser size={16} />
           </span>
           <span className="font-bold text-sm">
-            {lang === 'gu' ? 'ક્લીનઅપ & ડાઘા / શેડો રીમુવર' : 'Cleanup & Spot Eraser'}
+            {lang === 'gu' ? 'ક્લીનઅપ અને ડાઘા / શેડો રીમુવર' : lang === 'hi' ? 'क्लीनअप और दाग / शैडो रिमूवर' : 'Cleanup & Spot Eraser'}
           </span>
         </div>
         <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/20 text-white">
@@ -2812,7 +2868,7 @@ function CleanupModalOverlay({ cleanupState, onClose, onApply, lang }) {
       <div className="w-full max-w-lg space-y-2 shrink-0 pt-2">
         <div className="flex items-center justify-between bg-white/10 p-2 rounded-2xl backdrop-blur-xs text-white text-xs font-bold">
           <div className="flex items-center gap-2">
-            <span>{lang === 'gu' ? 'પીંછી સાઇઝ:' : 'Brush Size:'}</span>
+            <span>{lang === 'gu' ? 'પીંછી સાઇઝ:' : lang === 'hi' ? 'ब्रश साइज़:' : 'Brush Size:'}</span>
             {[16, 28, 44].map((sz) => (
               <button
                 key={sz}
@@ -2834,13 +2890,13 @@ function CleanupModalOverlay({ cleanupState, onClose, onApply, lang }) {
             className="flex items-center gap-1 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs disabled:opacity-30"
           >
             <Undo2 size={14} />
-            <span>{lang === 'gu' ? 'અનડુ' : 'Undo'}</span>
+            <span>{lang === 'gu' ? 'અનડુ' : lang === 'hi' ? 'अनडू' : 'Undo'}</span>
           </button>
         </div>
 
         <div className="flex items-center gap-2">
           <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-white/15 text-white font-bold text-xs rounded-xl">
-            {lang === 'gu' ? 'રદ કરો' : 'Cancel'}
+            {lang === 'gu' ? 'રદ કરો' : lang === 'hi' ? 'रद्द करें' : 'Cancel'}
           </button>
           <button
             type="button"
@@ -2848,7 +2904,7 @@ function CleanupModalOverlay({ cleanupState, onClose, onApply, lang }) {
             className="flex-1 py-2.5 bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5"
           >
             <Check size={16} />
-            <span>{lang === 'gu' ? 'ક્લીનઅપ સેવ કરો' : 'Save Cleanup'}</span>
+            <span>{lang === 'gu' ? 'ક્લીનઅપ સેવ કરો' : lang === 'hi' ? 'क्लीनअप सेव करें' : 'Save Cleanup'}</span>
           </button>
         </div>
       </div>
@@ -2878,7 +2934,7 @@ function ReorderPagesModalOverlay({ pages, setPages, activePageIndex, setActiveP
               <ArrowLeftRight size={18} />
             </span>
             <h4 className="font-bold text-sm text-slate-800">
-              {lang === 'gu' ? 'પાનાનો ક્રમ ગોઠવો (Reorder Pages)' : 'Reorder Pages'}
+              {lang === 'gu' ? 'પાનાનો ક્રમ ગોઠવો' : lang === 'hi' ? 'पेज का क्रम बदलें' : 'Reorder Pages'}
             </h4>
           </div>
           <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:text-slate-600">
@@ -2902,7 +2958,7 @@ function ReorderPagesModalOverlay({ pages, setPages, activePageIndex, setActiveP
                 />
                 <div>
                   <span className="font-extrabold text-xs text-slate-800 block">
-                    {lang === 'gu' ? 'પાનું #' : 'Page #'}{idx + 1}
+                    {lang === 'gu' ? 'પાનું #' : lang === 'hi' ? 'पेज #' : 'Page #'}{idx + 1}
                   </span>
                   <span className="text-[10px] text-slate-500 font-semibold">{p.filter}</span>
                 </div>
@@ -2938,7 +2994,7 @@ function ReorderPagesModalOverlay({ pages, setPages, activePageIndex, setActiveP
             onClick={onClose}
             className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md"
           >
-            {lang === 'gu' ? 'પૂર્ણ (Done)' : 'Done'}
+            {lang === 'gu' ? 'પૂર્ણ' : lang === 'hi' ? 'पूर्ण' : 'Done'}
           </button>
         </div>
       </div>

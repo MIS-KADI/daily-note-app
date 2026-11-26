@@ -7,11 +7,11 @@ const STREAK_KEY = 'daily_diary_streak_data';
 const MOOD_KEY = 'daily_diary_mood_data';
 
 export const MOODS = [
-  { id: 'good', emoji: '😊', labelGu: 'ખુશ (Happy)', labelHi: 'खुश (Happy)', labelEn: 'Happy', color: 'from-emerald-400 to-teal-500' },
-  { id: 'awesome', emoji: '🤩', labelGu: 'ઉત્સાહી / કાર્યક્ષમ (Productive)', labelHi: 'उत्साहित / सक्रिय', labelEn: 'Productive', color: 'from-amber-400 to-orange-500' },
-  { id: 'neutral', emoji: '😌', labelGu: 'શાંત / સંતુષ્ટ (Peaceful)', labelHi: 'शांत / संतुष्ट', labelEn: 'Peaceful', color: 'from-blue-400 to-indigo-500' },
-  { id: 'tired', emoji: '😔', labelGu: 'થાકેલા / ઉદાસ (Tired)', labelHi: 'थका / उदास', labelEn: 'Tired', color: 'from-purple-400 to-pink-500' },
-  { id: 'stressed', emoji: '😤', labelGu: 'તણાવ / ચિંતા (Stressed)', labelHi: 'तनावग्रस्त / चिंतित', labelEn: 'Stressed', color: 'from-rose-400 to-red-500' },
+  { id: 'good', emoji: '😊', labelGu: 'ખુશ', labelHi: 'खुश', labelEn: 'Happy', color: 'from-emerald-400 to-teal-500' },
+  { id: 'awesome', emoji: '🤩', labelGu: 'ઉત્સાહી', labelHi: 'उत्साहित', labelEn: 'Productive', color: 'from-amber-400 to-orange-500' },
+  { id: 'neutral', emoji: '😌', labelGu: 'શાંત', labelHi: 'शांत', labelEn: 'Peaceful', color: 'from-blue-400 to-indigo-500' },
+  { id: 'tired', emoji: '😔', labelGu: 'થાકેલા', labelHi: 'थका / उदास', labelEn: 'Tired', color: 'from-purple-400 to-pink-500' },
+  { id: 'stressed', emoji: '😤', labelGu: 'તણાવ', labelHi: 'तनावग्रस्त', labelEn: 'Stressed', color: 'from-rose-400 to-red-500' },
 ];
 
 export const streakService = {
@@ -66,12 +66,35 @@ export const streakService = {
     return updated;
   },
 
-  getBadge(streak) {
-    if (streak >= 30) return { title: '👑 લાઈફસ્ટાઈલ લીજેન્ડ (30+ Days)', icon: '👑' };
-    if (streak >= 15) return { title: '⭐ ડાયરી માસ્ટર (15+ Days)', icon: '⭐' };
-    if (streak >= 7) return { title: '🔥 સતત સપ્તાહ ચેમ્પિયન (7+ Days)', icon: '🔥' };
-    if (streak >= 3) return { title: '🌱 સતત ૩ દિવસ સ્ટ્રીક (3+ Days)', icon: '🌱' };
-    return { title: '✨ દૈનિક યાત્રા શરૂ કરી', icon: '✨' };
+  getBadge(streak, lang = 'gu') {
+    if (streak >= 30) {
+      return {
+        title: lang === 'hi' ? '👑 लाइफस्टाइल लीजेंड (30+ दिन)' : lang === 'en' ? '👑 Lifestyle Legend (30+ Days)' : '👑 લાઈફસ્ટાઈલ લીજેન્ડ (૩૦+ દિવસ)',
+        icon: '👑',
+      };
+    }
+    if (streak >= 15) {
+      return {
+        title: lang === 'hi' ? '⭐ डायरी मास्टर (15+ दिन)' : lang === 'en' ? '⭐ Diary Master (15+ Days)' : '⭐ ડાયરી માસ્ટર (૧૫+ દિવસ)',
+        icon: '⭐',
+      };
+    }
+    if (streak >= 7) {
+      return {
+        title: lang === 'hi' ? '🔥 साप्ताहिक चैंपियन (7+ दिन)' : lang === 'en' ? '🔥 Weekly Champion (7+ Days)' : '🔥 સપ્તાહ ચેમ્પિયન (૭+ દિવસ)',
+        icon: '🔥',
+      };
+    }
+    if (streak >= 3) {
+      return {
+        title: lang === 'hi' ? '🌱 3 दिन स्ट्रीक (3+ दिन)' : lang === 'en' ? '🌱 3-Day Streak' : '🌱 ૩ દિવસ સ્ટ્રીક',
+        icon: '🌱',
+      };
+    }
+    return {
+      title: lang === 'hi' ? '✨ दैनिक यात्रा शुरू' : lang === 'en' ? '✨ Daily Journey Started' : '✨ દૈનિક યાત્રા શરૂ કરી',
+      icon: '✨',
+    };
   },
 
   // Mood Tracker APIs
@@ -241,10 +264,18 @@ export const streakService = {
       advice = 'Keep nurturing your daily reflections. Your emotional resilience and consistency shine through your notes!';
     }
 
+    const dominantMoodObj = MOODS.find((m) => m.id === dominantKey);
+    const dominantLabel =
+      lang === 'hi'
+        ? dominantMoodObj?.labelHi || 'खुश'
+        : lang === 'en'
+        ? dominantMoodObj?.labelEn || 'Happy'
+        : dominantMoodObj?.labelGu || 'ખુશ';
+
     return {
       dominantKey,
-      dominantEmoji: MOODS.find((m) => m.id === dominantKey)?.emoji || '😊',
-      dominantLabel: MOODS.find((m) => m.id === dominantKey)?.labelGu || 'ખુશ',
+      dominantEmoji: dominantMoodObj?.emoji || '😊',
+      dominantLabel,
       stats,
       counts,
       totalEntries,

@@ -52,7 +52,7 @@ jobs:
 
       - name: Copy and Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.44.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk daily-diary-v1.0.45.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Diary-App.apk
 
       - name: Upload APK as Workflow Artifact
@@ -60,7 +60,7 @@ jobs:
         with:
           name: daily-diary-apk
           path: |
-            daily-diary-v1.0.44.apk
+            daily-diary-v1.0.45.apk
             Daily-Diary-App.apk
           retention-days: 30
 
@@ -68,19 +68,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.44
-          name: "Daily Diary & Smart Assistant - Android APK (v1.0.44 Streamlined Profile)"
+          tag_name: v1.0.45
+          name: "Daily Diary & Smart Assistant - Android APK (v1.0.45 Step Graph & Full Localization)"
           body: |
-            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.44)
+            ### 📱 દૈનિક ડાયરી અને સ્માર્ટ આસિસ્ટન્ટ (Android APK v1.0.45)
 
-            આ નવા વર્ઝન v1.0.44 માં કરવામાં આવેલા મહત્વપૂર્ણ સુધારાઓ:
-            - **✨ પ્રોફાઇલ પેજ વધુ સરળ અને સ્વચ્છ બનાવ્યું:**
-              - યુઝર પ્રોફાઇલ કાર્ડમાંથી એવતાર [U], હેડિંગ, સ્વિચ અને લૉગઆઉટ બટન તેમજ સબ-ટાઈટલ સંપૂર્ણપણે દૂર કરવામાં આવ્યા.
-              - હવે સીધું જ ફોર્મ ઓપન થશે અને યુઝર પોતાનું નામ, મોબાઈલ, ઈમેઈલ અને સેટિંગ્સ સરળતાથી સેવ કરી શકશે.
+            આ નવા વર્ઝન v1.0.45 માં કરવામાં આવેલા મહત્વપૂર્ણ સુધારાઓ:
+            - **📊 સાચો 7-દિવસનો વોકિંગ સ્ટેપ ગ્રાફ:** હવે ચાલેલા વાસ્તવિક સ્ટેપ મુજબ લાઈવ અપડેટ, ટૅપ કરીને દરેક દિવસની વિગતો, સ્ટેપ ગોલ પ્રીસેટ્સ અને રિસેટ વિકલ્પ સાથે.
+            - **🔒 ખાલી UPI ID અને મોબાઈલ પ્લેસહોલ્ડર:** UPI ID તથા ફોર્મમાં ડિફોલ્ટ મોબાઈલ નંબર હટાવી બ્લેન્ક રાખવામાં આવ્યું છે.
+            - **🌐 સંપૂર્ણ ગુજરાતી / હિન્દી / અંગ્રેજી ભાષા સપોર્ટ:** તમામ ટેબ, મોડલ, ચાર્ટ્સ, એલર્ટ્સ અને સ્કેનરમાં પસંદ કરેલી ભાષા મુજબ સુસંગત લખાણ.
+            - **⚡ હોમ સ્ક્રીન પર સ્ટેપ્સ & પાણી ક્વિક ટ્રેકર:** સીધા હોમ ટેબમાંથી જ સ્ટેપ્સ અને પાણી ટ્રેક કરવાની સુવિધા.
 
-            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.44.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
+            નીચે આપેલ **`Daily-Diary-App.apk`** અથવા **`daily-diary-v1.0.45.apk`** પર ક્લિક કરીને ડાઉનલોડ કરો.
           files: |
-            daily-diary-v1.0.44.apk
+            daily-diary-v1.0.45.apk
             Daily-Diary-App.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

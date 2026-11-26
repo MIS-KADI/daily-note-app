@@ -24,14 +24,14 @@ export default function MoodTrackerCard({ lang = 'gu' }) {
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
   };
 
-  const badge = streakService.getBadge(streakData.currentStreak);
+  const badge = streakService.getBadge(streakData.currentStreak, lang);
 
   // Get last 7 days keys for mini mood history
   const last7Days = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
-    const dateStr = d.toISOString().split('T')[0];
-    const dayName = d.toLocaleDateString(lang === 'gu' ? 'gu-IN' : 'en-US', { weekday: 'narrow' });
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const dayName = d.toLocaleDateString(lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'narrow' });
     return { dateStr, dayName, mood: allMoods[dateStr] };
   });
 
@@ -75,7 +75,7 @@ export default function MoodTrackerCard({ lang = 'gu' }) {
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
             <Smile size={14} className="text-orange-500" />
-            {lang === 'hi' ? 'आज आपका दिन कैसा रहा? (Daily Mood)' : lang === 'en' ? 'How was your day? (Daily Mood)' : 'આજે તમારો દિવસ કેવો રહ્યો? (Daily Mood)'}
+            {lang === 'hi' ? 'आज आपका दिन कैसा रहा?' : lang === 'en' ? 'How was your day?' : 'આજે તમારો દિવસ કેવો રહ્યો?'}
           </span>
           {todayMood && (
             <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">

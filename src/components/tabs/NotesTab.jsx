@@ -203,29 +203,77 @@ export default function NotesTab({
   const quickEmojiBar = ['😊', '❤️', '🙏', '🌸', '✨', '☕', '💡', '📝', '🎯', '🎉', '✈️', '🌟'];
 
   // Quick Chips & Emojis for Shopping and Work Notes
-  const quickShoppingChips = [
-    { label: '+ નવી આઇટમ (☐)', insert: '\n☐ ', isAction: true },
-    { label: '🛒 કરિયાણું', insert: '\n• કરિયાણું: ' },
-    { label: '🥬 શાકભાજી', insert: '\n• શાકભાજી: ' },
-    { label: '🥛 દૂધ / ડેરી', insert: '\n• દૂધ: ' },
-    { label: '💊 દવાઓ', insert: '\n• દવાઓ: ' },
-    { label: '🍞 નાસ્તો', insert: '\n• નાસ્તો: ' },
-    { label: '🧽 ઘરવપરાશ', insert: '\n• ઘરવપરાશ: ' },
-    { label: '🍎 ફળો', insert: '\n• ફળો: ' },
-    { label: '🧴 તેલ / મસાલા', insert: '\n• મસાલા/તેલ: ' },
-  ];
+  const quickShoppingChips = lang === 'hi'
+    ? [
+        { label: '+ नया आइटम (☐)', insert: '\n☐ ', isAction: true },
+        { label: '🛒 किराना', insert: '\n• किराना: ' },
+        { label: '🥬 सब्जियां', insert: '\n• सब्जियां: ' },
+        { label: '🥛 दूध / डेयरी', insert: '\n• दूध: ' },
+        { label: '💊 दवाइयां', insert: '\n• दवाइयां: ' },
+        { label: '🍞 नाश्ता', insert: '\n• नाश्ता: ' },
+        { label: '🧽 घरेलू सामान', insert: '\n• घरेलू सामान: ' },
+        { label: '🍎 फल', insert: '\n• फल: ' },
+        { label: '🧴 तेल / मसाले', insert: '\n• मसाले/तेल: ' },
+      ]
+    : lang === 'en'
+    ? [
+        { label: '+ New Item (☐)', insert: '\n☐ ', isAction: true },
+        { label: '🛒 Groceries', insert: '\n• Groceries: ' },
+        { label: '🥬 Vegetables', insert: '\n• Vegetables: ' },
+        { label: '🥛 Milk / Dairy', insert: '\n• Milk: ' },
+        { label: '💊 Medicines', insert: '\n• Medicines: ' },
+        { label: '🍞 Snacks', insert: '\n• Snacks: ' },
+        { label: '🧽 Household', insert: '\n• Household: ' },
+        { label: '🍎 Fruits', insert: '\n• Fruits: ' },
+        { label: '🧴 Oil / Spices', insert: '\n• Oil/Spices: ' },
+      ]
+    : [
+        { label: '+ નવી આઇટમ (☐)', insert: '\n☐ ', isAction: true },
+        { label: '🛒 કરિયાણું', insert: '\n• કરિયાણું: ' },
+        { label: '🥬 શાકભાજી', insert: '\n• શાકભાજી: ' },
+        { label: '🥛 દૂધ / ડેરી', insert: '\n• દૂધ: ' },
+        { label: '💊 દવાઓ', insert: '\n• દવાઓ: ' },
+        { label: '🍞 નાસ્તો', insert: '\n• નાસ્તો: ' },
+        { label: '🧽 ઘરવપરાશ', insert: '\n• ઘરવપરાશ: ' },
+        { label: '🍎 ફળો', insert: '\n• ફળો: ' },
+        { label: '🧴 તેલ / મસાલા', insert: '\n• મસાલા/તેલ: ' },
+      ];
 
-  const quickWorkChips = [
-    { label: '+ નવું કામ (☐)', insert: '\n☐ ', isAction: true },
-    { label: '⭐ અગત્યનું કામ', insert: '\n⭐ અગત્યનું: ' },
-    { label: '📞 કોલ કરવો', insert: '\n📞 કોલ: ' },
-    { label: '🏦 બેંકનું કામ', insert: '\n🏦 બેંક: ' },
-    { label: '📁 ફાઇલ સબમિશન', insert: '\n📁 સબમિશન: ' },
-    { label: '🤝 મીટિંગ', insert: '\n🤝 મીટિંગ: ' },
-    { label: '⏳ ફોલોઅપ', insert: '\n⏳ ફોલોઅપ: ' },
-    { label: '✉️ ઈમેલ / મેસેજ', insert: '\n✉️ ઈમેલ: ' },
-    { label: '💰 પેમેન્ટ હિસાબ', insert: '\n💰 પેમેન્ટ: ' },
-  ];
+  const quickWorkChips = lang === 'hi'
+    ? [
+        { label: '+ नया कार्य (☐)', insert: '\n☐ ', isAction: true },
+        { label: '⭐ महत्वपूर्ण', insert: '\n⭐ महत्वपूर्ण: ' },
+        { label: '📞 कॉल करना है', insert: '\n📞 कॉल: ' },
+        { label: '🏦 बैंक का काम', insert: '\n🏦 बैंक: ' },
+        { label: '📁 फाइल जमा', insert: '\n📁 जमा: ' },
+        { label: '🤝 मीटिंग', insert: '\n🤝 मीटिंग: ' },
+        { label: '⏳ फॉलोअप', insert: '\n⏳ फॉलोअप: ' },
+        { label: '✉️ ईमेल / संदेश', insert: '\n✉️ ईमेल: ' },
+        { label: '💰 पेमेंट हिसाब', insert: '\n💰 पेमेंट: ' },
+      ]
+    : lang === 'en'
+    ? [
+        { label: '+ New Task (☐)', insert: '\n☐ ', isAction: true },
+        { label: '⭐ Important', insert: '\n⭐ Important: ' },
+        { label: '📞 Call', insert: '\n📞 Call: ' },
+        { label: '🏦 Bank Work', insert: '\n🏦 Bank: ' },
+        { label: '📁 File Submission', insert: '\n📁 Submit: ' },
+        { label: '🤝 Meeting', insert: '\n🤝 Meeting: ' },
+        { label: '⏳ Follow-up', insert: '\n⏳ Follow-up: ' },
+        { label: '✉️ Email / Message', insert: '\n✉️ Email: ' },
+        { label: '💰 Payment', insert: '\n💰 Payment: ' },
+      ]
+    : [
+        { label: '+ નવું કામ (☐)', insert: '\n☐ ', isAction: true },
+        { label: '⭐ અગત્યનું કામ', insert: '\n⭐ અગત્યનું: ' },
+        { label: '📞 કોલ કરવો', insert: '\n📞 કોલ: ' },
+        { label: '🏦 બેંકનું કામ', insert: '\n🏦 બેંક: ' },
+        { label: '📁 ફાઇલ સબમિશન', insert: '\n📁 સબમિશન: ' },
+        { label: '🤝 મીટિંગ', insert: '\n🤝 મીટિંગ: ' },
+        { label: '⏳ ફોલોઅપ', insert: '\n⏳ ફોલોઅપ: ' },
+        { label: '✉️ ઈમેલ / મેસેજ', insert: '\n✉️ ઈમેલ: ' },
+        { label: '💰 પેમેન્ટ હિસાબ', insert: '\n💰 પેમેન્ટ: ' },
+      ];
 
   const quickShoppingEmojis = ['🛒', '🛍️', '🥬', '🍎', '🥛', '🧀', '🍞', '💊', '🧼', '🧹', '💰', '🧾', '📦', '✅', '❌'];
   const quickWorkEmojis = ['✅', '❌', '⏳', '⏰', '📞', '✉️', '💻', '📁', '📊', '🏦', '🤝', '📌', '🎯', '⚠️', '💼'];
@@ -370,7 +418,7 @@ export default function NotesTab({
       mediaRecorder.start();
       setIsRecordingAudio(true);
     } catch {
-      alert(lang === 'gu' ? 'માઇક્રોફોનની પરવાનગી આપો.' : 'Please allow microphone access.');
+      alert(lang === 'gu' ? 'માઇક્રોફોનની પરવાનગી આપો.' : lang === 'hi' ? 'माइक्रोफ़ोन की अनुमति दें।' : 'Please allow microphone access.');
     }
   };
 
@@ -383,22 +431,20 @@ export default function NotesTab({
 
   // Location Fetcher
   const handleGetLocation = () => {
+    const promptMsg = lang === 'gu' ? 'શહેર / સ્થળનું નામ લખો:' : lang === 'hi' ? 'शहर / स्थान का नाम लिखें:' : 'Enter city / location:';
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         () => {
-          const place = prompt(
-            lang === 'gu' ? 'શહેર / સ્થળનું નામ દાખલ કરો:' : 'Enter city / place name:',
-            lang === 'gu' ? 'કડી, ગુજરાત' : 'Kadi, Gujarat'
-          );
+          const place = prompt(promptMsg, '');
           if (place) setLocation(place.trim());
         },
         () => {
-          const place = prompt(lang === 'gu' ? 'શહેર / સ્થળનું નામ લખો:' : 'Enter city / location:');
+          const place = prompt(promptMsg);
           if (place) setLocation(place.trim());
         }
       );
     } else {
-      const place = prompt(lang === 'gu' ? 'શહેર / સ્થળનું નામ લખો:' : 'Enter city / location:');
+      const place = prompt(promptMsg);
       if (place) setLocation(place.trim());
     }
   };
@@ -1187,7 +1233,10 @@ export default function NotesTab({
                         {/* Mood Badge - only show for personal/diary notes */}
                         {note.mood && !['ખરીદી', 'Shopping', 'खरीदारी', 'કામ', 'Work', 'काम'].includes(note.category) && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300">
-                            {note.mood === 'awesome' ? '🤩 ઉત્સાહી' : note.mood === 'neutral' ? '😌 શાંત' : note.mood === 'tired' ? '😔 થાકેલા' : note.mood === 'stressed' ? '😤 તણાવ' : '😊 ખુશ'}
+                            {(() => {
+                              const mObj = MOODS.find((x) => x.id === note.mood) || MOODS[0];
+                              return `${mObj.emoji} ${lang === 'hi' ? mObj.labelHi : lang === 'en' ? mObj.labelEn : mObj.labelGu}`;
+                            })()}
                           </span>
                         )}
 
@@ -1454,7 +1503,12 @@ export default function NotesTab({
               {!isShoppingOrWork && showPromptsDrawer && (
                 <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200 space-y-2 animate-in fade-in">
                   <span className="text-[11px] font-bold text-amber-900 block">
-                    ✨ કોઈ એક પ્રશ્ન પસંદ કરો, એપ આપમેળે ડાયરી શરૂ કરી આપશે:
+                    ✨{' '}
+                    {lang === 'hi'
+                      ? 'कोई भी प्रश्न चुनें, ऐप अपने आप डायरी शुरू कर देगा:'
+                      : lang === 'en'
+                      ? 'Pick a prompt below to start writing instantly:'
+                      : 'કોઈ એક પ્રશ્ન પસંદ કરો, એપ આપમેળે ડાયરી શરૂ કરી આપશે:'}
                   </span>
                   <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                     {aiPromptsList.map((item, idx) => (
@@ -1534,7 +1588,7 @@ export default function NotesTab({
                       <ImageIcon size={14} className="text-emerald-600" />
                       <span>
                         {photo
-                          ? '✓ ફોટો ઉમેરાયો'
+                          ? (lang === 'hi' ? '✓ फ़ोटो जोड़ा गया' : lang === 'en' ? '✓ Photo Added' : '✓ ફોટો ઉમેરાયો')
                           : isShopping
                           ? (lang === 'hi' ? '🧾 बिल / फोटो जोड़ें' : lang === 'en' ? '🧾 Bill / Photo' : '🧾 બિલ / ફોટો ઉમેરો')
                           : (lang === 'hi' ? '📎 दस्तावेज / फोटो जोड़ें' : lang === 'en' ? '📎 Doc / Photo' : '📎 દસ્તાવેજ / ફોટો ઉમેરો')}
@@ -1568,10 +1622,10 @@ export default function NotesTab({
                     {isListening ? <MicOff size={14} /> : <Mic size={14} />}
                     <span>
                       {isListening
-                        ? (lang === 'gu' ? 'સાંભળી રહ્યા છીએ...' : 'Listening...')
+                        ? (lang === 'hi' ? 'सुन रहे हैं...' : lang === 'en' ? 'Listening...' : 'સાંભળી રહ્યા છીએ...')
                         : isShopping
-                        ? (lang === 'gu' ? '🎙️ બોલીને ઉમેરો' : '🎙️ Voice Add')
-                        : (lang === 'gu' ? '🎙️ બોલીને લખો' : '🎙️ Voice Write')}
+                        ? (lang === 'hi' ? '🎙️ बोलकर जोड़ें' : lang === 'en' ? '🎙️ Voice Add' : '🎙️ બોલીને ઉમેરો')
+                        : (lang === 'hi' ? '🎙️ बोलकर लिखें' : lang === 'en' ? '🎙️ Voice Write' : '🎙️ બોલીને લખો')}
                     </span>
                   </button>
                 </div>
@@ -1579,7 +1633,7 @@ export default function NotesTab({
                 /* Full Multimedia Bar for Personal Diary Notes */
                 <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                   <span className="text-xs font-bold text-slate-700 block">
-                    મલ્ટીમીડિયા અટેચમેન્ટ (Photos, Audio, Location):
+                    {lang === 'hi' ? 'मल्टीमीडिया अटैचमेंट (फ़ोटो, ऑडियो, स्थान):' : lang === 'en' ? 'Multimedia Attachments (Photo, Audio, Location):' : 'મલ્ટીમીડિયા અટેચમેન્ટ (ફોટો, ઓડિયો, સ્થળ):'}
                   </span>
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Photo Upload */}
@@ -1598,7 +1652,7 @@ export default function NotesTab({
                       }`}
                     >
                       <ImageIcon size={14} className="text-emerald-600" />
-                      <span>{photo ? '✓ ફોટો ઉમેરાયો' : t('add_photo', lang)}</span>
+                      <span>{photo ? (lang === 'hi' ? '✓ फ़ोटो जोड़ा गया' : lang === 'en' ? '✓ Photo Added' : '✓ ફોટો ઉમેરાયો') : t('add_photo', lang)}</span>
                     </button>
 
                     {/* Audio Recording */}
@@ -1614,7 +1668,13 @@ export default function NotesTab({
                       }`}
                     >
                       <Mic size={14} className={isRecordingAudio ? 'text-white' : 'text-blue-600'} />
-                      <span>{isRecordingAudio ? '⏹️ રેકોર્ડિંગ બંધ કરો' : audio ? '✓ ઓડિયો મેમો' : t('record_audio', lang)}</span>
+                      <span>
+                        {isRecordingAudio
+                          ? (lang === 'hi' ? '⏹️ रिकॉर्डिंग रोकें' : lang === 'en' ? '⏹️ Stop Recording' : '⏹️ રેકોર્ડિંગ બંધ કરો')
+                          : audio
+                          ? (lang === 'hi' ? '✓ ऑडियो मेमो' : lang === 'en' ? '✓ Audio Memo' : '✓ ઓડિયો મેમો')
+                          : t('record_audio', lang)}
+                      </span>
                     </button>
 
                     {/* Location Tag */}
@@ -1680,7 +1740,7 @@ export default function NotesTab({
                       )}
                     </span>
                     <span className="text-[10px] text-slate-400 font-semibold">
-                      {lang === 'gu' ? 'ક્લિક કરી લિસ્ટમાં ઉમેરો' : 'Click to insert'}
+                      {lang === 'gu' ? 'ક્લિક કરી લિસ્ટમાં ઉમેરો' : lang === 'hi' ? 'सूची में जोड़ने के लिए क्लिक करें' : 'Click to insert'}
                     </span>
                   </div>
 
@@ -2049,10 +2109,10 @@ export default function NotesTab({
                 <span className="text-2xl">{weeklyMood.dominantEmoji}</span>
                 <div>
                   <h3 className="text-base font-extrabold text-slate-800">
-                    {lang === 'gu' ? 'સાપ્તાહિક મૂડ એનાલિસિસ' : 'Weekly Mood Analysis'}
+                    {lang === 'gu' ? 'સાપ્તાહિક મૂડ એનાલિસિસ' : lang === 'hi' ? 'साप्ताहिक मूड विश्लेषण' : 'Weekly Mood Analysis'}
                   </h3>
                   <span className="text-xs font-semibold text-slate-500">
-                    {lang === 'gu' ? 'છેલ્લા ૭ દિવસની ભાવનાત્મક સ્થિતિ' : 'Last 7 days emotional trend'}
+                    {lang === 'gu' ? 'છેલ્લા ૭ દિવસની ભાવનાત્મક સ્થિતિ' : lang === 'hi' ? 'पिछले 7 दिनों का भावनात्मक विश्लेषण' : 'Last 7 days emotional trend'}
                   </span>
                 </div>
               </div>
@@ -2080,7 +2140,7 @@ export default function NotesTab({
             {/* Breakdown Percentage Bars */}
             <div className="space-y-2 pt-1">
               <span className="text-xs font-bold text-slate-700 block">
-                {lang === 'gu' ? 'મૂડ વિતરણ ટકાવારી:' : 'Mood Breakdown (%):'}
+                {lang === 'gu' ? 'મૂડ વિતરણ ટકાવારી:' : lang === 'hi' ? 'मूड प्रतिशत विवरण:' : 'Mood Breakdown (%):'}
               </span>
 
               {MOODS.map((m) => {
@@ -2090,7 +2150,7 @@ export default function NotesTab({
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-slate-700 flex items-center gap-1.5">
                         <span>{m.emoji}</span>
-                        <span>{m.labelGu}</span>
+                        <span>{lang === 'hi' ? m.labelHi : lang === 'en' ? m.labelEn : m.labelGu}</span>
                       </span>
                       <span className="font-extrabold text-slate-900">{pct}%</span>
                     </div>
@@ -2109,7 +2169,7 @@ export default function NotesTab({
               onClick={() => setIsMoodModalOpen(false)}
               className="w-full py-2.5 rounded-xl bg-slate-800 text-white font-bold text-xs"
             >
-              {lang === 'gu' ? 'બંધ કરો' : 'Close'}
+              {lang === 'gu' ? 'બંધ કરો' : lang === 'hi' ? 'बंद करें' : 'Close'}
             </button>
           </div>
         </div>
@@ -2128,10 +2188,10 @@ export default function NotesTab({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-800">
-                    {lang === 'gu' ? 'દૈનિક ડાયરી રીમાઇન્ડર & હેબિટ' : 'Daily Diary Reminder'}
+                    {lang === 'gu' ? 'દૈનિક ડાયરી રીમાઇન્ડર & હેબિટ' : lang === 'hi' ? 'दैनिक डायरी रिमाइंडर' : 'Daily Diary Reminder'}
                   </h3>
                   <span className="text-xs text-slate-500">
-                    {lang === 'gu' ? 'રોજ રાત્રે ડાયરી લખવાની યાદ અપાવો' : 'Nightly habit reminder'}
+                    {lang === 'gu' ? 'રોજ રાત્રે ડાયરી લખવાની યાદ અપાવો' : lang === 'hi' ? 'रोज रात डायरी लिखने का रिमाइंडर' : 'Nightly habit reminder'}
                   </span>
                 </div>
               </div>
@@ -2147,10 +2207,10 @@ export default function NotesTab({
               <div className="p-3 bg-cyan-50/70 rounded-2xl border border-cyan-200/80 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-cyan-950 block">
-                    {lang === 'gu' ? 'રોજિંદી ડાયરી નોટિફિકેશન' : 'Daily Diary Notification'}
+                    {lang === 'gu' ? 'રોજિંદી ડાયરી નોટિફિકેશન' : lang === 'hi' ? 'दैनिक डायरी सूचना' : 'Daily Diary Notification'}
                   </span>
                   <span className="text-[10px] text-cyan-800">
-                    {lang === 'gu' ? 'નિયમિત ડાયરી લખવાની હેબિટ જાળવી રાખો' : 'Keep your writing streak alive'}
+                    {lang === 'gu' ? 'નિયમિત ડાયરી લખવાની હેબિટ જાળવી રાખો' : lang === 'hi' ? 'नियमित डायरी लिखने की आदत बनाए रखें' : 'Keep your writing streak alive'}
                   </span>
                 </div>
                 <input
@@ -2164,7 +2224,7 @@ export default function NotesTab({
               {reminderConfig.enabled && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 block">
-                    {lang === 'gu' ? 'રીમાઇન્ડરનો સમય (Reminder Time):' : 'Preferred Notification Time:'}
+                    {lang === 'gu' ? 'રીમાઇન્ડરનો સમય:' : lang === 'hi' ? 'रिमाइंडर का समय:' : 'Preferred Notification Time:'}
                   </label>
                   <input
                     type="time"
@@ -2197,7 +2257,7 @@ export default function NotesTab({
                   onClick={handleTestDiaryNotification}
                   className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50"
                 >
-                  🔔 {lang === 'gu' ? 'ટેસ્ટ એલાર્મ' : 'Test Alert'}
+                  🔔 {lang === 'gu' ? 'ટેસ્ટ એલાર્મ' : lang === 'hi' ? 'टेस्ट अलार्म' : 'Test Alert'}
                 </button>
                 <button
                   type="submit"
@@ -2224,10 +2284,10 @@ export default function NotesTab({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-800">
-                    {lang === 'gu' ? 'ડાયરી PDF એક્સપોર્ટ & પ્રિન્ટ' : 'Export Diary to PDF'}
+                    {lang === 'gu' ? 'ડાયરી PDF એક્સપોર્ટ & પ્રિન્ટ' : lang === 'hi' ? 'डायरी PDF एक्सपोर्ट और प्रिंट' : 'Export Diary to PDF'}
                   </h3>
                   <span className="text-xs text-slate-500">
-                    {lang === 'gu' ? 'પાસવર્ડ સુરક્ષા સાથે પુસ્તક શૈલીમાં ડાઉનલોડ' : 'Download with password security'}
+                    {lang === 'gu' ? 'પાસવર્ડ સુરક્ષા સાથે પુસ્તક શૈલીમાં ડાઉનલોડ' : lang === 'hi' ? 'पासवर्ड सुरक्षा के साथ डाउनलोड करें' : 'Download with password security'}
                   </span>
                 </div>
               </div>
@@ -2242,15 +2302,15 @@ export default function NotesTab({
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  {lang === 'gu' ? 'સમયગાળો (Timeframe):' : 'Select Timeframe:'}
+                  {lang === 'gu' ? 'સમયગાળો:' : lang === 'hi' ? 'अवधि चुनें:' : 'Select Timeframe:'}
                 </label>
                 <select
                   value={exportMonth}
                   onChange={(e) => setExportMonth(e.target.value)}
                   className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 bg-slate-50"
                 >
-                  <option value="all">{lang === 'gu' ? 'તમામ નોંધો (All Notes)' : 'All Notes'}</option>
-                  <option value={todayStr.substring(0, 7)}>{lang === 'gu' ? 'ચાલુ મહિનો' : 'This Month'}</option>
+                  <option value="all">{lang === 'gu' ? 'તમામ નોંધો' : lang === 'hi' ? 'सभी नोट्स' : 'All Notes'}</option>
+                  <option value={todayStr.substring(0, 7)}>{lang === 'gu' ? 'ચાલુ મહિનો' : lang === 'hi' ? 'इस महीने' : 'This Month'}</option>
                 </select>
               </div>
 
@@ -2271,13 +2331,17 @@ export default function NotesTab({
                   <div className="pt-1 animate-in fade-in space-y-1">
                     <input
                       type="password"
-                      placeholder={lang === 'gu' ? 'PDF ખોલવા માટે પાસવર્ડ સેટ કરો (દા.ત. 1234)' : 'Enter PDF password'}
+                      placeholder={lang === 'gu' ? 'PDF ખોલવા માટે પાસવર્ડ સેટ કરો' : lang === 'hi' ? 'PDF खोलने के लिए पासवर्ड सेट करें' : 'Enter PDF password'}
                       value={pdfPassword}
                       onChange={(e) => setPdfPassword(e.target.value)}
                       className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white font-bold"
                     />
                     <span className="text-[10px] text-slate-400 block">
-                      {lang === 'gu' ? 'ℹ️ જ્યારે કોઈ આ PDF ઓપન કરશે ત્યારે પાસવર્ડ માંગવામાં આવશે.' : 'Password will be required to open this PDF.'}
+                      {lang === 'gu'
+                        ? 'ℹ️ જ્યારે કોઈ આ PDF ઓપન કરશે ત્યારે પાસવર્ડ માંગવામાં આવશે.'
+                        : lang === 'hi'
+                        ? 'ℹ️ इस PDF को खोलने पर पासवर्ड मांगा जाएगा।'
+                        : 'Password will be required to open this PDF.'}
                     </span>
                   </div>
                 )}
@@ -2297,7 +2361,9 @@ export default function NotesTab({
                   onClick={handleExportDiaryPdf}
                   className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs disabled:opacity-50"
                 >
-                  {isExportingPdf ? 'જનરેટ થઈ રહ્યું છે...' : 'PDF ડાઉનલોડ'}
+                  {isExportingPdf
+                    ? (lang === 'hi' ? 'बनाया जा रहा है...' : lang === 'en' ? 'Generating...' : 'જનરેટ થઈ રહ્યું છે...')
+                    : (lang === 'hi' ? 'PDF डाउनलोड' : lang === 'en' ? 'Download PDF' : 'PDF ડાઉનલોડ')}
                 </button>
               </div>
             </div>

@@ -65,7 +65,7 @@ export default function FinanceCharts({
   filteredFinance
     .filter((f) => f.type === 'expense')
     .forEach((f) => {
-      const cat = f.category || (lang === 'gu' ? 'અન્ય ખર્ચ' : 'Other Expense');
+      const cat = f.category || (lang === 'gu' ? 'અન્ય ખર્ચ' : lang === 'hi' ? 'अन्य खर्च' : 'Other Expense');
       categoryMap[cat] = (categoryMap[cat] || 0) + Number(f.amount || 0);
     });
 

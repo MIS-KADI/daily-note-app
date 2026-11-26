@@ -35,6 +35,7 @@ import { backupSyncService } from './services/backupSyncService';
 import { notificationService } from './services/notificationService';
 import { streakService } from './services/streakService';
 import { pedometerService } from './services/pedometerService';
+import { getPaymentModes, getExpenseCategories, getIncomeCategories } from './services/i18n';
 
 // Clean default mock dummy data once for fresh/updated v17 install
 storageService.cleanDefaultDummyDataOnce();
@@ -235,8 +236,8 @@ export default function App() {
         if (rem.hasAlarm && !rem.isCompleted && rem.time && rem.date) {
           notificationService.scheduleNativeAlarm({
             id: rem.id,
-            title: `⏰ કામનું એલાર્મ: ${rem.title}`,
-            body: rem.description || `સમય: ${rem.time}`,
+            title: lang === 'hi' ? `⏰ कार्य अलार्म: ${rem.title}` : lang === 'en' ? `⏰ Task Alarm: ${rem.title}` : `⏰ કામનું એલાર્મ: ${rem.title}`,
+            body: rem.description || `${lang === 'hi' ? 'समय' : lang === 'en' ? 'Time' : 'સમય'}: ${rem.time}`,
             dateStr: rem.date,
             timeStr: rem.time,
           });
@@ -244,13 +245,17 @@ export default function App() {
       });
 
       // Schedule active medicines in Android AlarmManager
-      const today = new Date().toISOString().split('T')[0];
+      const today = storageService.getLocalDateStr();
       medicines.forEach((med) => {
         if (med.active && med.hasAlarm && med.time) {
+          const mealStr =
+            med.mealRelation === 'before_food'
+              ? (lang === 'hi' ? 'खाली पेट' : lang === 'en' ? 'Before food' : 'ભૂખ્યા પેટે')
+              : (lang === 'hi' ? 'खाने के बाद' : lang === 'en' ? 'After food' : 'જમ્યા પછી');
           notificationService.scheduleNativeAlarm({
             id: med.id,
-            title: `💊 દવા લેવાનો સમય: ${med.name}`,
-            body: `${med.dosage} - ${med.mealRelation === 'before_food' ? 'ભૂખ્યા પેટે' : 'જમ્યા પછી'} (${med.time})`,
+            title: lang === 'hi' ? `💊 दवा लेने का समय: ${med.name}` : lang === 'en' ? `💊 Medicine Time: ${med.name}` : `💊 દવા લેવાનો સમય: ${med.name}`,
+            body: `${med.dosage} - ${mealStr} (${med.time})`,
             dateStr: today,
             timeStr: med.time,
           });
@@ -262,14 +267,14 @@ export default function App() {
       if (diaryConfig?.enabled && diaryConfig?.time) {
         notificationService.scheduleNativeAlarm({
           id: 'diary-nightly-reminder',
-          title: '📔 ડાયરી લખવાનો સમય થયો!',
-          body: 'આજના દિવસની યાદો, વિચારો અને મૂડ નોંધી લો. તમારી 🔥 સ્ટ્રીક જાળવી રાખો!',
+          title: lang === 'hi' ? '📔 डायरी लिखने का समय हो गया!' : lang === 'en' ? '📔 Time to Write Your Diary!' : '📔 ડાયરી લખવાનો સમય થયો!',
+          body: lang === 'hi' ? 'आज की यादें, विचार और मूड लिखें। अपनी 🔥 स्ट्रीक बनाए रखें!' : lang === 'en' ? 'Record today’s thoughts and mood to keep your 🔥 streak!' : 'આજના દિવસની યાદો, વિચારો અને મૂડ નોંધી લો. તમારી 🔥 સ્ટ્રીક જાળવી રાખો!',
           dateStr: today,
           timeStr: diaryConfig.time,
         });
       }
     }
-  }, [reminders, medicines]);
+  }, [reminders, medicines, lang]);
 
   // Save changes to storage whenever states change
   const handleUpdateUser = (updated) => {
@@ -378,8 +383,10 @@ export default function App() {
       if (!started) {
         alert(
           lang === 'gu'
-            ? 'આ બ્રાઉઝરમાં મોશન સેન્સર પરમિશન નથી મળી અથવા ડિવાઇસ સેન્સર સપોર્ટ કરતું નથી. તમે ઝડપી બટન અથવા હેલ્થ એપ સિન્ક વાપરી શકો છો.'
-            : 'Motion sensor permission not granted or device not supported.'
+            ? 'આ બ્રાઉઝરમાં મોશન સેન્સર પરમિશન નથી મળી અથવા ડિવાઇસ સેન્સર સપોર્ટ કરતું નથી. તમે ઝડપી બટન વાપરી શકો છો.'
+            : lang === 'hi'
+            ? 'इस ब्राउज़र में मोशन सेंसर की अनुमति नहीं मिली। आप त्वरित बटन का उपयोग कर सकते हैं।'
+            : 'Motion sensor permission not granted or device not supported. You can use quick step buttons.'
         );
       }
     }
@@ -637,24 +644,27 @@ export default function App() {
   // Transfer calculated amount directly to finance (Supports direct object with paymentMode, category)
   const handleTransferAmount = (entryOrAmount, typeOverride = 'expense') => {
     setActiveTab('finance');
-    
+    const expCats = getExpenseCategories(lang);
+    const incCats = getIncomeCategories(lang);
+    const pModes = getPaymentModes(lang);
+
     let num = 0;
     let type = typeOverride;
-    let paymentMode = 'રોકડ (Cash)';
-    let category = 'કરિયાણું / ઘરખર્ચ';
-    let description = 'કેલ્ક્યુલેટરમાંથી ગણેલ હિસાબ';
-    let date = new Date().toISOString().split('T')[0];
+    let paymentMode = pModes[0] || 'Cash in Hand';
+    let category = expCats[0] || 'Groceries';
+    let description = lang === 'hi' ? 'कैलकुलेटर से सहेजा गया हिसाब' : lang === 'en' ? 'Entry from Calculator' : 'કેલ્ક્યુલેટરમાંથી ગણેલ હિસાબ';
+    let date = storageService.getLocalDateStr();
 
     if (typeof entryOrAmount === 'object' && entryOrAmount !== null) {
       num = Number(entryOrAmount.amount || 0);
       type = entryOrAmount.type || typeOverride;
-      paymentMode = entryOrAmount.paymentMode || 'રોકડ (Cash)';
-      category = entryOrAmount.category || (type === 'income' ? 'પગાર / આવક' : 'કરિયાણું / ઘરખર્ચ');
-      description = entryOrAmount.description || 'કેલ્ક્યુલેટરમાંથી સેવ કરેલ રકમ';
+      paymentMode = entryOrAmount.paymentMode || pModes[0] || 'Cash in Hand';
+      category = entryOrAmount.category || (type === 'income' ? (incCats[0] || 'Salary') : (expCats[0] || 'Groceries'));
+      description = entryOrAmount.description || description;
       date = entryOrAmount.date || date;
     } else {
       num = Number(entryOrAmount || 0);
-      category = type === 'expense' ? 'કરિયાણું / ઘરખર્ચ' : 'પગાર / આવક';
+      category = type === 'expense' ? (expCats[0] || 'Groceries') : (incCats[0] || 'Salary');
     }
 
     if (num <= 0) return;
@@ -704,14 +714,16 @@ export default function App() {
     const txType = tx.type || 'expense';
     const pMode = tx.paymentMode || 'UPI (GPay/PhonePe)';
 
+    const expCats = getExpenseCategories(lang);
+    const incCats = getIncomeCategories(lang);
     const newEntry = {
       id: 'fin-' + Date.now(),
       type: txType,
       amount: amt,
-      category: tx.category || (txType === 'income' ? 'પગાર / આવક' : 'અન્ય ખર્ચ'),
+      category: tx.category || (txType === 'income' ? (incCats[0] || 'Salary') : (expCats[expCats.length - 1] || 'Other')),
       description: tx.description || '',
       paymentMode: pMode,
-      date: tx.date || new Date().toISOString().split('T')[0],
+      date: tx.date || storageService.getLocalDateStr(),
     };
     const latestFinance = storageService.getFinance() || finance || [];
     handleSaveFinance([newEntry, ...latestFinance]);
@@ -744,9 +756,9 @@ export default function App() {
     setActiveTab('reminders');
     const newRem = {
       id: 'rem-' + Date.now(),
-      title: rem.title || 'નવું રીમાઇન્ડર',
+      title: rem.title || (lang === 'hi' ? 'नया रिमाइंडर' : lang === 'en' ? 'New Reminder' : 'નવું રીમાઇન્ડર'),
       description: rem.description || '',
-      date: rem.date || new Date().toISOString().split('T')[0],
+      date: rem.date || storageService.getLocalDateStr(),
       time: rem.time || '10:00',
       type: rem.type || 'task',
       hasAlarm: true,
@@ -756,14 +768,14 @@ export default function App() {
     handleSaveReminders([newRem, ...reminders]);
 
     if (rem.type === 'shopping') {
-      const cleanName = (rem.title || 'ખરીદી').replace(/^ખરીદી:\s*/, '').trim();
+      const cleanName = (rem.title || (lang === 'hi' ? 'खरीदारी' : lang === 'en' ? 'Shopping' : 'ખરીદી')).replace(/^(ખરીદી|खरीदारी|Shopping):\s*/i, '').trim();
       const newShop = {
         id: 'shop-' + Date.now(),
         name: cleanName,
-        quantity: '૧',
-        category: 'કરિયાણું / શાકભાજી',
+        quantity: '1',
+        category: lang === 'hi' ? 'किराना / सब्जियां' : lang === 'en' ? 'Groceries / Vegetables' : 'કરિયાણું / શાકભાજી',
         completed: false,
-        date: new Date().toISOString().split('T')[0],
+        date: storageService.getLocalDateStr(),
       };
       handleSaveShopping([newShop, ...shoppingList]);
     }
@@ -775,12 +787,12 @@ export default function App() {
     setActiveTab('finance');
     const newKhata = {
       id: 'kh-' + Date.now(),
-      partyName: k.partyName || 'ગ્રાહક',
+      partyName: k.partyName || (lang === 'hi' ? 'ग्राहक' : lang === 'en' ? 'Customer' : 'ગ્રાહક'),
       phone: k.phone || '',
       type: k.type || 'to_receive',
       amount: Number(k.amount || 0),
-      date: k.date || new Date().toISOString().split('T')[0],
-      dueDate: k.dueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      date: k.date || storageService.getLocalDateStr(),
+      dueDate: k.dueDate || storageService.getLocalDateStr(new Date(Date.now() + 7 * 86400000)),
       description: k.description || '',
       isSettled: false,
     };
@@ -792,10 +804,10 @@ export default function App() {
     setActiveTab('notes');
     const newNote = {
       id: 'note-' + Date.now(),
-      title: n.title || 'નવી નોંધ',
+      title: n.title || (lang === 'hi' ? 'नया नोट' : lang === 'en' ? 'New Note' : 'નવી નોંધ'),
       content: n.content || n.title || '',
-      category: n.category || 'સામાન્ય',
-      date: n.date || new Date().toISOString().split('T')[0],
+      category: n.category || (lang === 'hi' ? 'सामान्य' : lang === 'en' ? 'General' : 'સામાન્ય'),
+      date: n.date || storageService.getLocalDateStr(),
       isPinned: false,
       tags: ['AI Voice'],
     };
@@ -817,12 +829,12 @@ export default function App() {
     setActiveTab('health');
     const newMed = {
       id: 'med-' + Date.now(),
-      name: med.name || 'નવી દવા',
-      dosage: med.dosage || '૧ ગોળી',
+      name: med.name || (lang === 'hi' ? 'नई दवा' : lang === 'en' ? 'New Medicine' : 'નવી દવા'),
+      dosage: med.dosage || (lang === 'hi' ? '1 गोली' : lang === 'en' ? '1 Tablet' : '૧ ગોળી'),
       timeSlot: med.timeSlot || 'morning',
       mealRelation: med.mealRelation || 'after_food',
       time: med.time || '08:30',
-      notes: med.notes || 'AI Voice દ્વારા ઉમેરાયેલ',
+      notes: med.notes || (lang === 'hi' ? 'AI वॉइस से जोड़ा गया' : lang === 'en' ? 'Added via AI Voice' : 'AI Voice દ્વારા ઉમેરાયેલ'),
       hasAlarm: true,
       active: true,
     };
@@ -832,11 +844,11 @@ export default function App() {
 
   const handleAddParsedShopping = (item) => {
     setActiveTab('reminders');
-    const rawName = item.name || item.title || 'નવી વસ્તુ';
-    const cleanName = rawName.replace(/^ખરીદી:\s*/, '').trim();
-    const quantity = item.quantity || '૧';
-    const category = item.category || 'કરિયાણું / શાકભાજી';
-    const today = new Date().toISOString().split('T')[0];
+    const rawName = item.name || item.title || (lang === 'hi' ? 'नया आइटम' : lang === 'en' ? 'New Item' : 'નવી વસ્તુ');
+    const cleanName = rawName.replace(/^(ખરીદી|खरीदारी|Shopping):\s*/i, '').trim();
+    const quantity = item.quantity || '1';
+    const category = item.category || (lang === 'hi' ? 'किराना / सब्जियां' : lang === 'en' ? 'Groceries / Vegetables' : 'કરિયાણું / શાકભાજી');
+    const today = storageService.getLocalDateStr();
 
     // 1. Save to shoppingList
     const newItem = {
@@ -849,11 +861,13 @@ export default function App() {
     };
     handleSaveShopping([newItem, ...shoppingList]);
 
-    // 2. Also save to reminders so it appears immediately under 'ખરીદી' filter in RemindersTab!
+    const shopPrefix = lang === 'hi' ? 'खरीदारी' : lang === 'en' ? 'Shopping' : 'ખરીદી';
+    const catLabel = lang === 'hi' ? 'श्रेणी' : lang === 'en' ? 'Category' : 'કેટેગરી';
+    // 2. Also save to reminders so it appears immediately under shopping filter in RemindersTab!
     const newRem = {
       id: 'rem-' + Date.now(),
-      title: `ખરીદી: ${cleanName}`,
-      description: `☐ ${cleanName} (${quantity})\nકેટેગરી: ${category}`,
+      title: `${shopPrefix}: ${cleanName}`,
+      description: `☐ ${cleanName} (${quantity})\n${catLabel}: ${category}`,
       date: today,
       time: '11:00',
       type: 'shopping',
@@ -870,9 +884,9 @@ export default function App() {
     setActiveTab('reminders');
     const newEvt = {
       id: 'evt-' + Date.now(),
-      title: evt.title || 'નવો ઉત્સવ',
+      title: evt.title || (lang === 'hi' ? 'नया उत्सव' : lang === 'en' ? 'New Event' : 'નવો ઉત્સવ'),
       personName: evt.personName || '',
-      date: evt.date || new Date().toISOString().split('T')[0],
+      date: evt.date || storageService.getLocalDateStr(),
       type: evt.type || 'birthday',
       notes: evt.notes || '',
     };
@@ -888,15 +902,15 @@ export default function App() {
     setActiveAlarm({
       id: 'test-alarm-' + Date.now(),
       type: 'task',
-      title: 'અગત્યનું કામ / મીટિંગ ટેસ્ટ',
+      title: lang === 'hi' ? 'महत्वपूर्ण कार्य / मीटिंग टेस्ट' : lang === 'en' ? 'Important Task / Meeting Test' : 'અગત્યનું કામ / મીટિંગ ટેસ્ટ',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      description: 'ટેસ્ટ એલાર્મ: મોબાઈલ રીંગટોન અને સાઉન્ડ સાથે!',
+      description: lang === 'hi' ? 'टेस्ट अलार्म: मोबाइल रिंगटोन और ध्वनि के साथ!' : lang === 'en' ? 'Test Alarm: With ringtone and vibration!' : 'ટેસ્ટ એલાર્મ: મોબાઈલ રીંગટોન અને સાઉન્ડ સાથે!',
       ringtone: globalAlarmSettings?.ringtone || 'classic_bell',
       customAudioUrl: globalAlarmSettings?.customRingtoneData,
       customRingtoneName: globalAlarmSettings?.customRingtoneName,
     });
-    notificationService.send('⏰ એલાર્મ ટેસ્ટ!', {
-      body: 'મોબાઈલ રીંગટોન સાથે એલાર્મ કાર્યરત છે.',
+    notificationService.send(lang === 'hi' ? '⏰ अलार्म टेस्ट!' : lang === 'en' ? '⏰ Alarm Test!' : '⏰ એલાર્મ ટેસ્ટ!', {
+      body: lang === 'hi' ? 'मोबाइल रिंगटोन के साथ अलार्म सक्रिय है।' : lang === 'en' ? 'Alarm is active with mobile ringtone.' : 'મોબાઈલ રીંગટોન સાથે એલાર્મ કાર્યરત છે.',
     });
   };
 
@@ -1141,7 +1155,7 @@ export default function App() {
             onClick={handleGrantSensorPermission}
             className="px-2.5 py-1 bg-white text-emerald-800 rounded-xl font-extrabold text-xs active:scale-95 transition shadow-xs shrink-0"
           >
-            {lang === 'hi' ? 'एक्टિવ કરો' : lang === 'en' ? 'Enable' : 'શરૂ કરો'}
+            {lang === 'hi' ? 'एक्टिव करें' : lang === 'en' ? 'Enable' : 'શરૂ કરો'}
           </button>
         </div>
       )}

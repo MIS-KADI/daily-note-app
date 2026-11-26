@@ -254,9 +254,9 @@ export default function PinLockModal({
               />
               <span className="relative z-10">
                 {isHoldingTouch
-                  ? `${lang === 'gu' ? 'સ્કેન થઈ રહ્યું છે...' : 'Scanning...'} ${touchProgress}%`
+                  ? `${lang === 'gu' ? 'સ્કેન થઈ રહ્યું છે...' : lang === 'hi' ? 'स्कैन हो रहा है...' : 'Scanning...'} ${touchProgress}%`
                   : lang === 'hi'
-                  ? '👆 फिंगरप्रिंट टच करके रखें (Hold to Unlock)'
+                  ? '👆 फिंगरप्रिंट दबाए रखें'
                   : lang === 'en'
                   ? '👆 Press & Hold Fingerprint'
                   : '👆 ફિંગરપ્રિન્ટ ટચ કરીને દબાવી રાખો'}
@@ -281,10 +281,10 @@ export default function PinLockModal({
           <button
             onClick={triggerBiometric}
             className="h-12 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 active:bg-emerald-600 text-emerald-400 border border-emerald-500/30 shadow-xs active:scale-95 transition flex flex-col items-center justify-center"
-            title="સિસ્ટમ ફિંગરપ્રિન્ટ ચકાસો"
+            title={lang === 'hi' ? 'सिस्टम फिंगरप्रिंट जांचें' : lang === 'en' ? 'Verify Fingerprint' : 'સિસ્ટમ ફિંગરપ્રિન્ટ ચકાસો'}
           >
             <Fingerprint size={18} className="animate-pulse" />
-            <span className="text-[8px] font-bold">સેન્સર</span>
+            <span className="text-[8px] font-bold">{lang === 'hi' ? 'सेंसर' : lang === 'en' ? 'Sensor' : 'સેન્સર'}</span>
           </button>
 
           <button

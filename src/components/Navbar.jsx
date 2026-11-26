@@ -70,7 +70,7 @@ export default function Navbar({
                 {user?.name ? user.name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : '👤')}
               </span>
               <span className="hidden xs:inline max-w-[85px] sm:max-w-[120px] truncate text-[10px]">
-                {user?.name || (user?.email ? user.email.split('@')[0] : (lang === 'gu' ? 'લૉગિન' : 'Login'))}
+                {user?.name || (user?.email ? user.email.split('@')[0] : (lang === 'gu' ? 'લૉગિન' : lang === 'hi' ? 'लॉगिन' : 'Login'))}
               </span>
             </button>
           )}

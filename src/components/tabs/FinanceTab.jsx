@@ -750,7 +750,7 @@ export default function FinanceTab({
                             type="button"
                             onClick={() => handleOpenEditKhata(k)}
                             className="p-1 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition active:scale-95"
-                            title={lang === 'gu' ? 'વિગત / નંબર એડિટ કરો' : 'Edit details'}
+                            title={lang === 'gu' ? 'વિગત / નંબર એડિટ કરો' : lang === 'hi' ? 'विवरण / नंबर संपादित करें' : 'Edit details'}
                           >
                             <Edit2 size={13} />
                           </button>
@@ -792,10 +792,10 @@ export default function FinanceTab({
                             type="button"
                             onClick={() => handleOpenEditKhata(k)}
                             className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg font-bold text-[11px] transition active:scale-95 shrink-0"
-                            title={lang === 'gu' ? 'મોબાઇલ નંબર ઉમેરો' : 'Add phone number'}
+                            title={lang === 'gu' ? 'મોબાઇલ નંબર ઉમેરો' : lang === 'hi' ? 'मोबाइल नंबर जोड़ें' : 'Add phone number'}
                           >
                             <Phone size={11} />
-                            <span>{lang === 'gu' ? '+ ફોન નંબર' : '+ Add Mobile'}</span>
+                            <span>{lang === 'gu' ? '+ ફોન નંબર' : lang === 'hi' ? '+ फोन नंबर' : '+ Add Mobile'}</span>
                           </button>
                         )}
 
@@ -1022,7 +1022,7 @@ export default function FinanceTab({
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <h3 className="text-base font-bold text-slate-800">
                 {editingKhataId
-                  ? (lang === 'gu' ? 'ખાતું / ફોન નંબર એડિટ કરો' : 'Edit Khata Entry')
+                  ? (lang === 'gu' ? 'ખાતું / ફોન નંબર એડિટ કરો' : lang === 'hi' ? 'खाता / फोन नंबर संपादित करें' : 'Edit Khata Entry')
                   : (khType === 'to_receive' ? t('to_receive', lang) : t('to_pay', lang))}
               </h3>
               <button
@@ -1070,7 +1070,7 @@ export default function FinanceTab({
                     className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 active:scale-95 transition"
                   >
                     <Users size={12} />
-                    <span>{lang === 'gu' ? 'સંપર્કમાંથી પસંદ કરો' : 'Pick from Contacts'}</span>
+                    <span>{lang === 'gu' ? 'સંપર્કમાંથી પસંદ કરો' : lang === 'hi' ? 'संपर्क से चुनें' : 'Pick from Contacts'}</span>
                   </button>
                 </div>
                 <input
@@ -1100,13 +1100,13 @@ export default function FinanceTab({
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    {t('mobile_number', lang)} ({lang === 'gu' ? '૧૦ અંક' : '10 digits'})
+                    {t('mobile_number', lang)} ({lang === 'gu' ? '૧૦ અંક' : lang === 'hi' ? '10 अंक' : '10 digits'})
                   </label>
                   <input
                     type="tel"
                     inputMode="numeric"
                     maxLength={10}
-                    placeholder="10 અંકનો નંબર"
+                    placeholder={lang === 'gu' ? '૧૦ અંકનો નંબર' : lang === 'hi' ? '10 अंकों का नंबर' : '10 digits number'}
                     value={khPhone}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -1184,7 +1184,7 @@ export default function FinanceTab({
                   className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs"
                 >
                   {editingKhataId
-                    ? (lang === 'gu' ? 'સુધારો સાચવો ✓' : 'Update Khata')
+                    ? (lang === 'gu' ? 'સુધારો સાચવો ✓' : lang === 'hi' ? 'सुधार सहेजें ✓' : 'Update Khata')
                     : t('save_to_khata', lang)}
                 </button>
               </div>

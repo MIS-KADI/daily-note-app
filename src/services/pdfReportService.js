@@ -557,8 +557,8 @@ export const buildReportHtml = ({
     .reduce((s, k) => s + Number(k.amount || 0), 0);
 
   // Health data
-  const steps = fitness?.steps || 4250;
-  const calories = fitness?.calories || 220;
+  const steps = fitness?.steps || 0;
+  const calories = fitness?.calories || 0;
   const bpm = fitness?.heartRate || 74;
   const bp = fitness?.bloodPressure
     ? `${fitness.bloodPressure.systolic}/${fitness.bloodPressure.diastolic} mmHg`

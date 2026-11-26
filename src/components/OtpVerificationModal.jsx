@@ -62,9 +62,9 @@ export default function OtpVerificationModal({
     try {
       let res;
       if (type === 'mobile') {
-        res = await otpService.sendMobileOtp(target || user?.mobile || '+91 98765 43210');
+        res = await otpService.sendMobileOtp(target || user?.mobile || '');
       } else if (type === 'email') {
-        res = await otpService.sendEmailOtp(target || user?.email || 'user@example.com');
+        res = await otpService.sendEmailOtp(target || user?.email || '');
       } else {
         res = await otpService.sendUnlockOtp(user);
       }
@@ -74,7 +74,13 @@ export default function OtpVerificationModal({
         setTimer(60);
       }
     } catch (e) {
-      setErrorMsg('OTP મોકલવામાં સમસ્યા આવી. ફરી પ્રયત્ન કરો.');
+      setErrorMsg(
+        lang === 'hi'
+          ? 'OTP भेजने में समस्या आई। पुनः प्रयास करें।'
+          : lang === 'en'
+          ? 'Failed to send OTP. Please try again.'
+          : 'OTP મોકલવામાં સમસ્યા આવી. ફરી પ્રયત્ન કરો.'
+      );
     } finally {
       setIsSending(false);
     }

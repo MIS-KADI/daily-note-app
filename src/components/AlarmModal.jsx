@@ -22,13 +22,17 @@ export default function AlarmModal({ activeAlarm, onDismiss, onMarkDone, onSnooz
   const toneOption = RINGTONE_OPTIONS.find((r) => r.id === activeAlarm.ringtone);
   const ringtoneName =
     activeAlarm.ringtone === 'custom'
-      ? activeAlarm.customRingtoneName || (lang === 'gu' ? 'મોબાઈલ ઓડિયો' : 'Mobile Audio')
+      ? activeAlarm.customRingtoneName || (lang === 'gu' ? 'મોબાઈલ ઓડિયો' : lang === 'hi' ? 'मोबाइल ऑडियो' : 'Mobile Audio')
       : toneOption
       ? lang === 'gu'
         ? toneOption.nameGu
+        : lang === 'hi'
+        ? (toneOption.nameHi || toneOption.nameEn)
         : toneOption.nameEn
       : lang === 'gu'
       ? '🔔 ક્લાસિકલ બેલ'
+      : lang === 'hi'
+      ? '🔔 क्लासिकल बेल'
       : '🔔 Classic Bell';
 
   return (

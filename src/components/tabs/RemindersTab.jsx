@@ -1576,12 +1576,12 @@ export default function RemindersTab({
                 {previewingRingtone === alarmSettings.ringtone ? (
                   <>
                     <SquareIcon size={13} />
-                    <span>{lang === 'gu' ? 'બંધ કરો' : 'Stop'}</span>
+                    <span>{lang === 'gu' ? 'બંધ કરો' : lang === 'hi' ? 'रोकें' : 'Stop'}</span>
                   </>
                 ) : (
                   <>
                     <PlayIcon size={13} />
-                    <span>{lang === 'gu' ? 'સાંભળો' : 'Test'}</span>
+                    <span>{lang === 'gu' ? 'સાંભળો' : lang === 'hi' ? 'सुनें' : 'Test'}</span>
                   </>
                 )}
               </button>
@@ -1590,7 +1590,7 @@ export default function RemindersTab({
             {/* Section 1: Built-in Melodic Ringtones */}
             <div className="space-y-2">
               <label className="text-xs font-black text-slate-700 block">
-                {lang === 'gu' ? '🎵 બિલ્ટ-ઇન રીંગટોન્સ (ઑફલાઇન)' : '🎵 Built-in Ringtones (Offline)'}
+                {lang === 'gu' ? '🎵 બિલ્ટ-ઇન રીંગટોન્સ (ઑફલાઇન)' : lang === 'hi' ? '🎵 इन-बिल्ट रिंगटोन (ऑफ़लाइन)' : '🎵 Built-in Ringtones (Offline)'}
               </label>
               <div className="space-y-1.5">
                 {RINGTONE_OPTIONS.filter((r) => r.id !== 'custom').map((opt) => {
@@ -1611,7 +1611,7 @@ export default function RemindersTab({
                         <span className="text-xl shrink-0">{opt.icon}</span>
                         <div className="min-w-0">
                           <h5 className="text-xs font-bold text-slate-800 truncate">
-                            {lang === 'gu' ? opt.nameGu : opt.nameEn}
+                            {lang === 'gu' ? opt.nameGu : lang === 'hi' ? (opt.nameHi || opt.nameEn) : opt.nameEn}
                           </h5>
                           <p className="text-[10px] text-slate-500 truncate">
                             {opt.description}
@@ -1632,7 +1632,7 @@ export default function RemindersTab({
                               ? 'bg-purple-600 text-white animate-pulse'
                               : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                           }`}
-                          title="સાંભળો"
+                          title={lang === 'gu' ? 'સાંભળો' : lang === 'hi' ? 'सुनें' : 'Preview'}
                         >
                           {isPreviewing ? <SquareIcon size={14} /> : <PlayIcon size={14} />}
                         </button>
@@ -1657,7 +1657,7 @@ export default function RemindersTab({
             {/* Section 2: Custom Mobile Ringtone Upload */}
             <div className="space-y-2 pt-2 border-t border-slate-100">
               <label className="text-xs font-black text-slate-700 block">
-                {lang === 'gu' ? '📁 તમારા મોબાઈલમાંથી રિંગટોન પસંદ કરો' : '📁 Custom Mobile Audio File'}
+                {lang === 'gu' ? '📁 તમારા મોબાઈલમાંથી રિંગટોન પસંદ કરો' : lang === 'hi' ? '📁 अपने मोबाइल से रिंगटोन चुनें' : '📁 Custom Mobile Audio File'}
               </label>
 
               {alarmSettings.customRingtoneData ? (
@@ -1675,10 +1675,10 @@ export default function RemindersTab({
                     </span>
                     <div className="min-w-0">
                       <h5 className="text-xs font-bold text-slate-800 truncate">
-                        {alarmSettings.customRingtoneName || 'મોબાઈલ ઓડિયો ફાઈલ'}
+                        {alarmSettings.customRingtoneName || (lang === 'hi' ? 'मोबाइल ऑडियो फाइल' : lang === 'en' ? 'Mobile Audio File' : 'મોબાઈલ ઓડિયો ફાઈલ')}
                       </h5>
                       <span className="text-[10px] text-emerald-600 font-semibold">
-                        {lang === 'gu' ? 'સફળતાપૂર્વક અપલોડ થયેલ' : 'Ready to play'}
+                        {lang === 'gu' ? 'સફળતાપૂર્વક અપલોડ થયેલ' : lang === 'hi' ? 'सफलतापूर्वक अपलोड हो गया' : 'Ready to play'}
                       </span>
                     </div>
                   </div>
@@ -1710,7 +1710,7 @@ export default function RemindersTab({
                         handleRemoveCustomAudio();
                       }}
                       className="p-2 text-slate-400 hover:text-red-500 rounded-xl transition"
-                      title="હટાવો"
+                      title={lang === 'gu' ? 'હટાવો' : lang === 'hi' ? 'हटाएं' : 'Remove'}
                     >
                       <Trash2Icon size={14} />
                     </button>
@@ -1720,10 +1720,10 @@ export default function RemindersTab({
                 <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-purple-200 hover:border-purple-400 rounded-2xl bg-purple-50/30 cursor-pointer transition text-center group">
                   <UploadIcon size={24} className="text-purple-600 mb-1 group-hover:scale-110 transition" />
                   <span className="text-xs font-bold text-purple-900">
-                    {lang === 'gu' ? 'મોબાઈલ માંથી .mp3 / .wav / .m4a લાવો' : 'Upload MP3 / WAV from Phone'}
+                    {lang === 'gu' ? 'મોબાઈલ માંથી .mp3 / .wav / .m4a લાવો' : lang === 'hi' ? 'फ़ोन से .mp3 / .wav / .m4a चुनें' : 'Upload MP3 / WAV from Phone'}
                   </span>
                   <span className="text-[10px] text-purple-600/80 mt-0.5">
-                    {lang === 'gu' ? 'તમારું મનપસંદ ગીત કે રિંગટોન સેટ કરો (Max 5MB)' : 'Select your favorite tune (Max 5MB)'}
+                    {lang === 'gu' ? 'તમારું મનપસંદ ગીત કે રિંગટોન સેટ કરો (Max 5MB)' : lang === 'hi' ? 'अपनी पसंदीदा रिंगटोन चुनें (Max 5MB)' : 'Select your favorite tune (Max 5MB)'}
                   </span>
                   <input
                     type="file"
@@ -1740,7 +1740,7 @@ export default function RemindersTab({
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                   <SlidersIcon size={14} className="text-purple-600" />
-                  <span>{lang === 'gu' ? 'એલાર્મ અવાજ (Volume)' : 'Alarm Volume'}</span>
+                  <span>{lang === 'gu' ? 'એલાર્મ અવાજ' : lang === 'hi' ? 'अलार्म वॉल्यूम' : 'Alarm Volume'}</span>
                 </label>
                 <span className="text-xs font-bold text-slate-600">
                   {Math.round((alarmSettings.volume ?? 1) * 100)}%
@@ -1759,7 +1759,7 @@ export default function RemindersTab({
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-slate-700">
-                    {lang === 'gu' ? '📳 મોબાઈલ વાઇબ્રેશન (Vibration)' : '📳 Mobile Vibration'}
+                    {lang === 'gu' ? '📳 મોબાઈલ વાઇબ્રેશન' : lang === 'hi' ? '📳 मोबाइल वाइब्रेशन' : '📳 Mobile Vibration'}
                   </span>
                 </div>
                 <input
@@ -1781,10 +1781,10 @@ export default function RemindersTab({
                     setPreviewingRingtone(null);
                     onTriggerAlarm({
                       id: 'test-ringtone-' + Date.now(),
-                      title: lang === 'gu' ? 'રીંગટોન ટેસ્ટ એલાર્મ' : 'Ringtone Test Alarm',
+                      title: lang === 'gu' ? 'રીંગટોન ટેસ્ટ એલાર્મ' : lang === 'hi' ? 'रिंगटोन टेस्ट अलार्म' : 'Ringtone Test Alarm',
                       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                       type: 'task',
-                      description: lang === 'gu' ? 'આ અવાજ અને રીંગટોન સાથે તમારું એલાર્મ વાગશે.' : 'This ringtone will play for your reminders.',
+                      description: lang === 'gu' ? 'આ અવાજ અને રીંગટોન સાથે તમારું એલાર્મ વાગશે.' : lang === 'hi' ? 'इस ध्वनि और रिंगटोन के साथ आपका अलार्म बजेगा।' : 'This ringtone will play for your reminders.',
                       ringtone: alarmSettings.ringtone,
                       customAudioUrl: alarmSettings.customRingtoneData,
                       customRingtoneName: alarmSettings.customRingtoneName,
@@ -1794,7 +1794,7 @@ export default function RemindersTab({
                   className="flex-1 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-purple-200"
                 >
                   <Volume2Icon size={15} />
-                  <span>{lang === 'gu' ? 'ફૂલ એલાર્મ ટેસ્ટ' : 'Test Full Alarm'}</span>
+                  <span>{lang === 'gu' ? 'ફૂલ એલાર્મ ટેસ્ટ' : lang === 'hi' ? 'फुल अलार्म टेस्ट' : 'Test Full Alarm'}</span>
                 </button>
               )}
 
@@ -1807,7 +1807,7 @@ export default function RemindersTab({
                 }}
                 className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-600/30 transition text-center"
               >
-                {lang === 'gu' ? 'સાચવો અને બહાર નીકળો' : 'Done & Save'}
+                {lang === 'gu' ? 'સાચવો અને બહાર નીકળો' : lang === 'hi' ? 'सहेजें और बंद करें' : 'Done & Save'}
               </button>
             </div>
           </div>
@@ -1825,9 +1825,9 @@ export default function RemindersTab({
                 {editingReminder
                   ? (lang === 'gu' ? 'કામ સુધારો' : t('edit', lang))
                   : type === 'shopping'
-                  ? (lang === 'gu' ? '🛒 નવી ખરીદી યાદી / ટાસ્ક' : '🛒 New Shopping Checklist')
+                  ? (lang === 'gu' ? '🛒 નવી ખરીદી યાદી / ટાસ્ક' : lang === 'hi' ? '🛒 नई खरीदारी सूची' : '🛒 New Shopping Checklist')
                   : type === 'work'
-                  ? (lang === 'gu' ? '💼 નવું કામ / ઓફિસ ટાસ્ક' : '💼 New Work / Office Task')
+                  ? (lang === 'gu' ? '💼 નવું કામ / ઓફિસ ટાસ્ક' : lang === 'hi' ? '💼 नया कार्य / ऑफिस टास्क' : '💼 New Work / Office Task')
                   : (lang === 'gu' ? 'નવું કામ / મીટિંગ ઉમેરો' : t('new_task', lang))}
               </h3>
               <button
@@ -1847,9 +1847,9 @@ export default function RemindersTab({
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
                   {type === 'shopping'
-                    ? (lang === 'gu' ? 'ખરીદીનું નામ / વિષય *' : 'Shopping Title *')
+                    ? (lang === 'gu' ? 'ખરીદીનું નામ / વિષય *' : lang === 'hi' ? 'खरीदारी का नाम *' : 'Shopping Title *')
                     : type === 'work'
-                    ? (lang === 'gu' ? 'ઓફિસ / કામનું નામ *' : 'Work Task Name *')
+                    ? (lang === 'gu' ? 'ઓફિસ / કામનું નામ *' : lang === 'hi' ? 'कार्य का नाम *' : 'Work Task Name *')
                     : t('task_name_req', lang)}
                 </label>
                 <input
@@ -1857,10 +1857,10 @@ export default function RemindersTab({
                   required
                   placeholder={
                     type === 'shopping'
-                      ? (lang === 'gu' ? 'દા.ત. કરિયાણું, સુપરમાર્કેટ, શાકભાજી...' : 'e.g. Weekly Groceries, Market...')
+                      ? (lang === 'gu' ? 'દા.ત. કરિયાણું, સુપરમાર્કેટ, શાકભાજી...' : lang === 'hi' ? 'उदा. किराना, सब्जियां...' : 'e.g. Weekly Groceries, Market...')
                       : type === 'work'
-                      ? (lang === 'gu' ? 'દા.ત. પ્રોજેક્ટ રિપોર્ટ, ફાઇલ સબમિશન...' : 'e.g. Project Report, Client Followup...')
-                      : (lang === 'gu' ? 'દા.ત. બેંક વિઝિટ, ક્લાયન્ટ મીટિંગ...' : 'e.g. Bank visit, Client meeting...')
+                      ? (lang === 'gu' ? 'દા.ત. પ્રોજેક્ટ રિપોર્ટ, ફાઇલ સબમિશન...' : lang === 'hi' ? 'उदा. प्रोजेक्ट रिपोर्ट, फाइल...' : 'e.g. Project Report, Client Followup...')
+                      : (lang === 'gu' ? 'દા.ત. બેંક વિઝિટ, ક્લાયન્ટ મીટિંગ...' : lang === 'hi' ? 'उदा. बैंक विजिट, मीटिंग...' : 'e.g. Bank visit, Client meeting...')
                   }
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -1936,7 +1936,7 @@ export default function RemindersTab({
                     }}
                     className="px-2.5 py-1 rounded-lg font-bold border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
                   >
-                    +7 {lang === 'gu' ? 'દિવસ' : 'Days'}
+                    +7 {lang === 'gu' ? 'દિવસ' : lang === 'hi' ? 'दिन' : 'Days'}
                   </button>
                 </div>
                 <div className="relative">
@@ -1985,7 +1985,7 @@ export default function RemindersTab({
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
                     <MusicIcon size={13} className="text-purple-600" />
-                    <span>{lang === 'gu' ? 'આ કામની રીંગટોન' : 'Task Ringtone'}</span>
+                    <span>{lang === 'gu' ? 'આ કામની રીંગટોન' : lang === 'hi' ? 'कार्य रिंगटोन' : 'Task Ringtone'}</span>
                   </label>
                   <button
                     type="button"
@@ -2005,12 +2005,12 @@ export default function RemindersTab({
                     {previewingRingtone ? (
                       <>
                         <SquareIcon size={10} />
-                        <span>{lang === 'gu' ? 'બંધ કરો' : 'Stop'}</span>
+                        <span>{lang === 'gu' ? 'બંધ કરો' : lang === 'hi' ? 'रोकें' : 'Stop'}</span>
                       </>
                     ) : (
                       <>
                         <PlayIcon size={10} />
-                        <span>{lang === 'gu' ? 'સાંભળો' : 'Preview'}</span>
+                        <span>{lang === 'gu' ? 'સાંભળો' : lang === 'hi' ? 'सुनें' : 'Preview'}</span>
                       </>
                     )}
                   </button>
@@ -2023,16 +2023,18 @@ export default function RemindersTab({
                   <option value="default">
                     {lang === 'gu'
                       ? `🔔 ડિફોલ્ટ (${getRingtoneDisplayName(alarmSettings.ringtone)})`
+                      : lang === 'hi'
+                      ? `🔔 डिफ़ॉल्ट (${getRingtoneDisplayName(alarmSettings.ringtone)})`
                       : `🔔 Default (${getRingtoneDisplayName(alarmSettings.ringtone)})`}
                   </option>
                   {RINGTONE_OPTIONS.filter((r) => r.id !== 'custom').map((opt) => (
                     <option key={opt.id} value={opt.id}>
-                      {lang === 'gu' ? opt.nameGu : opt.nameEn}
+                      {lang === 'gu' ? opt.nameGu : lang === 'hi' ? (opt.nameHi || opt.nameEn) : opt.nameEn}
                     </option>
                   ))}
                   {alarmSettings.customRingtoneData && (
                     <option value="custom">
-                      📁 {alarmSettings.customRingtoneName || 'મોબાઈલ ઓડિયો'}
+                      📁 {alarmSettings.customRingtoneName || (lang === 'hi' ? 'मोबाइल ऑडियो' : lang === 'en' ? 'Mobile Audio' : 'મોબાઈલ ઓડિયો')}
                     </option>
                   )}
                 </select>
@@ -2042,17 +2044,17 @@ export default function RemindersTab({
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
                   <RepeatIcon size={12} className="inline mr-1 text-slate-500" />
-                  {lang === 'gu' ? 'રીપીટ (વારંવારતા)' : 'Repeat Frequency'}
+                  {lang === 'gu' ? 'રીપીટ (વારંવારતા)' : lang === 'hi' ? 'दोहराएं (Repeat)' : 'Repeat Frequency'}
                 </label>
                 <select
                   value={taskRepeat}
                   onChange={(e) => setTaskRepeat(e.target.value)}
                   className="w-full text-xs p-2 rounded-xl border border-slate-200 font-bold bg-white"
                 >
-                  <option value="none">{lang === 'gu' ? 'એક જ વાર (No repeat)' : 'Once'}</option>
-                  <option value="daily">{lang === 'gu' ? 'દરરોજ (Daily)' : 'Daily'}</option>
-                  <option value="weekly">{lang === 'gu' ? 'દર અઠવાડિયે (Weekly)' : 'Weekly'}</option>
-                  <option value="monthly">{lang === 'gu' ? 'દર મહિને (Monthly)' : 'Monthly'}</option>
+                  <option value="none">{lang === 'gu' ? 'એક જ વાર' : lang === 'hi' ? 'एक बार' : 'Once'}</option>
+                  <option value="daily">{lang === 'gu' ? 'દરરોજ' : lang === 'hi' ? 'रोजाना' : 'Daily'}</option>
+                  <option value="weekly">{lang === 'gu' ? 'દર અઠવાડિયે' : lang === 'hi' ? 'साप्ताहिक' : 'Weekly'}</option>
+                  <option value="monthly">{lang === 'gu' ? 'દર મહિને' : lang === 'hi' ? 'मासिक' : 'Monthly'}</option>
                 </select>
               </div>
 
@@ -2061,7 +2063,7 @@ export default function RemindersTab({
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-slate-700">
                     {type === 'shopping'
-                      ? (lang === 'gu' ? 'ખરીદી યાદી / વિગત (ચેકલિસ્ટ)' : 'Shopping Items / Checklist')
+                      ? (lang === 'gu' ? 'ખરીદી યાદી / વિગત' : lang === 'hi' ? 'खरीदारी सूची / विवरण' : 'Shopping Items / Checklist')
                       : t('task_desc_label', lang)}
                   </label>
                   <button
@@ -2115,9 +2117,17 @@ export default function RemindersTab({
                   rows={type === 'shopping' ? 4 : 3}
                   placeholder={
                     type === 'shopping'
-                      ? '☐ દૂધ 1 લીટર\n☐ શાકભાજી (બટાટા, ડુંગળી)\n☐ કરિયાણું'
+                      ? (lang === 'hi'
+                          ? '☐ दूध 1 लीटर\n☐ सब्जियां (आलू, प्याज)\n☐ किराना'
+                          : lang === 'en'
+                          ? '☐ Milk 1 Litre\n☐ Vegetables (Potato, Onion)\n☐ Groceries'
+                          : '☐ દૂધ 1 લીટર\n☐ શાકભાજી (બટાટા, ડુંગળી)\n☐ કરિયાણું')
                       : type === 'work'
-                      ? '☐ ક્લાયન્ટને કોલ કરવો\n☐ પ્રોજેક્ટ ફાઇલ સબમિટ કરવી'
+                      ? (lang === 'hi'
+                          ? '☐ क्लाइंट को कॉल करना\n☐ प्रोजेक्ट फाइल जमा करना'
+                          : lang === 'en'
+                          ? '☐ Call client\n☐ Submit project file'
+                          : '☐ ક્લાયન્ટને કોલ કરવો\n☐ પ્રોજેક્ટ ફાઇલ સબમિટ કરવી')
                       : ''
                   }
                   value={description}
@@ -2210,13 +2220,13 @@ export default function RemindersTab({
                     className="text-pink-600 hover:text-pink-700 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition"
                   >
                     <UserPlusIcon size={12} />
-                    <span>{lang === 'gu' ? 'સંપર્ક પસંદ કરો' : 'Pick Contact'}</span>
+                    <span>{lang === 'gu' ? 'સંપર્ક પસંદ કરો' : lang === 'hi' ? 'संपर्क चुनें' : 'Pick Contact'}</span>
                   </button>
                 </div>
                 <input
                   type="text"
                   required
-                  placeholder={lang === 'gu' ? 'દા.ત. રાહુલ ભાઈ / પ્રિયા & અમિત' : 'Enter name'}
+                  placeholder={lang === 'gu' ? 'દા.ત. રાહુલ ભાઈ / પ્રિયા & અમિત' : lang === 'hi' ? 'उदा. राहुल भाई / प्रिया व अमित' : 'Enter name'}
                   value={evName}
                   onChange={(e) => setEvName(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-pink-500 font-bold"
@@ -2271,7 +2281,7 @@ export default function RemindersTab({
                   <label className="text-xs font-bold text-slate-700 block mb-1">{t('relation', lang)}</label>
                   <input
                     type="text"
-                    placeholder={lang === 'gu' ? 'દા.ત. મિત્ર, ભાઈ' : 'Relation'}
+                    placeholder={lang === 'gu' ? 'દા.ત. મિત્ર, ભાઈ' : lang === 'hi' ? 'उदा. मित्र, भाई' : 'Relation'}
                     value={evRelation}
                     onChange={(e) => setEvRelation(e.target.value)}
                     className="w-full text-xs p-2 rounded-xl border border-slate-200 font-bold"
@@ -2290,13 +2300,13 @@ export default function RemindersTab({
                     className="text-pink-600 hover:text-pink-700 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition"
                   >
                     <UserPlusIcon size={12} />
-                    <span>{lang === 'gu' ? 'કોન્ટેક્ટમાંથી લાવો' : 'From Contacts'}</span>
+                    <span>{lang === 'gu' ? 'કોન્ટેક્ટમાંથી લાવો' : lang === 'hi' ? 'संपर्क से चुनें' : 'From Contacts'}</span>
                   </button>
                 </div>
                 <div className="relative">
                   <input
                     type="tel"
-                    placeholder="9876543210"
+                    placeholder=""
                     value={evPhone}
                     onChange={(e) => setEvPhone(e.target.value)}
                     className="w-full text-xs p-2.5 pr-10 rounded-xl border border-slate-200 font-bold focus:outline-pink-500"
@@ -2304,7 +2314,7 @@ export default function RemindersTab({
                   <button
                     type="button"
                     onClick={handlePickContactForEvent}
-                    title="Select Contact"
+                    title={lang === 'gu' ? 'સંપર્ક પસંદ કરો' : lang === 'hi' ? 'संपर्क चुनें' : 'Select Contact'}
                     className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-pink-600 hover:text-pink-700 hover:bg-pink-50 rounded-lg transition"
                   >
                     <UserPlusIcon size={16} />
@@ -2316,7 +2326,7 @@ export default function RemindersTab({
                 <label className="text-xs font-bold text-slate-700 block mb-1">{t('notes', lang)}</label>
                 <textarea
                   rows={2}
-                  placeholder={lang === 'gu' ? 'કોઈ નોંધ લખો...' : 'Any notes...'}
+                  placeholder={lang === 'gu' ? 'કોઈ નોંધ લખો...' : lang === 'hi' ? 'कोई नोट लिखें...' : 'Any notes...'}
                   value={evNotes}
                   onChange={(e) => setEvNotes(e.target.value)}
                   className="w-full text-xs p-2 rounded-xl border border-slate-200 focus:outline-pink-500"

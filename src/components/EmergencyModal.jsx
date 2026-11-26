@@ -173,11 +173,11 @@ export default function EmergencyModal({ isOpen, onClose, lang = 'gu' }) {
     const cleanNum = contactNumber.replace(/\D/g, '').slice(-10);
 
     if (!cleanName) {
-      setErrorMsg(lang === 'gu' ? 'કૃપા કરીને નામ દાખલ કરો.' : 'Please enter contact name.');
+      setErrorMsg(lang === 'gu' ? 'કૃપા કરીને નામ દાખલ કરો.' : lang === 'hi' ? 'कृपया नाम दर्ज करें।' : 'Please enter contact name.');
       return;
     }
     if (!cleanNum || cleanNum.length < 5) {
-      setErrorMsg(lang === 'gu' ? 'કૃપા કરીને સાચો મોબાઈલ નંબર દાખલ કરો.' : 'Please enter a valid phone number.');
+      setErrorMsg(lang === 'gu' ? 'કૃપા કરીને સાચો મોબાઈલ નંબર દાખલ કરો.' : lang === 'hi' ? 'कृपया सही मोबाइल नंबर दर्ज करें।' : 'Please enter a valid phone number.');
       return;
     }
 
@@ -308,7 +308,7 @@ export default function EmergencyModal({ isOpen, onClose, lang = 'gu' }) {
                     <input
                       type="text"
                       required
-                      placeholder={lang === 'gu' ? 'દા.ત. પપ્પા / ડૉક્ટર' : 'e.g. Papa / Doctor'}
+                      placeholder={lang === 'gu' ? 'દા.ત. પપ્પા / ડૉક્ટર' : lang === 'hi' ? 'उदा. पापा / डॉक्टर' : 'e.g. Papa / Doctor'}
                       value={contactName}
                       onChange={(e) => setContactName(e.target.value)}
                       className="w-full text-xs p-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold focus:outline-red-500"
@@ -323,7 +323,7 @@ export default function EmergencyModal({ isOpen, onClose, lang = 'gu' }) {
                       type="tel"
                       required
                       maxLength={14}
-                      placeholder="9876543210"
+                      placeholder=""
                       value={contactNumber}
                       onChange={(e) => setContactNumber(e.target.value)}
                       className="w-full text-xs p-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold focus:outline-red-500"
@@ -334,7 +334,7 @@ export default function EmergencyModal({ isOpen, onClose, lang = 'gu' }) {
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
                     <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 block mb-0.5">
-                      {lang === 'gu' ? 'સંબંધ / પ્રકાર' : 'Relation / Type'}
+                      {lang === 'gu' ? 'સંબંધ / પ્રકાર' : lang === 'hi' ? 'संबंध / प्रकार' : 'Relation / Type'}
                     </label>
                     <select
                       value={contactRelation}
@@ -358,14 +358,14 @@ export default function EmergencyModal({ isOpen, onClose, lang = 'gu' }) {
                       }}
                       className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                     >
-                      {lang === 'gu' ? 'રદ કરો' : 'Cancel'}
+                      {lang === 'gu' ? 'રદ કરો' : lang === 'hi' ? 'रद्द करें' : 'Cancel'}
                     </button>
                     <button
                       type="submit"
                       className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm transition active:scale-95 flex items-center gap-1"
                     >
                       <Check size={14} />
-                      <span>{lang === 'gu' ? 'સેવ કરો' : 'Save'}</span>
+                      <span>{lang === 'gu' ? 'સેવ કરો' : lang === 'hi' ? 'सहेजें' : 'Save'}</span>
                     </button>
                   </div>
                 </div>
@@ -378,11 +378,15 @@ export default function EmergencyModal({ isOpen, onClose, lang = 'gu' }) {
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                   {lang === 'gu'
                     ? 'હજી સુધી કોઈ અંગત ઇમરજન્સી નંબર ઉમેર્યો નથી.'
+                    : lang === 'hi'
+                    ? 'अभी तक कोई व्यक्तिगत आपातकालीन नंबर नहीं जोड़ा गया है।'
                     : 'No personal emergency numbers added yet.'}
                 </p>
                 <p className="text-[11px] text-slate-400">
                   {lang === 'gu'
                     ? 'તમારા પરિવાર, મિત્ર કે ડૉક્ટરનો નંબર સાચવો જેથી કટોકટીમાં ૧-ક્લિકમાં કૉલ કરી શકાય.'
+                    : lang === 'hi'
+                    ? 'परिवार, मित्र या डॉक्टर का नंबर सहेजें ताकि आपात स्थिति में 1-क्लिक में कॉल कर सकें।'
                     : 'Save family, friend, or doctor contact for 1-tap calling in emergencies.'}
                 </p>
               </div>
@@ -423,7 +427,7 @@ export default function EmergencyModal({ isOpen, onClose, lang = 'gu' }) {
                       <button
                         type="button"
                         onClick={(e) => handleDeleteContact(c.id, e)}
-                        title={lang === 'gu' ? 'નંબર કાઢી નાખો' : 'Remove contact'}
+                        title={lang === 'gu' ? 'નંબર કાઢી નાખો' : lang === 'hi' ? 'संपर्क हटाएं' : 'Remove contact'}
                         className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/60 rounded-xl transition active:scale-95"
                       >
                         <Trash2 size={15} />
@@ -441,7 +445,7 @@ export default function EmergencyModal({ isOpen, onClose, lang = 'gu' }) {
           <div className="space-y-2">
             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1">
               <span>🏛️</span>
-              <span>{lang === 'gu' ? 'સરકારી & બેંક હેલ્પલાઇન (Toll Free)' : 'National & Bank Helplines'}</span>
+              <span>{lang === 'gu' ? 'સરકારી & બેંક હેલ્પલાઇન' : lang === 'hi' ? 'सरकारी और बैंक हेल्पलाइन' : 'National & Bank Helplines'}</span>
             </h4>
 
             <div className="space-y-2">

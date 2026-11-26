@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Pill,
   Activity,
@@ -95,20 +95,20 @@ const MEDICINE_SLOTS = {
 
 const WORKOUT_TYPES = {
   gu: [
-    { id: 'walk', label: '🚶 મોર્નિંગ વૉક (Morning Walk)', ratePerMin: 4.2 },
-    { id: 'run', label: '🏃 દોડવું / જોગિંગ (Running)', ratePerMin: 9.5 },
-    { id: 'gym', label: '🏋️ જીમ & વેઇટ લિફ્ટિંગ (Gym / Weights)', ratePerMin: 6.8 },
-    { id: 'yoga', label: '🧘 યોગ & પ્રાણાયામ (Yoga & Meditation)', ratePerMin: 3.5 },
-    { id: 'cycle', label: '🚴 સાયકલિંગ (Cycling)', ratePerMin: 7.5 },
-    { id: 'cardio', label: '🤸 કાર્ડિયો & એરોબિક્સ (Cardio)', ratePerMin: 8.2 },
+    { id: 'walk', label: '🚶 મોર્નિંગ વૉક', ratePerMin: 4.2 },
+    { id: 'run', label: '🏃 દોડવું / જોગિંગ', ratePerMin: 9.5 },
+    { id: 'gym', label: '🏋️ જીમ & વેઇટ લિફ્ટિંગ', ratePerMin: 6.8 },
+    { id: 'yoga', label: '🧘 યોગ & પ્રાણાયામ', ratePerMin: 3.5 },
+    { id: 'cycle', label: '🚴 સાયકલિંગ', ratePerMin: 7.5 },
+    { id: 'cardio', label: '🤸 કાર્ડિયો & એરોબિક્સ', ratePerMin: 8.2 },
   ],
   hi: [
-    { id: 'walk', label: '🚶 मॉर्निंग वॉक (Morning Walk)', ratePerMin: 4.2 },
-    { id: 'run', label: '🏃 दौड़ना / जॉगिंग (Running)', ratePerMin: 9.5 },
-    { id: 'gym', label: '🏋️ जिम और वेट ट्रेनिंग (Gym / Weights)', ratePerMin: 6.8 },
-    { id: 'yoga', label: '🧘 योग और प्राणायाम (Yoga)', ratePerMin: 3.5 },
-    { id: 'cycle', label: '🚴 साइकिलिंग (Cycling)', ratePerMin: 7.5 },
-    { id: 'cardio', label: '🤸 कार्डियो और एरोबिक्स (Cardio)', ratePerMin: 8.2 },
+    { id: 'walk', label: '🚶 मॉर्निंग वॉक', ratePerMin: 4.2 },
+    { id: 'run', label: '🏃 दौड़ना / जॉगिंग', ratePerMin: 9.5 },
+    { id: 'gym', label: '🏋️ जिम और वेट ट्रेनिंग', ratePerMin: 6.8 },
+    { id: 'yoga', label: '🧘 योग और प्राणायाम', ratePerMin: 3.5 },
+    { id: 'cycle', label: '🚴 साइकिलिंग', ratePerMin: 7.5 },
+    { id: 'cardio', label: '🤸 कार्डियो और एरोबिक्स', ratePerMin: 8.2 },
   ],
   en: [
     { id: 'walk', label: '🚶 Morning Walk', ratePerMin: 4.2 },
@@ -172,7 +172,7 @@ export default function HealthHubTab({
   checkCanAdd,
 }) {
   const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = storageService.getLocalDateStr();
 
   const currentMedicineSlots = MEDICINE_SLOTS[lang] || MEDICINE_SLOTS.en || MEDICINE_SLOTS.gu;
   const currentWorkoutTypes = WORKOUT_TYPES[lang] || WORKOUT_TYPES.en || WORKOUT_TYPES.gu;
@@ -226,9 +226,10 @@ export default function HealthHubTab({
   const [isMedModalOpen, setIsMedModalOpen] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
 
+  const defaultDosage = lang === 'hi' ? '1 गोली' : lang === 'en' ? '1 Tablet' : '૧ ગોળી';
   // Medicine Form
   const [medName, setMedName] = useState('');
-  const [medDosage, setMedDosage] = useState('૧ ગોળી');
+  const [medDosage, setMedDosage] = useState(defaultDosage);
   const [medTimeSlot, setMedTimeSlot] = useState('morning');
   const [medMealRelation, setMedMealRelation] = useState('before_food');
   const [medTime, setMedTime] = useState('08:00');
@@ -243,7 +244,7 @@ export default function HealthHubTab({
     }
     setEditingMed(null);
     setMedName('');
-    setMedDosage('૧ ગોળી');
+    setMedDosage(defaultDosage);
     setMedTimeSlot('morning');
     setMedMealRelation('before_food');
     setMedTime('08:00');
@@ -324,9 +325,9 @@ export default function HealthHubTab({
   // ----------------------------------------------------
   // 2. FITNESS & STEPS LOGIC
   // ----------------------------------------------------
-  const steps = fitness?.steps || 0;
-  const stepTarget = fitness?.stepTarget || 8000;
-  const distanceKm = fitness?.distanceKm || Number(((steps * 0.76) / 1000).toFixed(2));
+  const steps = Math.max(0, Number(fitness?.steps) || 0);
+  const stepTarget = Math.max(500, Number(fitness?.stepTarget) || 8000);
+  const distanceKm = Number(((steps * 0.76) / 1000).toFixed(2));
   const stepCalories = Math.round(steps * 0.045);
 
   const workouts = fitness?.workouts || [];
@@ -334,10 +335,41 @@ export default function HealthHubTab({
   const totalCalories = stepCalories + workoutCalories;
   const stepProgress = Math.min(100, Math.round((steps / stepTarget) * 100));
 
-  const [weeklySteps] = useState(() => {
-    const list = storageService.getWeeklyStepHistory();
-    return list.map((item) => (item.isToday ? { ...item, steps: steps || item.steps } : item));
-  });
+  const [selectedGraphDayIdx, setSelectedGraphDayIdx] = useState(null);
+  const weeklySteps = useMemo(() => {
+    const list = storageService.getWeeklyStepHistory(lang);
+    return list.map((item) => (item.isToday ? { ...item, steps } : item));
+  }, [steps, lang, fitness?.date]);
+
+  const maxWeekSteps = Math.max(stepTarget, ...weeklySteps.map((d) => d.steps), 1000);
+  const weeklyTotalSteps = weeklySteps.reduce((sum, d) => sum + (d.steps || 0), 0);
+  const weeklyAvgSteps = Math.round(weeklyTotalSteps / 7);
+  const selectedGraphDay = selectedGraphDayIdx !== null ? weeklySteps[selectedGraphDayIdx] : weeklySteps.find((d) => d.isToday);
+
+  const handleUpdateStepTarget = (newTarget) => {
+    const targetVal = Math.max(1000, Number(newTarget) || 8000);
+    onUpdateFitness?.({
+      ...fitness,
+      stepTarget: targetVal,
+    });
+  };
+
+  const handleResetSteps = () => {
+    const msg =
+      lang === 'hi'
+        ? 'क्या आप आज के कदमों की गिनती 0 करना चाहते हैं?'
+        : lang === 'en'
+        ? 'Reset today’s step count to 0?'
+        : 'શું તમે આજના સ્ટેપની ગણતરી 0 કરવા માંગો છો?';
+    if (window.confirm(msg)) {
+      onUpdateFitness?.({
+        ...fitness,
+        steps: 0,
+        distanceKm: 0,
+        calories: workoutCalories,
+      });
+    }
+  };
 
   const handleAddSteps = (count) => {
     if (typeof onStepIncrement === 'function') {
@@ -376,7 +408,7 @@ export default function HealthHubTab({
     const newWorkout = {
       id: 'w-' + Date.now(),
       type: selectedWorkoutType,
-      name: typeObj?.label || (lang === 'gu' ? 'કસરત' : 'Workout'),
+      name: typeObj?.label || (lang === 'hi' ? 'व्यायाम' : lang === 'en' ? 'Workout' : 'કસરત'),
       durationMinutes: Number(workoutDuration),
       calories: calculatedCals,
       time: nowTime,
@@ -1323,7 +1355,7 @@ export default function HealthHubTab({
                 <span className="text-lg font-bold text-slate-400 dark:text-slate-500">/ {targetGlasses} {lang === 'gu' ? 'ગ્લાસ' : lang === 'hi' ? 'ग्लास' : 'Glasses'}</span>
               </div>
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                💧 {(glasses * 250).toLocaleString()} ml / {(targetGlasses * 250).toLocaleString()} ml {lang === 'gu' ? 'લક્ષ્ય' : 'Target'}
+                💧 {(glasses * 250).toLocaleString()} ml / {(targetGlasses * 250).toLocaleString()} ml {lang === 'hi' ? 'लक्ष्य' : lang === 'en' ? 'Target' : 'લક્ષ્ય'}
               </p>
 
               {/* Progress Bar */}
@@ -1345,7 +1377,7 @@ export default function HealthHubTab({
                         ? 'scale-110 drop-shadow bg-cyan-100/70 dark:bg-cyan-950/60'
                         : 'opacity-35 grayscale contrast-125 dark:opacity-45 hover:opacity-75'
                     }`}
-                    title={`${i + 1} glass`}
+                    title={`${i + 1} ${lang === 'hi' ? 'गिलास' : lang === 'en' ? 'glass' : 'ગ્લાસ'}`}
                   >
                     🥛
                   </button>
@@ -1361,7 +1393,7 @@ export default function HealthHubTab({
                 className="py-2.5 px-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition disabled:opacity-40"
               >
                 <Minus size={14} />
-                <span>-1 {lang === 'gu' ? 'ગ્લાસ' : 'Glass'}</span>
+                <span>-1 {lang === 'hi' ? 'गिलास' : lang === 'en' ? 'Glass' : 'ગ્લાસ'}</span>
               </button>
 
               <button
@@ -1369,7 +1401,7 @@ export default function HealthHubTab({
                 className="py-2.5 px-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
               >
                 <Plus size={14} />
-                <span>+1 {lang === 'gu' ? 'ગ્લાસ' : 'Glass'}</span>
+                <span>+1 {lang === 'hi' ? 'गिलास' : lang === 'en' ? 'Glass' : 'ગ્લાસ'}</span>
               </button>
 
               <button
@@ -1377,7 +1409,7 @@ export default function HealthHubTab({
                 className="py-2.5 px-2 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
               >
                 <Plus size={14} />
-                <span>+2 {lang === 'gu' ? 'ગ્લાસ' : 'Glasses'}</span>
+                <span>+2 {lang === 'hi' ? 'गिलास' : lang === 'en' ? 'Glasses' : 'ગ્લાસ'}</span>
               </button>
 
               <button
@@ -1394,17 +1426,17 @@ export default function HealthHubTab({
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                  🎯 {lang === 'gu' ? 'દૈનિક લક્ષ્ય સેટ કરો (Daily Goal)' : 'Set Daily Goal'}
+                  🎯 {lang === 'hi' ? 'दैनिक लक्ष्य सेट करें' : lang === 'en' ? 'Set Daily Goal' : 'દૈનિક લક્ષ્ય સેટ કરો'}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {lang === 'gu' ? 'તમારા શરીર મુજબ યોગ્ય પાણીનું લક્ષ્ય પસંદ કરો' : 'Choose target according to your lifestyle'}
+                  {lang === 'hi' ? 'अपने स्वास्थ्य के अनुसार पानी का लक्ष्य चुनें' : lang === 'en' ? 'Choose target according to your lifestyle' : 'તમારા શરીર મુજબ યોગ્ય પાણીનું લક્ષ્ય પસંદ કરો'}
                 </p>
               </div>
               <button
                 onClick={handleResetWater}
                 className="text-[11px] text-red-600 dark:text-rose-400 font-bold hover:underline"
               >
-                {lang === 'gu' ? 'રીસેટ કરો' : 'Reset'}
+                {lang === 'hi' ? 'रीसेट करें' : lang === 'en' ? 'Reset' : 'રીસેટ કરો'}
               </button>
             </div>
 
@@ -1419,7 +1451,7 @@ export default function HealthHubTab({
                       : 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  {g} {lang === 'gu' ? 'ગ્લાસ' : 'gl'} ({g * 250}ml)
+                  {g} {lang === 'hi' ? 'गिलास' : lang === 'en' ? 'gl' : 'ગ્લાસ'} ({g * 250}ml)
                 </button>
               ))}
             </div>
@@ -1429,17 +1461,17 @@ export default function HealthHubTab({
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2.5">
             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
               <span>⏰</span>
-              <span>{lang === 'gu' ? 'પાણી પીવાનો શ્રેષ્ઠ સમય (Hydration Schedule)' : 'Best Times to Drink Water'}</span>
+              <span>{lang === 'hi' ? 'पानी पीने का सर्वोत्तम समय' : lang === 'en' ? 'Best Times to Drink Water' : 'પાણી પીવાનો શ્રેષ્ઠ સમય'}</span>
             </h4>
             <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
               <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 flex items-center gap-2">
                 <span className="text-base">🌅</span>
                 <div>
                   <span className="font-bold text-slate-800 dark:text-slate-200 block">
-                    {lang === 'gu' ? 'સવારે જાગીને: ૧-૨ ગ્લાસ' : 'Morning waking up: 1-2 glasses'}
+                    {lang === 'hi' ? 'सुबह उठने के बाद: 1-2 गिलास' : lang === 'en' ? 'Morning waking up: 1-2 glasses' : 'સવારે જાગીને: ૧-૨ ગ્લાસ'}
                   </span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {lang === 'gu' ? 'શરીરના અંગોને સક્રિય કરે છે અને પાચન સુધારે છે' : 'Activates internal organs & cleanses system'}
+                    {lang === 'hi' ? 'शरीर के अंगों को सक्रिय करता है और पाचन सुधारता है' : lang === 'en' ? 'Activates internal organs & cleanses system' : 'શરીરના અંગોને સક્રિય કરે છે અને પાચન સુધારે છે'}
                   </span>
                 </div>
               </div>
@@ -1448,10 +1480,10 @@ export default function HealthHubTab({
                 <span className="text-base">🥪</span>
                 <div>
                   <span className="font-bold text-slate-800 dark:text-slate-200 block">
-                    {lang === 'gu' ? 'જમવાના ૩૦ મિનિટ પહેલા: ૧ ગ્લાસ' : '30 mins before meals: 1 glass'}
+                    {lang === 'hi' ? 'भोजन से 30 मिनट पहले: 1 गिलास' : lang === 'en' ? '30 mins before meals: 1 glass' : 'જમવાના ૩૦ મિનિટ પહેલા: ૧ ગ્લાસ'}
                   </span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {lang === 'gu' ? 'પાચન ક્રિયા સરળ બને છે (જમતી વખતે વધુ પાણી ન પીવું)' : 'Aids digestion smoothly'}
+                    {lang === 'hi' ? 'पाचन क्रिया को सुगम बनाता है (खाते समय अधिक न पिएं)' : lang === 'en' ? 'Aids digestion smoothly' : 'પાચન ક્રિયા સરળ બને છે (જમતી વખતે વધુ પાણી ન પીવું)'}
                   </span>
                 </div>
               </div>
@@ -1460,10 +1492,10 @@ export default function HealthHubTab({
                 <span className="text-base">🚶</span>
                 <div>
                   <span className="font-bold text-slate-800 dark:text-slate-200 block">
-                    {lang === 'gu' ? 'કસરત / ચાલ્યા પછી: ૧ ગ્લાસ' : 'After walk or exercise: 1 glass'}
+                    {lang === 'hi' ? 'कसरत / टहलने के बाद: 1 गिलास' : lang === 'en' ? 'After walk or exercise: 1 glass' : 'કસરત / ચાલ્યા પછી: ૧ ગ્લાસ'}
                   </span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {lang === 'gu' ? 'શરીરનું તાપમાન નિયંત્રિત કરે છે' : 'Replaces lost fluids'}
+                    {lang === 'hi' ? 'शरीर के तापमान और पानी की कमी को नियंत्रित करता है' : lang === 'en' ? 'Replaces lost fluids' : 'શરીરનું તાપમાન નિયંત્રિત કરે છે'}
                   </span>
                 </div>
               </div>
@@ -1472,10 +1504,10 @@ export default function HealthHubTab({
                 <span className="text-base">🌙</span>
                 <div>
                   <span className="font-bold text-slate-800 dark:text-slate-200 block">
-                    {lang === 'gu' ? 'રાત્રે સૂતા પહેલા: ૧ ગ્લાસ' : 'Before bed: 1 glass'}
+                    {lang === 'hi' ? 'रात को सोने से पहले: 1 गिलास' : lang === 'en' ? 'Before bed: 1 glass' : 'રાત્રે સૂતા પહેલા: ૧ ગ્લાસ'}
                   </span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {lang === 'gu' ? 'હૃદય અને બ્લડ પ્રેશર માટે ગુણકારી' : 'Prevents dehydration overnight'}
+                    {lang === 'hi' ? 'दिल और रक्तचाप के लिए लाभदायक' : lang === 'en' ? 'Prevents dehydration overnight' : 'હૃદય અને બ્લડ પ્રેશર માટે ગુણકારી'}
                   </span>
                 </div>
               </div>
@@ -1491,7 +1523,8 @@ export default function HealthHubTab({
         <div className="space-y-4">
           {/* Main Step Ring & Metrics Card */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
+            {/* Header & Goal Selector */}
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300">
                   <Footprints size={20} />
@@ -1503,9 +1536,44 @@ export default function HealthHubTab({
                   </p>
                 </div>
               </div>
-              <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60">
-                {stepProgress}% {t('completed', lang)}
+              <div className="flex items-center gap-1.5">
+                {steps > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleResetSteps}
+                    title={lang === 'hi' ? 'रीसेट' : lang === 'en' ? 'Reset' : 'રીસેટ'}
+                    className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-500 hover:text-rose-600 transition active:scale-95"
+                  >
+                    <RotateCcw size={14} />
+                  </button>
+                )}
+                <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60">
+                  {stepProgress}% {t('completed', lang)}
+                </span>
+              </div>
+            </div>
+
+            {/* Step Goal Preset Pills */}
+            <div className="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                🎯 {t('step_goal', lang)}:
               </span>
+              <div className="flex items-center gap-1">
+                {[5000, 8000, 10000, 12000].map((goalVal) => (
+                  <button
+                    key={goalVal}
+                    type="button"
+                    onClick={() => handleUpdateStepTarget(goalVal)}
+                    className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition ${
+                      stepTarget === goalVal
+                        ? 'bg-teal-600 text-white shadow-2xs'
+                        : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-teal-50'
+                    }`}
+                  >
+                    {goalVal / 1000}k
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Circular / Large Step Display */}
@@ -1514,7 +1582,7 @@ export default function HealthHubTab({
                 {steps.toLocaleString()}
               </span>
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mt-0.5">
-                {steps.toLocaleString()} / {stepTarget.toLocaleString()}
+                {steps.toLocaleString()} / {stepTarget.toLocaleString()} {t('steps', lang)}
               </span>
 
               {/* Progress bar */}
@@ -1577,8 +1645,8 @@ export default function HealthHubTab({
                   </p>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400">
                     {isStepSensorActive
-                      ? (lang === 'gu' ? 'ચાલતી વખતે સ્ટેપ્સ આપોઆપ ગણાય છે' : 'Steps are auto-counted as you walk')
-                      : (lang === 'gu' ? 'સેન્સર શરૂ કરવા ક્લિક કરો' : 'Click to activate motion sensor')}
+                      ? (lang === 'hi' ? 'चलते समय कदम अपने-आप गिने जा रहे हैं' : lang === 'en' ? 'Steps are auto-counted as you walk' : 'ચાલતી વખતે સ્ટેપ્સ આપોઆપ ગણાય છે')
+                      : (lang === 'hi' ? 'सेंसर शुरू करने के लिए क्लिक करें' : lang === 'en' ? 'Click to activate motion sensor' : 'સેન્સર શરૂ કરવા ક્લિક કરો')}
                   </p>
                 </div>
               </div>
@@ -1595,67 +1663,116 @@ export default function HealthHubTab({
             </div>
           </div>
 
-          {/* 7-Day Walking Step History Bar Chart */}
-          <div className="bg-white rounded-3xl p-4.5 border border-slate-200 shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
+          {/* 7-Day Walking Step History Bar Chart (Synced to Real Walked Steps) */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-teal-100 text-teal-700">
+                <div className="p-2 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300">
                   <BarChart3 size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800">
-                    {lang === 'hi' ? 'साप्ताहिक वॉकिंग स्टेप ग्राफ (7 दिन)' : lang === 'en' ? 'Weekly Step Trend (7 Days)' : '૭-દિવસનો વોકિંગ સ્ટેપ ગ્રાફ'}
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    {lang === 'hi' ? 'साप्ताहिक वॉकिंग स्टेप ग्राफ (7 दिन)' : lang === 'en' ? '7-Day Walking Step Graph' : '૭-દિવસનો વોકિંગ સ્ટેપ ગ્રાફ'}
                   </h3>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {lang === 'hi' ? 'दैनिक लक्ष्य' : lang === 'en' ? 'Daily Goal' : 'દૈનિક લક્ષ્ય'}: {stepTarget.toLocaleString()} {t('steps', lang)}
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+              <span className="text-xs font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-full border border-teal-200 dark:border-teal-800/60 shrink-0">
                 {Math.round(steps).toLocaleString()} {t('steps_today', lang)}
               </span>
             </div>
 
             {/* 7 Vertical Step Columns */}
-            <div className="grid grid-cols-7 gap-1.5 pt-4 pb-2 items-end h-36 border-b border-slate-100">
+            <div className="grid grid-cols-7 gap-1.5 pt-4 pb-2 items-end h-36 border-b border-slate-100 dark:border-slate-800">
               {weeklySteps.map((d, idx) => {
-                const heightPct = Math.min(100, Math.max(12, Math.round((d.steps / Math.max(stepTarget, 10000)) * 100)));
+                const isZero = !d.steps || d.steps <= 0;
+                const heightPct = isZero
+                  ? 6
+                  : Math.min(100, Math.max(10, Math.round((d.steps / maxWeekSteps) * 100)));
                 const isTargetAchieved = d.steps >= stepTarget;
+                const isSelected = selectedGraphDay?.date === d.date;
                 return (
-                  <div key={idx} className="flex flex-col items-center justify-end h-full gap-1">
-                    <span className="text-[8px] font-bold text-slate-500 truncate">
-                      {d.steps > 999 ? `${(d.steps / 1000).toFixed(1)}k` : d.steps}
+                  <button
+                    key={d.date || idx}
+                    type="button"
+                    onClick={() => setSelectedGraphDayIdx(idx)}
+                    className="flex flex-col items-center justify-end h-full gap-1 group cursor-pointer focus:outline-none"
+                    title={`${d.day} (${d.date}): ${d.steps.toLocaleString()} ${t('steps', lang)}`}
+                  >
+                    <span className={`text-[9px] font-bold truncate ${d.isToday ? 'text-teal-700 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                      {d.steps >= 1000 ? `${(d.steps / 1000).toFixed(1)}k` : d.steps}
                     </span>
                     <div
-                      className={`w-full max-w-[24px] rounded-t-lg transition-all duration-500 ${
-                        d.isToday
+                      className={`w-full max-w-[26px] rounded-t-lg transition-all duration-500 ${
+                        isZero
+                          ? d.isToday
+                            ? 'bg-teal-200/70 dark:bg-teal-900/50 border border-dashed border-teal-400'
+                            : 'bg-slate-200 dark:bg-slate-700'
+                          : d.isToday
                           ? 'bg-gradient-to-t from-teal-600 to-emerald-400 shadow-xs ring-2 ring-teal-400/40'
                           : isTargetAchieved
-                          ? 'bg-emerald-400'
-                          : 'bg-teal-200'
-                      }`}
+                          ? 'bg-emerald-500'
+                          : 'bg-teal-400'
+                      } ${isSelected ? 'ring-2 ring-blue-500/60 scale-105' : ''}`}
                       style={{ height: `${heightPct}%` }}
-                      title={`${d.day}: ${d.steps} steps`}
                     />
                     <span
                       className={`text-[10px] font-bold ${
-                        d.isToday ? 'text-teal-800 font-extrabold' : 'text-slate-500'
+                        d.isToday ? 'text-teal-800 dark:text-teal-300 font-extrabold' : isSelected ? 'text-blue-600' : 'text-slate-500 dark:text-slate-400'
                       }`}
                     >
                       {d.day}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
-            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+
+            {/* Selected Day Details & Weekly Summary */}
+            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-2.5 border border-slate-100 dark:border-slate-700/60 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+              {selectedGraphDay && (
+                <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
+                  <span className="px-2 py-0.5 rounded-lg bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200 font-bold">
+                    {selectedGraphDay.day}
+                  </span>
+                  <span>
+                    {selectedGraphDay.steps.toLocaleString()} {t('steps', lang)}
+                  </span>
+                  <span className="text-slate-400">•</span>
+                  <span className="text-slate-500 dark:text-slate-400">
+                    {Number(((selectedGraphDay.steps * 0.76) / 1000).toFixed(2))} km
+                  </span>
+                  <span className="text-slate-400">•</span>
+                  <span className="text-orange-600 dark:text-orange-400 font-bold">
+                    {Math.round(selectedGraphDay.steps * 0.045)} kcal
+                  </span>
+                </div>
+              )}
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold ml-auto">
+                {lang === 'hi' ? 'साप्ताहिक कुल' : lang === 'en' ? 'Week Total' : 'અઠવાડિયાના કુલ'}:{' '}
+                <strong className="text-slate-800 dark:text-slate-100">{weeklyTotalSteps.toLocaleString()}</strong>
+                {' · '}
+                {lang === 'hi' ? 'औसत' : lang === 'en' ? 'Avg' : 'સરેરાશ'}:{' '}
+                <strong className="text-teal-700 dark:text-teal-300">{weeklyAvgSteps.toLocaleString()}</strong>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
               <span className="flex items-center gap-1">
                 <span className="w-2.5 h-2.5 rounded-sm bg-teal-600" />
                 <span>{lang === 'hi' ? 'आज' : lang === 'en' ? 'Today' : 'આજે'}</span>
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />
-                <span>{lang === 'hi' ? 'लक्ष्य पूर्ण (8,000+)' : lang === 'en' ? 'Goal Met (8,000+)' : 'લક્ષ્ય પૂર્ણ (૮,૦૦૦+)'}</span>
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+                <span>
+                  {lang === 'hi'
+                    ? `लक्ष्य पूर्ण (${stepTarget.toLocaleString()}+)`
+                    : lang === 'en'
+                    ? `Goal Met (${stepTarget.toLocaleString()}+)`
+                    : `લક્ષ્ય પૂર્ણ (${stepTarget.toLocaleString()}+)`}
+                </span>
               </span>
             </div>
           </div>
@@ -1948,7 +2065,13 @@ export default function HealthHubTab({
                 </div>
                 <div>
                   <h3 className="text-base font-bold flex items-center gap-1.5">
-                    <span>ફેફસાં વિસ્તરણ & પ્રાણાયામ</span>
+                    <span>
+                      {lang === 'hi'
+                        ? 'फेफड़ों का व्यायाम व प्राणायाम'
+                        : lang === 'en'
+                        ? 'Lung Expansion & Pranayama'
+                        : 'ફેફસાં વિસ્તરણ & પ્રાણાયામ'}
+                    </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 font-semibold border border-cyan-400/30">
                       {currentPattern.badge}
                     </span>
@@ -1958,7 +2081,7 @@ export default function HealthHubTab({
               </div>
               {isBreathingActive && (
                 <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-500/30 text-teal-200 border border-teal-400/30 animate-pulse">
-                  રાઉન્ડ {breathRound}
+                  {lang === 'hi' ? `राउंड ${breathRound}` : lang === 'en' ? `Round ${breathRound}` : `રાઉન્ડ ${breathRound}`}
                 </span>
               )}
             </div>
@@ -1966,10 +2089,10 @@ export default function HealthHubTab({
             {/* Pattern Mode Selector Pills */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-5">
               {[
-                { id: '478', label: '૪-૭-૮ પદ્ધતિ', icon: '🌬️' },
-                { id: 'box', label: 'બોક્સ ૪-૪-૪-૪', icon: '📦' },
-                { id: 'anulom', label: 'અનુલોમ-વિલોમ', icon: '🧘' },
-                { id: 'deep', label: 'ડીપ લંગ (૫-૧૦-૫)', icon: '💪' },
+                { id: '478', label: lang === 'hi' ? '4-7-8 विधि' : lang === 'en' ? '4-7-8 Method' : '૪-૭-૮ પદ્ધતિ', icon: '🌬️' },
+                { id: 'box', label: lang === 'hi' ? 'बॉक्स 4-4-4-4' : lang === 'en' ? 'Box 4-4-4-4' : 'બોક્સ ૪-૪-૪-૪', icon: '📦' },
+                { id: 'anulom', label: lang === 'hi' ? 'अनुलोम-विलोम' : lang === 'en' ? 'Anulom-Vilom' : 'અનુલોમ-વિલોમ', icon: '🧘' },
+                { id: 'deep', label: lang === 'hi' ? 'डीप लंग (5-10-5)' : lang === 'en' ? 'Deep Lung (5-10-5)' : 'ડીપ લંગ (૫-૧૦-૫)', icon: '💪' },
               ].map((m) => (
                 <button
                   key={m.id}
@@ -2009,7 +2132,7 @@ export default function HealthHubTab({
                 {/* Countdown & Phase Indicator */}
                 <div className="text-center z-10 space-y-1">
                   <span className="text-5xl font-black tracking-tight text-white drop-shadow-md">
-                    {isBreathingActive ? breathSecondsLeft : '૪'}
+                    {isBreathingActive ? breathSecondsLeft : currentPattern.phases[0].duration}
                   </span>
                   <span className="text-xs font-extrabold uppercase tracking-widest block text-white/90">
                     {lang === 'hi' ? 'सेकंड' : lang === 'en' ? 'seconds' : 'સેકન્ડ'}

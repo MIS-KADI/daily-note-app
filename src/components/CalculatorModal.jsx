@@ -12,7 +12,7 @@ import {
   IndianRupee,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { t } from '../services/i18n';
+import { t, getExpenseCategories, getIncomeCategories, getPaymentModes } from '../services/i18n';
 import { audioService } from '../services/audioService';
 
 export default function CalculatorModal({
@@ -25,12 +25,16 @@ export default function CalculatorModal({
   const [equation, setEquation] = useState('');
   const [copied, setCopied] = useState(false);
 
+  const pModes = getPaymentModes(lang);
+  const expenseCategories = getExpenseCategories(lang).slice(0, 7);
+  const incomeCategories = getIncomeCategories(lang);
+
   // Quick Save Drawer State
   const [isSavingEntry, setIsSavingEntry] = useState(false);
   const [saveType, setSaveType] = useState('expense'); // 'expense' | 'income'
   const [saveAmount, setSaveAmount] = useState(0);
-  const [savePaymentMode, setSavePaymentMode] = useState('રોકડ (Cash)');
-  const [saveCategory, setSaveCategory] = useState('કરિયાણું / ઘરખર્ચ');
+  const [savePaymentMode, setSavePaymentMode] = useState(pModes[0] || 'Cash in Hand');
+  const [saveCategory, setSaveCategory] = useState(expenseCategories[0] || 'Groceries');
   const [saveDescription, setSaveDescription] = useState('');
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
@@ -163,15 +167,19 @@ export default function CalculatorModal({
     }
 
     if (isNaN(finalAmount) || finalAmount <= 0) {
-      alert(lang === 'gu' ? 'કૃપા કરીને માન્ય રકમ ગણો.' : 'Please calculate a valid amount.');
+      alert(lang === 'gu' ? 'કૃપા કરીને માન્ય રકમ ગણો.' : lang === 'hi' ? 'कृपया सही राशि की गणना करें।' : 'Please calculate a valid amount.');
       return;
     }
 
     setSaveType(type);
     setSaveAmount(finalAmount);
-    setSavePaymentMode('રોકડ (Cash)');
-    setSaveCategory(type === 'expense' ? 'કરિયાણું / ઘરખર્ચ' : 'પગાર / આવક');
-    setSaveDescription(type === 'expense' ? 'દૈનિક ખર્ચ' : 'આવક');
+    setSavePaymentMode(pModes[0] || 'Cash in Hand');
+    setSaveCategory(type === 'expense' ? (expenseCategories[0] || 'Groceries') : (incomeCategories[0] || 'Salary'));
+    setSaveDescription(
+      type === 'expense'
+        ? (lang === 'hi' ? 'दैनिक खर्च' : lang === 'en' ? 'Daily Expense' : 'દૈનિક ખર્ચ')
+        : (lang === 'hi' ? 'दैनिक आय' : lang === 'en' ? 'Income' : 'આવક')
+    );
     setIsSavingEntry(true);
     setSaveSuccessMsg('');
   };
@@ -181,14 +189,20 @@ export default function CalculatorModal({
     e.preventDefault();
     if (saveAmount <= 0) return;
 
+    const now = new Date();
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     if (typeof onTransferAmount === 'function') {
       onTransferAmount({
         amount: saveAmount,
         type: saveType,
         paymentMode: savePaymentMode,
         category: saveCategory,
-        description: saveDescription.trim() || (saveType === 'expense' ? 'કેલ્ક્યુલેટર ખર્ચ' : 'કેલ્ક્યુલેટર આવક'),
-        date: new Date().toISOString().split('T')[0],
+        description:
+          saveDescription.trim() ||
+          (saveType === 'expense'
+            ? (lang === 'hi' ? 'कैलकुलेटर खर्च' : lang === 'en' ? 'Calculator Expense' : 'કેલ્ક્યુલેટર ખર્ચ')
+            : (lang === 'hi' ? 'कैलकुलेटर आय' : lang === 'en' ? 'Calculator Income' : 'કેલ્ક્યુલેટર આવક')),
+        date: localDate,
       });
     }
 
@@ -200,31 +214,15 @@ export default function CalculatorModal({
     const successText =
       lang === 'gu'
         ? `₹${saveAmount.toLocaleString()} ${saveType === 'expense' ? 'ખર્ચમાં' : 'આવકમાં'} (${savePaymentMode}) સફળતાપૂર્વક સાચવી લીધું!`
-        : `₹${saveAmount.toLocaleString()} saved to ${saveType}!`;
+        : lang === 'hi'
+        ? `₹${saveAmount.toLocaleString()} ${saveType === 'expense' ? 'खर्च' : 'आय'} (${savePaymentMode}) में सहेजा गया!`
+        : `₹${saveAmount.toLocaleString()} saved to ${saveType} (${savePaymentMode})!`;
 
     setSaveSuccessMsg(successText);
     setIsSavingEntry(false);
     setEquation('');
     setDisplay('0');
   };
-
-  const expenseCategories = [
-    'કરિયાણું / ઘરખર્ચ',
-    'પેટ્રોલ / મુસાફરી',
-    'દૂધ અને ચા-નાસ્તો',
-    'શાકભાજી / ફળફળાદિ',
-    'દવાઓ / હેલ્થ',
-    'મોબાઈલ / રિચાર્જ',
-    'અન્ય ખર્ચ',
-  ];
-
-  const incomeCategories = [
-    'પગાર / આવક',
-    'વેપાર / ધંધો',
-    'વ્યાજ / રિટર્ન',
-    'ભાડું',
-    'અન્ય આવક',
-  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 select-none">
@@ -237,12 +235,14 @@ export default function CalculatorModal({
               <h3 className="font-bold text-sm leading-tight flex items-center gap-1.5">
                 <span>{t('smart_calc_title', lang)}</span>
                 <span className="text-[10px] bg-blue-500/30 text-blue-300 px-1.5 py-0.2 rounded-full font-bold">
-                  {lang === 'gu' ? 'ઑટો હિસાબ' : 'Smart'}
+                  {lang === 'gu' ? 'ઑટો હિસાબ' : lang === 'hi' ? 'स्मार्ट हिसाब' : 'Smart'}
                 </span>
               </h3>
               <p className="text-[10px] text-slate-400">
                 {lang === 'gu'
                   ? 'ગણતરી કરો અને સીધા રોકડ/UPI હિસાબમાં સેવ કરો'
+                  : lang === 'hi'
+                  ? 'गणना करें और सीधे नकद/UPI हिसाब में सहेजें'
                   : t('calc_sub', lang)}
               </p>
             </div>
@@ -281,7 +281,7 @@ export default function CalculatorModal({
                 className="flex items-center gap-1 text-xs text-indigo-600 font-bold hover:underline active:scale-95"
               >
                 <ArrowLeft size={14} />
-                <span>{lang === 'gu' ? 'પાછા કેલ્ક્યુલેટરમાં જાઓ' : 'Back to Calculator'}</span>
+                <span>{lang === 'gu' ? 'પાછા કેલ્ક્યુલેટરમાં જાઓ' : lang === 'hi' ? 'कैलकुलेटर पर वापस जाएं' : 'Back to Calculator'}</span>
               </button>
               <span
                 className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
@@ -291,15 +291,15 @@ export default function CalculatorModal({
                 }`}
               >
                 {saveType === 'expense'
-                  ? (lang === 'gu' ? '💸 ખર્ચ એન્ટ્રી' : 'Expense')
-                  : (lang === 'gu' ? '💰 આવક એન્ટ્રી' : 'Income')}
+                  ? (lang === 'gu' ? '💸 ખર્ચ એન્ટ્રી' : lang === 'hi' ? '💸 खर्च प्रविष्टि' : '💸 Expense Entry')
+                  : (lang === 'gu' ? '💰 આવક એન્ટ્રી' : lang === 'hi' ? '💰 आय प्रविष्टि' : '💰 Income Entry')}
               </span>
             </div>
 
             {/* Prominent Amount Display */}
             <div className="bg-white p-3.5 rounded-2xl border border-slate-200 text-center shadow-xs">
               <span className="text-[11px] text-slate-500 font-bold block mb-1">
-                {lang === 'gu' ? 'ગણેલ કુલ રકમ' : 'Calculated Amount'}
+                {lang === 'gu' ? 'ગણેલ કુલ રકમ' : lang === 'hi' ? 'गणना की गई कुल राशि' : 'Calculated Amount'}
               </span>
               <div className="text-3xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-1">
                 <span className="text-2xl text-slate-400">₹</span>
@@ -310,20 +310,20 @@ export default function CalculatorModal({
             {/* Payment Mode Selector: Cash vs UPI vs Bank */}
             <div className="space-y-1.5">
               <label className="text-xs font-extrabold text-slate-700 flex items-center justify-between">
-                <span>{lang === 'gu' ? 'ચુકવણી મોડ (Payment Mode):' : 'Payment Mode:'}</span>
+                <span>{lang === 'gu' ? 'ચુકવણી મોડ:' : lang === 'hi' ? 'भुगतान का माध्यम:' : 'Payment Mode:'}</span>
                 <span className="text-[11px] text-emerald-600 font-black">{savePaymentMode}</span>
               </label>
               <div className="grid grid-cols-3 gap-1.5">
                 {[
-                  { id: 'રોકડ (Cash)', label: '💵 રોકડ (Cash)' },
-                  { id: 'UPI (GPay/PhonePe)', label: '📱 UPI / ઓનલાઇન' },
-                  { id: 'બેંક ટ્રાન્સફર (NEFT/IMPS)', label: '🏦 બેંક ટ્રાન્સફર' },
+                  { id: pModes[0] || 'Cash', label: `💵 ${pModes[0] ? pModes[0].split('(')[0].trim() : 'Cash'}` },
+                  { id: pModes[1] || 'UPI (GPay/PhonePe)', label: `📱 ${lang === 'hi' ? 'UPI / ऑनलाइन' : lang === 'en' ? 'UPI / Online' : 'UPI / ઓનલાઇન'}` },
+                  { id: pModes[2] || 'Bank Transfer', label: `🏦 ${lang === 'hi' ? 'बैंक ट्रांसफर' : lang === 'en' ? 'Bank Transfer' : 'બેંક ટ્રાન્સફર'}` },
                 ].map((pm) => (
                   <button
                     key={pm.id}
                     type="button"
                     onClick={() => setSavePaymentMode(pm.id)}
-                    className={`py-2 px-1 rounded-xl text-xs font-bold border transition active:scale-95 text-center ${
+                    className={`py-2 px-1 rounded-xl text-xs font-bold border transition active:scale-95 text-center truncate ${
                       savePaymentMode === pm.id
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                         : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -338,7 +338,7 @@ export default function CalculatorModal({
             {/* Category Quick Selector */}
             <div className="space-y-1.5">
               <label className="text-xs font-extrabold text-slate-700 block">
-                {lang === 'gu' ? 'કેટેગરી પસંદ કરો:' : 'Select Category:'}
+                {lang === 'gu' ? 'કેટેગરી પસંદ કરો:' : lang === 'hi' ? 'श्रेणी चुनें:' : 'Select Category:'}
               </label>
               <div className="flex flex-wrap gap-1.5">
                 {(saveType === 'expense' ? expenseCategories : incomeCategories).map((cat) => (
@@ -361,13 +361,13 @@ export default function CalculatorModal({
             {/* Optional Description / Note */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-600 block">
-                {lang === 'gu' ? 'વિગત / નોંધ (Note - ઐચ્છિક):' : 'Note (Optional):'}
+                {lang === 'gu' ? 'વિગત / નોંધ (ઐચ્છિક):' : lang === 'hi' ? 'विवरण / नोट (वैकल्पिक):' : 'Note (Optional):'}
               </label>
               <input
                 type="text"
                 value={saveDescription}
                 onChange={(e) => setSaveDescription(e.target.value)}
-                placeholder={lang === 'gu' ? 'દા.ત. ૨૦૦૦ નું પેટ્રોલ, કરિયાણું...' : 'e.g. Petrol, groceries...'}
+                placeholder={lang === 'gu' ? 'દા.ત. પેટ્રોલ, કરિયાણું...' : lang === 'hi' ? 'उदा. पेट्रोल, किराना...' : 'e.g. Petrol, groceries...'}
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
               />
             </div>
@@ -380,7 +380,7 @@ export default function CalculatorModal({
                 className="py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-600/30 active:scale-95 transition flex items-center justify-center gap-1.5"
               >
                 <CheckCircle2 size={16} />
-                <span>{lang === 'gu' ? 'હિસાબમાં સેવ કરો' : 'Save to Finance'}</span>
+                <span>{lang === 'gu' ? 'હિસાબમાં સેવ કરો' : lang === 'hi' ? 'हिसाब में सहेजें' : 'Save to Finance'}</span>
               </button>
 
               <button
@@ -389,7 +389,7 @@ export default function CalculatorModal({
                 className="py-3 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 active:scale-95 transition flex items-center justify-center gap-1"
               >
                 <X size={15} />
-                <span>{lang === 'gu' ? 'રદ કરો' : 'Cancel'}</span>
+                <span>{lang === 'gu' ? 'રદ કરો' : lang === 'hi' ? 'रद्द करें' : 'Cancel'}</span>
               </button>
             </div>
           </div>
@@ -414,7 +414,7 @@ export default function CalculatorModal({
                 className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-300 shadow-xs transition active:scale-95"
               >
                 <MinusCircle size={15} className="text-rose-600" />
-                <span>{lang === 'gu' ? 'ખર્ચ ઉમેરો (-₹)' : `${t('calc_transfer_expense', lang)} (-₹)`}</span>
+                <span>{t('calc_transfer_expense', lang)} (-₹)</span>
               </button>
               <button
                 type="button"
@@ -422,7 +422,7 @@ export default function CalculatorModal({
                 className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-300 shadow-xs transition active:scale-95"
               >
                 <PlusCircle size={15} className="text-emerald-600" />
-                <span>{lang === 'gu' ? 'આવક ઉમેરો (+₹)' : `${t('calc_transfer_income', lang)} (+₹)`}</span>
+                <span>{t('calc_transfer_income', lang)} (+₹)</span>
               </button>
             </div>
 

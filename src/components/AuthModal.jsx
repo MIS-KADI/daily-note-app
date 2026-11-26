@@ -152,7 +152,7 @@ export default function AuthModal({
       // Create new profile
       const newProfile = {
         ...(currentUser || {}),
-        name: name.trim() || 'યુઝર',
+        name: name.trim() || (lang === 'hi' ? 'यूज़र' : lang === 'en' ? 'User' : 'યુઝર'),
         email: cleanEmail,
         mobile: mobile.trim(),
         pin: pin || '1234',
@@ -349,7 +349,7 @@ export default function AuthModal({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  placeholder=""
                   required
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
@@ -370,16 +370,16 @@ export default function AuthModal({
                   </div>
                   <div className="flex flex-wrap gap-2 text-[11px] text-slate-600 dark:text-slate-300">
                     <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 font-semibold">
-                      📝 {detectedBackup.recordCounts?.notes || 0} નોંધો
+                      📝 {detectedBackup.recordCounts?.notes || 0} {lang === 'hi' ? 'नोट्स' : lang === 'en' ? 'Notes' : 'નોંધો'}
                     </span>
                     <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 font-semibold">
-                      💰 {detectedBackup.recordCounts?.finance || 0} હિસાબ
+                      💰 {detectedBackup.recordCounts?.finance || 0} {lang === 'hi' ? 'हिसाब' : lang === 'en' ? 'Finance' : 'હિસાબ'}
                     </span>
                     <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 font-semibold">
-                      ⏰ {detectedBackup.recordCounts?.reminders || 0} કામો
+                      ⏰ {detectedBackup.recordCounts?.reminders || 0} {lang === 'hi' ? 'कार्य' : lang === 'en' ? 'Tasks' : 'કામો'}
                     </span>
                     <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 font-semibold">
-                      💊 {detectedBackup.recordCounts?.medicines || 0} દવાઓ
+                      💊 {detectedBackup.recordCounts?.medicines || 0} {lang === 'hi' ? 'दवाइयां' : lang === 'en' ? 'Medicines' : 'દવાઓ'}
                     </span>
                   </div>
                 </div>
@@ -391,7 +391,9 @@ export default function AuthModal({
                     <Lock size={14} className="text-blue-600" />
                     <span>{lang === 'gu' ? 'સુરક્ષા PIN (વૈકલ્પિક)' : lang === 'hi' ? 'सुरक्षा PIN (वैकल्पिक)' : 'Security PIN (Optional)'}</span>
                   </span>
-                  <span className="text-[10px] text-slate-400 font-normal">ડિફોલ્ટ: 1234</span>
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    {lang === 'hi' ? 'डिफ़ॉल्ट: 1234' : lang === 'en' ? 'Default: 1234' : 'ડિફોલ્ટ: 1234'}
+                  </span>
                 </label>
                 <input
                   type="password"
@@ -436,7 +438,7 @@ export default function AuthModal({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="દા.ત. રમેશ પટેલ"
+                  placeholder=""
                   required
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
@@ -451,7 +453,7 @@ export default function AuthModal({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  placeholder=""
                   required
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
@@ -467,7 +469,7 @@ export default function AuthModal({
                   maxLength={10}
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-                  placeholder="9876543210"
+                  placeholder=""
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
